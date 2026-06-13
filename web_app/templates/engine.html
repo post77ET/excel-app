@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="{% if lang == "zh" %}zh{% else %}ja{% endif %}">
+<head>
+  <meta charset="utf-8">
+  <title>{% if lang == "zh" %}Excel翻译作业支持{% else %}Excel翻訳作業支援{% endif %}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 32px; line-height: 1.6; }
+    .box { border: 1px solid #ccc; border-radius: 8px; padding: 20px; margin: 0 0 24px; max-width: 820px; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 18px; margin-top: 0; }
+    input, button { font-size: 16px; margin: 8px 0; }
+    button { padding: 8px 16px; }
+    .note { color: #555; font-size: 14px; }
+  </style>
+
+<style>
+.progress-box {
+  display:none;
+  margin-top:20px;
+  padding:16px;
+  border:1px solid #ccc;
+  background:#f8f8f8;
+}
+.progress-bar-bg {
+  width:100%;
+  height:18px;
+  background:#ddd;
+  border-radius:9px;
+  overflow:hidden;
+}
+.progress-bar-fill {
+  width:0%;
+  height:100%;
+  background:#4a90e2;
+  animation: progressMove 18s linear forwards;
+}
+@keyframes progressMove {
+  0% { width: 5%; }
+  60% { width: 75%; }
+  100% { width: 95%; }
+}
+</style>
+<script>
+function showProgress(messageId, boxId) {
+  var box = document.getElementById(boxId);
+  var msg = document.getElementById(messageId);
+  if (box) box.style.display = "block";
+  if (msg) msg.style.display = "block";
+  return true;
+}
+function showApplyGuide() {
+  var box = document.getElementById("apply-guide-box");
+  if (box) box.style.display = "block";
+}
+
+function chooseFile(inputId) {
+  var input = document.getElementById(inputId);
+  if (input) input.click();
+}
+
+function updateFileName(inputId, labelId) {
+  var input = document.getElementById(inputId);
+  var label = document.getElementById(labelId);
+  if (!input || !label) return;
+  if (input.files && input.files.length > 0) {
+    label.textContent = input.files[0].name;
+  }
+}
+
+function rememberLang(lang) {
+  localStorage.setItem("etb_lang", lang);
+  var u = document.getElementById("lang-upload");
+  var a = document.getElementById("lang-apply");
+  if (u) u.value = lang;
+  if (a) a.value = lang;
+}
+
+function applyLang(t) {
+  Object.keys(t).forEach(function(k) {
+    var el = document.getElementById(k);
+    if (el) el.innerText = t[k];
+  });
+}
+
+function setLangJa() {
+  rememberLang("ja");
+  applyLang({
+    "main-title": "Excel翻訳作業支援",
+    "upload-title": "1. アップロード・コース選択",
+    "course-exp": "体験コース",
+    "course-exp-note": "選択シートの A1:D5 の範囲で確認します。",
+    "course-std": "標準コース",
+    "course-std-note": "選択シートを通常処理します。",
+    "original-book": "原本Excel（.xlsx）",
+    "upload-button": "アップロードしてシート選択へ",
+    "reflect-title": "2. 編集内容の反映処理",
+    "edited-book": "編集済みExcelブック（.xlsx）",
+    "reflect-note1": "注意：ファイル名は変更しないでください。ファイル名を変更すると、Generate時に保存した原本クローンと照合できず、Applyできません。",
+    "reflect-note2": "原本Excelの再アップロードは不要です。Generate時のサーバ保存原本を自動使用します。",
+    "reflect-button": "編集内容の反映処理",
+    "guide-button": "編集方法をもう一度確認する",
+    "guide-title": "編集内容の反映処理までの流れ",
+    "guide-step1": "ダウンロードしたExcelブックを開きます。",
+    "guide-step2": "TRANSLATION_UI シートを開きます。",
+    "guide-step3": "K列に使いたい番号を入力します。",
+    "guide-step4": "L列に Y を入力します。",
+    "guide-step5": "K列に 4 を入力した場合は、M列に反映したい文章を入力します。",
+    "guide-step6": "ファイル名を変更せずに保存します。",
+    "guide-step7": "この画面の「編集内容の反映処理」欄から、保存したExcelブックをアップロードします。",
+    "guide-k-title": "K列の番号：",
+    "guide-k0": "0：翻訳前に戻す（原文保持）",
+    "guide-k1": "1：Candidate1（GOOGLE）",
+    "guide-k2": "2：Candidate2（AMAZON）",
+    "guide-k3": "3：Candidate3（DEEPL）",
+    "guide-k4": "4：自分で入力する文章を使う",
+    "guide-sheet-title": "どのシートを開くか：",
+    "guide-edit-title": "どこを編集するか：",
+    "apply-progress-message": "編集内容の反映処理中です。しばらくお待ちください。",
+    "original-file-button": "ファイルを選択",
+    "original-file-status": "ファイルが選択されていません",
+    "ui-file-button": "ファイルを選択",
+    "ui-file-status": "ファイルが選択されていません"
+  });
+}
+
+function setLangZh() {
+  rememberLang("zh");
+  applyLang({
+    "main-title": "Excel翻译作业支持",
+    "upload-title": "1. 上传・选择处理范围",
+    "course-exp": "体验模式",
+    "course-exp-note": "仅处理所选工作表的 A1:D5 范围。",
+    "course-std": "标准模式",
+    "course-std-note": "对所选工作表进行标准处理。",
+    "original-book": "原始Excel工作簿（.xlsx）",
+    "upload-button": "上传并进入工作表选择",
+    "reflect-title": "2. 编辑内容反映处理",
+    "edited-book": "已编辑的Excel工作簿（.xlsx）",
+    "reflect-note1": "注意：请不要更改文件名。更改文件名后，系统可能无法与生成时保存的原始副本匹配，导致无法反映编辑内容。",
+    "reflect-note2": "不需要重新上传原始Excel。系统会自动使用生成时保存的原始副本。",
+    "reflect-button": "编辑内容反映处理",
+    "guide-button": "再次查看编辑方法",
+    "guide-title": "编辑内容反映处理流程",
+    "guide-step1": "打开下载的Excel工作簿。",
+    "guide-step2": "打开 TRANSLATION_UI 工作表。",
+    "guide-step3": "在K列输入要使用的编号。",
+    "guide-step4": "在L列输入 Y。",
+    "guide-step5": "如果在K列输入 4，请在M列输入要反映的文本。",
+    "guide-step6": "不要更改文件名，直接保存。",
+    "guide-step7": "在本页面的“编辑内容反映处理”区域上传保存后的Excel工作簿。",
+    "guide-k-title": "K列编号：",
+    "guide-k0": "0：恢复为翻译前内容（保留原文）",
+    "guide-k1": "1：Candidate1（GOOGLE）",
+    "guide-k2": "2：Candidate2（AMAZON）",
+    "guide-k3": "3：Candidate3（DEEPL）",
+    "guide-k4": "4：使用自己输入的文本",
+    "guide-sheet-title": "打开哪个工作表：",
+    "guide-edit-title": "编辑哪里：",
+    "apply-progress-message": "正在反映编辑内容，请稍候。",
+    "original-file-button": "选择文件",
+    "original-file-status": "尚未选择文件",
+    "ui-file-button": "选择文件",
+    "ui-file-status": "尚未选择文件"
+  });
+}
+
+window.addEventListener("DOMContentLoaded", function() {
+  var serverLang = "{{ lang }}";
+  var lang = (serverLang === "zh" || serverLang === "ja") ? serverLang : (localStorage.getItem("etb_lang") || "ja");
+  if (lang === "zh") {
+    setLangZh();
+  } else {
+    setLangJa();
+  }
+});
+
+</script>
+
+</head>
+<body style="
+font-family:Arial,sans-serif;
+margin:0;
+line-height:1.8;
+background:#f7faff;
+color:#10213f;
+">
+
+<div style="
+max-width:980px;
+margin:40px auto;
+padding:32px;
+background:white;
+border-radius:18px;
+box-shadow:0 6px 24px rgba(0,0,0,0.08);
+">
+
+  <div style="margin-bottom:16px;">
+    <button type="button" onclick="setLangJa()">日本語</button>
+    <button type="button" onclick="setLangZh()">中文</button>
+  </div>
+
+  <h1 id="main-title">Excel翻訳作業支援</h1>
+
+  <div class="box">
+    <h2 id="upload-title">1. アップロード・コース選択</h2>
+    <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="return showProgress('upload-progress-message', 'upload-progress-box');">
+      <input type="hidden" name="lang" id="lang-upload" value="ja">
+      <label><input type="radio" name="mode" value="experience" checked> <span id="course-exp">体験コース</span></label>
+      <div class="note" id="course-exp-note">選択シートの A1:D5 の範囲で確認します。</div>
+      <label><input type="radio" name="mode" value="paid"> <span id="course-std">標準コース</span></label>
+      <div class="note" id="course-std-note">選択シートを通常処理します。</div>
+      <div style="margin-top:16px;" id="original-book">原本Excel（.xlsx）</div>
+      <input id="original-file-input" type="file" name="file" accept=".xlsx" required style="display:none;" onchange="updateFileName('original-file-input','original-file-status')">
+      <button type="button" id="original-file-button" onclick="chooseFile('original-file-input')">ファイルを選択</button>
+      <span id="original-file-status">ファイルが選択されていません</span><br>
+      <button type="submit" id="upload-button">アップロードしてシート選択へ</button>
+    </form>
+    <div id="upload-progress-box" class="progress-box">
+      <strong id="upload-progress-message">原本Excelを確認中です。しばらくお待ちください。</strong>
+      <div class="progress-bar-bg"><div class="progress-bar-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2 id="reflect-title">2. 編集内容の反映処理</h2>
+    <form action="/apply" method="post" enctype="multipart/form-data" onsubmit="return showProgress('apply-progress-message', 'apply-progress-box');">
+      <input type="hidden" name="lang" id="lang-apply" value="ja">
+      <div id="edited-book">編集済みExcelブック（.xlsx）</div>
+      <input id="ui-file-input" type="file" name="ui_file" accept=".xlsx" required style="display:none;" onchange="updateFileName('ui-file-input','ui-file-status')">
+      <button type="button" id="ui-file-button" onclick="chooseFile('ui-file-input')">ファイルを選択</button>
+      <span id="ui-file-status">ファイルが選択されていません</span><br>
+      <div class="note" id="reflect-note1">注意：ファイル名は変更しないでください。ファイル名を変更すると、Generate時に保存した原本クローンと照合できず、Applyできません。</div>
+      <div class="note" id="reflect-note2">原本Excelの再アップロードは不要です。Generate時のサーバ保存原本を自動使用します。</div>
+      <button type="submit" id="reflect-button">編集内容の反映処理</button>
+    </form>
+
+    <p style="margin-top:16px;">
+      <button type="button" onclick="showApplyGuide()" id="guide-button">編集方法をもう一度確認する</button>
+    </p>
+
+    <div id="apply-guide-box" style="display:none; border:1px solid #ccc; padding:16px; margin-top:12px; background:#fafafa;">
+      <h3 id="guide-title">編集内容の反映処理までの流れ</h3>
+      <ol style="
+line-height:2;
+font-size:16px;
+margin-top:20px;
+">
+        <li id="guide-step1">ダウンロードしたExcelブックを開きます。</li>
+        <li id="guide-step2">TRANSLATION_UI シートを開きます。</li>
+        <li id="guide-step3">K列に使いたい番号を入力します。</li>
+        <li id="guide-step4">L列に Y を入力します。</li>
+        <li id="guide-step5">K列に 4 を入力した場合は、M列に反映したい文章を入力します。</li>
+        <li id="guide-step6">ファイル名を変更せずに保存します。</li>
+        <li id="guide-step7">この画面の「編集内容の反映処理」欄から、保存したExcelブックをアップロードします。</li>
+      </ol>
+      <p>
+        <strong id="guide-k-title">K列の番号：</strong><br>
+        <span id="guide-k0">0：翻訳前に戻す（原文保持）</span><br>
+        <span id="guide-k1">1：Candidate1（GOOGLE）</span><br>
+        <span id="guide-k2">2：Candidate2（AMAZON）</span><br>
+        <span id="guide-k3">3：Candidate3（DEEPL）</span><br>
+        <span id="guide-k4">4：自分で入力する文章を使う</span>
+      </p>
+      <p><strong id="guide-sheet-title">どのシートを開くか：</strong></p>
+      <img src="/static/ui_sheet_tabs.png" alt="TRANSLATION_UI sheet" style="max-width:100%; border:1px solid #ccc;">
+      <p><strong id="guide-edit-title">どこを編集するか：</strong></p>
+      <img src="/static/ui_edit_example.png" alt="TRANSLATION_UI edit example" style="max-width:100%; border:1px solid #ccc;">
+    </div>
+
+    <div id="apply-progress-box" class="progress-box">
+      <div style="
+margin-top:48px;
+padding:36px;
+background:#eef5ff;
+border:1px solid #c9daf8;
+border-radius:16px;
+text-align:center;
+max-width:760px;
+margin-left:auto;
+margin-right:auto;
+box-shadow:0 4px 18px rgba(0,0,0,0.08);
+">
+<strong id="apply-progress-message" style="
+font-size:26px;
+color:#0b4db8;
+line-height:1.8;
+">
+{% if lang == "zh" %}
+正在反映编辑内容，请稍候。
+{% else %}
+編集内容の反映処理中です。しばらくお待ちください。
+{% endif %}
+</strong>
+
+<div style="margin-top:10px; color:#555;">
+{% if lang == "zh" %}
+请勿关闭浏览器。
+{% else %}
+ブラウザを閉じないでください。
+{% endif %}
+</div>
+</div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>Health</h2>
+    <a href="/health">/health</a>
+  </div>
+</div>
+</body>
+</html>

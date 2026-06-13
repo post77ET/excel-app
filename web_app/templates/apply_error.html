@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="{{ 'zh' if lang == 'zh' else 'ja' }}">
+<head><meta charset="utf-8">
+<title>Applyエラー / Apply Error / 反映处理错误</title>
+</head>
+<body style="
+font-family:Arial,sans-serif;
+margin:0;
+line-height:1.8;
+background:#f7faff;
+color:#10213f;
+">
+
+<div style="
+max-width:980px;
+margin:40px auto;
+padding:32px;
+background:white;
+border-radius:18px;
+box-shadow:0 6px 24px rgba(0,0,0,0.08);
+">
+  <h1 style="
+font-size:34px;
+margin-bottom:24px;
+color:#b00020;
+">
+Applyエラー / Apply Error / 反映处理错误
+</h1>
+
+  <div style="
+border:2px solid #e0b4b4;
+background:#fff5f5;
+padding:20px;
+margin:20px 0;
+border-radius:8px;
+font-size:17px;
+">
+    <p><strong>日本語：</strong>編集内容の反映処理ができませんでした。</p>
+    <p><strong>English：</strong>The edited workbook could not be applied.</p>
+    <p><strong>中文：</strong>无法执行编辑内容反映处理。</p>
+  </div>
+
+  <h2>原因 / Reason / 原因</h2>
+
+  <div style="border:1px solid #ccc; padding:12px; background:#fafafa;">
+  {% if lang == "zh" %}
+    文件名不一致、文件损坏、或Apply对象错误。
+  {% else %}
+    ファイル名不一致、ファイル破損、またはApply対象ファイル誤りの可能性があります。
+  {% endif %}
+  </div>
+
+  <h2>確認してください / Please check / 请确认</h2>
+  <ol style="
+line-height:2;
+font-size:16px;
+margin-top:20px;
+">
+    <li>ファイル名を変更していないか確認してください。 / Please check that the file name has not been changed. / 请确认文件名没有被更改。</li>
+    <li>ファイル名末尾に「(1)」「(2)」が付いている場合は、元のファイル名に戻してください。 / If “(1)” or “(2)” was added, restore the original file name. / 如果文件名末尾带有“(1)”或“(2)”，请恢复为原始文件名。</li>
+    <li>分からない場合は、最初からGenerateをやり直してください。 / If unclear, run Generate again from the beginning. / 如果不清楚，请从Generate重新开始。</li>
+  </ol>
+
+  <p>
+    <a href="/engine?lang=ja">実行画面へ戻る</a> /
+    <a href="/engine?lang=zh">返回执行画面</a><br><br>
+    <a href="/?lang=ja">ホームページトップへ戻る</a> /
+    <a href="/?lang=zh">返回首页</a>
+  </p>
+</div>
+</body>
+</html>

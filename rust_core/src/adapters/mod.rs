@@ -1,0 +1,9 @@
+pub mod translator_trait;
+pub mod types;
+pub mod deepl_adapter;
+pub mod google_adapter;
+pub mod amazon_adapter;
+pub mod mock_adapter;
+pub mod mock2_adapter;
+pub mod amazon_mock_adapter;
+pub mod provider_factory;

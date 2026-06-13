@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="{{ 'zh' if lang == 'zh' else 'ja' }}">
+<head><meta charset="utf-8">
+<title>{% if lang == "zh" %}反映处理完成{% else %}編集内容の反映処理完了{% endif %}</title>
+</head>
+<body style="
+font-family:Arial,sans-serif;
+margin:0;
+line-height:1.8;
+background:#f7faff;
+color:#10213f;
+">
+
+<div style="
+max-width:980px;
+margin:40px auto;
+padding:32px;
+background:white;
+border-radius:18px;
+box-shadow:0 6px 24px rgba(0,0,0,0.08);
+">
+  <h1 style="
+font-size:40px;
+margin-bottom:32px;
+color:#063577;
+">
+{% if lang == "zh" %}
+反映处理完成
+{% else %}
+編集内容の反映処理完了
+{% endif %}
+</h1>
+
+  {% if lang == "zh" %}
+    <p style="font-size:20px; margin-top:18px;">
+已生成反映编辑内容后的Excel工作簿。
+</p>
+
+    <div style="
+border:2px solid #d33;
+padding:22px;
+margin-top:28px;
+border-radius:12px;
+line-height:2;
+font-size:16px;
+background:#fffdf7;
+box-shadow:0 4px 16px rgba(0,0,0,0.08);
+">
+      生成后的Excel工作簿已设置工作表保护。<br>
+      如需编辑，请先解除工作表保护。
+    </div>
+
+    <p style="margin-top:20px;">
+      <a href="{{ download_url }}" style="
+display:inline-block;
+background:#075be8;
+color:white;
+padding:18px 38px;
+border-radius:12px;
+text-decoration:none;
+font-size:20px;
+font-weight:bold;
+box-shadow:0 4px 14px rgba(0,0,0,0.12);
+">
+下载反映处理后的Excel工作簿
+</a>
+    </p>
+
+    <div style="margin-top:24px; line-height:2;">
+<a href="/engine?lang=zh" style="font-size:20px; font-weight:bold;">返回执行画面</a><br>
+<a href="/?lang=zh">返回首页</a>
+</div>
+
+  {% else %}
+    <p style="font-size:20px; margin-top:18px;">
+編集内容を反映したExcelブックを生成しました。
+</p>
+
+    <div style="
+border:2px solid #d33;
+padding:22px;
+margin-top:28px;
+border-radius:12px;
+line-height:2;
+font-size:16px;
+background:#fffdf7;
+box-shadow:0 4px 16px rgba(0,0,0,0.08);
+">
+      反映処理後のExcelブックはシート保護がかかっています。<br>
+      編集される場合は、シート保護の解除を行ってください。
+    </div>
+
+    <p style="margin-top:20px;">
+      <a href="{{ download_url }}" style="
+display:inline-block;
+background:#075be8;
+color:white;
+padding:18px 38px;
+border-radius:12px;
+text-decoration:none;
+font-size:20px;
+font-weight:bold;
+box-shadow:0 4px 14px rgba(0,0,0,0.12);
+">
+反映処理後のExcelブックをダウンロード
+</a>
+    </p>
+
+    <div style="margin-top:24px; line-height:2;">
+<a href="/engine?lang=ja" style="font-size:20px; font-weight:bold;">実行画面へ戻る</a><br>
+<a href="/?lang=ja">ホームページトップへ戻る</a>
+</div>
+  {% endif %}
+</div>
+</body>
+</html>

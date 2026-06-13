@@ -1,0 +1,1 @@
+#[derive(Debug, Clone)] pub enum AppError { WorkbookReadFailed(String), Core1AnalyzeFailed(String), UiBuildFailed(String), Internal(String) }

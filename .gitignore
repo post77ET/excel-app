@@ -1,0 +1,38 @@
+# Rust build artifacts
+rust_core/target/
+
+# Runtime directories (user data / temp files)
+uploads/*.xlsx
+output/*.xlsx
+working/*.xlsx
+server_originals/*.xlsx
+
+# Keep directory structure
+!uploads/.gitkeep
+!output/.gitkeep
+!working/.gitkeep
+!server_originals/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+web_app/__pycache__/
+
+# Environment
+.env
+*.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor / merge leftovers (prevent huge stray files)
+*.orig
+*.rej
+*.bak
+
+# Backup / merge leftovers (never commit; can be huge)
+*.orig
+*.rej
+*.bak

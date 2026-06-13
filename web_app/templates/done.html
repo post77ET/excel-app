@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="{{ 'zh' if lang == 'zh' else 'ja' }}">
+<head>
+<meta charset="utf-8">
+<title>{% if lang == "zh" %}翻译处理完成{% else %}{{ "翻译处理完成" if lang == "zh" else "翻訳処理完了" }}{% endif %}</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 32px; line-height: 1.7; }
+.box { border: 1px solid #ccc; border-radius: 8px; padding: 20px; margin: 0 0 24px; max-width: 980px; }
+.download-button { display:inline-block; padding:14px 24px; background:#2d74da; color:white; text-decoration:none; border-radius:8px; font-size:20px; font-weight:bold; }
+.help-box { display:none; margin-top:24px; border:1px solid #bbb; padding:20px; background:#fafafa; }
+img { max-width:100%; border:1px solid #ccc; margin-top:8px; }
+</style>
+<script>
+function showGuide() {
+  var box = document.getElementById("guide-box");
+  if (box) box.style.display = "block";
+}
+</script>
+</head>
+<body style="
+font-family:Arial,sans-serif;
+margin:0;
+line-height:1.8;
+background:#f7faff;
+color:#10213f;
+">
+
+<div style="
+max-width:980px;
+margin:40px auto;
+padding:32px;
+background:white;
+border-radius:18px;
+box-shadow:0 6px 24px rgba(0,0,0,0.08);
+">
+
+<h1>{% if lang == "zh" %}翻译处理完成{% else %}{{ "翻译处理完成" if lang == "zh" else "翻訳処理完了" }}{% endif %}</h1>
+
+<div class="box">
+  {% if lang == "zh" %}
+    <p><strong>翻译处理已完成的Excel工作簿。</strong></p>
+    <p>可在 <strong>TRANSLATION_UI</strong> 工作表中确认・修改翻译结果。</p>
+  {% else %}
+    <p><strong>翻訳処理が完了したExcelブックです。</strong></p>
+    <p><strong>TRANSLATION_UI</strong> シートで翻訳結果を確認・修正できます。</p>
+  {% endif %}
+
+  <p style="margin-top:24px;">
+    <a class="download-button" href="{{ download_url }}" onclick="showGuide()">
+      {% if lang == "zh" %}
+        下载翻译结果确认・编辑用Excel工作簿
+      {% else %}
+        {{ "下载翻译结果确认・编辑用Excel工作簿" if lang == "zh" else "翻訳結果確認・編集用Excelブックをダウンロード" }}
+      {% endif %}
+    </a>
+  </p>
+
+  <div id="guide-box" class="help-box">
+    <h2>{% if lang == "zh" %}下一步操作{% else %}{{ "下一步操作" if lang == "zh" else "次の作業" }}{% endif %}</h2>
+
+    {% if lang == "zh" %}
+      <p>打开下载的Excel工作簿，选择 <strong>TRANSLATION_UI</strong> 工作表。</p>
+      <p><strong>打开哪个工作表：</strong></p>
+    {% else %}
+      <p>ダウンロードしたExcelブックを開き、<strong>TRANSLATION_UI</strong> シートを選択してください。</p>
+      <p><strong>どのシートを開くか：</strong></p>
+    {% endif %}
+
+    <img src="/static/ui_sheet_tabs.png" alt="TRANSLATION_UI">
+    <hr>
+
+    <h2>{% if lang == "zh" %}TRANSLATION_UI 的编辑方法{% else %}TRANSLATION_UI の編集方法{% endif %}</h2>
+
+    {% if lang == "zh" %}
+      <p><strong>编辑哪里：</strong></p>
+    {% else %}
+      <p><strong>どこを編集するか：</strong></p>
+    {% endif %}
+
+    <img src="/static/ui_edit_example.png" alt="TRANSLATION_UI">
+
+    {% if lang == "zh" %}
+      <ul>
+        <li><strong>J列</strong>：系统初始选择</li>
+        <li><strong>K列</strong>：用户选择</li>
+        <li><strong>L列</strong>：确认完成后输入 Y</li>
+        <li><strong>M列</strong>：自由输入</li>
+      </ul>
+      <h3>K列输入的编号</h3>
+      <ul>
+        <li><strong>0</strong>：恢复为翻译前内容（保留原文）</li>
+        <li><strong>1</strong>：Candidate1（GOOGLE）</li>
+        <li><strong>2</strong>：Candidate2（AMAZON）</li>
+        <li><strong>3</strong>：Candidate3（DEEPL）</li>
+        <li><strong>4</strong>：使用自己输入的文字</li>
+      </ul>
+      <p>编辑后，请不要更改文件名，直接保存。</p>
+      <hr>
+      <h2>编辑内容反映处理</h2>
+      <p>返回执行画面，上传已编辑的Excel工作簿。</p>
+      <p style="margin-top:24px;">
+      <a href="/engine?lang={{ lang }}" class="download-button">返回执行画面</a>
+      </p>
+    {% else %}
+      <ul>
+        <li><strong>J列</strong>：システム初期選択</li>
+        <li><strong>K列</strong>：ユーザー選択</li>
+        <li><strong>L列</strong>：確認済みなら Y</li>
+        <li><strong>M列</strong>：自由入力</li>
+      </ul>
+      <h3>K列に入力する番号</h3>
+      <ul>
+        <li><strong>0</strong>：翻訳前に戻す（原文保持）</li>
+        <li><strong>1</strong>：Candidate1（GOOGLE）</li>
+        <li><strong>2</strong>：Candidate2（AMAZON）</li>
+        <li><strong>3</strong>：Candidate3（DEEPL）</li>
+        <li><strong>4</strong>：自分で入力する文章を使う</li>
+      </ul>
+      <p>編集後は、ファイル名を変更せず保存してください。</p>
+      <hr>
+      <h2>編集内容の反映処理</h2>
+      <p>実行画面へ戻り、編集済みExcelブックをアップロードしてください。</p>
+      <p style="margin-top:24px;">
+      <a href="/engine?lang={{ lang }}" class="download-button">
+      {{ "返回执行画面" if lang == "zh" else "実行画面へ戻る" }}
+      </a>
+      </p>
+    {% endif %}
+  </div>
+</div>
+</div>
+</body>
+</html>

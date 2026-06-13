@@ -1,0 +1,9 @@
+{
+  "candidate1_provider": "google",
+  "candidate2_provider": "amazon",
+  "candidate3_provider": "deepl",
+  "batch_max_items": 50,
+  "batch_max_chars": 3000,
+  "deepl_api_key": "",
+  "deepl_use_free_endpoint": false
+}

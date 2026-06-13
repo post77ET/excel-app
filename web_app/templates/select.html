@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="{{ 'zh' if lang == 'zh' else 'ja' }}">
+<head>
+  <meta charset="utf-8">
+  <title>{% if lang == "zh" %}翻译设置{% else %}翻訳設定{% endif %}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; line-height: 1.8; background: #f7faff; color: #10213f; }
+    .container { max-width: 980px; margin: 40px auto; padding: 32px; background: white; border-radius: 18px; box-shadow: 0 6px 24px rgba(0,0,0,0.08); }
+    h1 { margin-top: 0; }
+    h2 { margin: 0 0 12px; font-size: 17px; }
+    .box { border: 1px solid #ccc; border-radius: 8px; padding: 20px; margin: 0 0 24px; }
+    .step { display: none; }
+    .step.active { display: block; }
+    .note { color: #555; font-size: 14px; }
+    .warn { color: #c05000; background: #fff4e0; border: 1px solid #f0b060; border-radius: 6px; padding: 8px 12px; font-size: 13px; margin-top: 8px; display: none; }
+    button { font-size: 15px; padding: 8px 20px; border-radius: 6px; border: 1px solid #aaa; background: #f0f4ff; cursor: pointer; margin-right: 8px; }
+    button.primary { background: #2a5bd7; color: white; border-color: #2a5bd7; }
+    .progress-box { display:none; margin-top:20px; padding:16px; border:1px solid #ccc; background:#f8f8f8; border-radius:8px; }
+    .progress-bar-bg { width:100%; height:18px; background:#ddd; border-radius:9px; overflow:hidden; margin-top:8px; }
+    .progress-bar-fill { width:0%; height:100%; background:#4a90e2; animation: progressMove 90s linear forwards; }
+    @keyframes progressMove { 0%{width:5%} 60%{width:75%} 100%{width:95%} }
+    .confirm-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+    .confirm-table td { padding: 8px 12px; border-bottom: 1px solid #eee; }
+    .confirm-table td:first-child { color: #555; width: 180px; }
+    .engine-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+    .engine-row label { width: 100px; font-size: 14px; }
+    .engine-row select { font-size: 14px; padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; }
+    .course-opt { display: flex; flex-direction: column; gap: 10px; }
+    .course-opt label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+    .course-opt label:hover { background: #f0f4ff; }
+    .course-opt input[type=radio] { margin-top: 3px; }
+    .course-desc { font-size: 13px; color: #555; }
+    ol { line-height: 2; font-size: 16px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>{% if lang == "zh" %}翻译设置{% else %}翻訳設定{% endif %}</h1>
+
+  <!-- STEP 1: シート選択 -->
+  <div id="step1" class="step active">
+    <div class="box">
+      <h2>{% if lang == "zh" %}Step 1：选择工作表{% else %}Step 1：翻訳対象シートを選択{% endif %}</h2>
+      {% if mode == "experience" %}
+        <p class="note">{% if lang == "zh" %}体验模式：仅处理1个工作表的 <strong>A1:D5</strong> 范围{% else %}体験コース：1シートの <strong>A1:D5</strong> の範囲で処理{% endif %}</p>
+      {% endif %}
+      <ol>{% for name in sheet_names %}<li>{{ name }}</li>{% endfor %}</ol>
+      {% if mode == "experience" %}
+        <p class="note">{% if lang == "zh" %}体验模式仅限1个工作表。例：1{% else %}体験コースは1シートのみ。例：1{% endif %}</p>
+        <input type="text" id="sheets-input" value="1" style="font-size:15px;padding:4px 8px;border-radius:4px;border:1px solid #ccc;width:120px;" required>
+      {% else %}
+        <p class="note">{% if lang == "zh" %}可选多个工作表 / all。例：1 或 1,2,4 或 all{% else %}複数シート / all が使えます。例：1 または 1,2,4 または all{% endif %}</p>
+        <input type="text" id="sheets-input" value="all" style="font-size:15px;padding:4px 8px;border-radius:4px;border:1px solid #ccc;width:200px;" required>
+      {% endif %}
+      <br><br>
+      <button class="primary" onclick="goStep(2)">{% if lang == "zh" %}下一步{% else %}次へ{% endif %}</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: コース選択 -->
+  <div id="step2" class="step">
+    <div class="box">
+      <h2>{% if lang == "zh" %}Step 2：选择翻译课程{% else %}Step 2：翻訳コースを選択{% endif %}</h2>
+      <div class="course-opt">
+        <label>
+          <input type="radio" name="course" value="full" checked onchange="updateCourse()">
+          <div>
+            <strong>{% if lang == "zh" %}全套课程{% else %}フルコース{% endif %}</strong>
+            <span class="course-desc">{% if lang == "zh" %}候选1 + 候选2 + 候选3（3种翻译引擎）{% else %}候補1 + 候補2 + 候補3（3エンジン翻訳）{% endif %}</span>
+          </div>
+        </label>
+        <label>
+          <input type="radio" name="course" value="c1c3" onchange="updateCourse()">
+          <div>
+            <strong>{% if lang == "zh" %}简化课程{% else %}C1+C3コース{% endif %}</strong>
+            <span class="course-desc">{% if lang == "zh" %}候选1 + 候选3（2种引擎）{% else %}候補1 + 候補3（2エンジン翻訳）{% endif %}</span>
+          </div>
+        </label>
+        <label>
+          <input type="radio" name="course" value="c1only" onchange="updateCourse()">
+          <div>
+            <strong>{% if lang == "zh" %}经济课程{% else %}C1のみコース{% endif %}</strong>
+            <span class="course-desc">{% if lang == "zh" %}仅候选1（1种引擎，最经济）{% else %}候補1のみ（1エンジン・最経済）{% endif %}</span>
+          </div>
+        </label>
+      </div>
+      <p class="note" style="margin-top:16px;">{% if lang == "zh" %}费用根据翻译量而定{% else %}料金は翻訳量に応じて変動します{% endif %}</p>
+      <br>
+      <button onclick="goStep(1)">{% if lang == "zh" %}返回{% else %}戻る{% endif %}</button>
+      <button class="primary" onclick="goStep(3)">{% if lang == "zh" %}下一步{% else %}次へ{% endif %}</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: エンジン選択 -->
+  <div id="step3" class="step">
+    <div class="box">
+      <h2>{% if lang == "zh" %}Step 3：选择翻译引擎{% else %}Step 3：翻訳エンジンを選択{% endif %}</h2>
+      <p class="note">{% if lang == "zh" %}默认为推荐设置。{% else %}デフォルトは推奨設定です。{% endif %}</p>
+
+      <div id="engine-c1" class="engine-row">
+        <label>{% if lang == "zh" %}候选1{% else %}候補1{% endif %}</label>
+        <select id="sel-c1" onchange="checkDeepLWarning()">
+          <option value="google" selected>Google Translate</option>
+          <option value="amazon">Amazon Translate</option>
+          <option value="deepl">DeepL</option>
+        </select>
+      </div>
+      <div id="engine-c2" class="engine-row">
+        <label>{% if lang == "zh" %}候选2{% else %}候補2{% endif %}</label>
+        <select id="sel-c2" onchange="checkDeepLWarning()">
+          <option value="google">Google Translate</option>
+          <option value="amazon" selected>Amazon Translate</option>
+          <option value="deepl">DeepL</option>
+        </select>
+      </div>
+      <div id="engine-c3" class="engine-row">
+        <label>{% if lang == "zh" %}候选3{% else %}候補3{% endif %}</label>
+        <select id="sel-c3" onchange="checkDeepLWarning()">
+          <option value="google">Google Translate</option>
+          <option value="amazon">Amazon Translate</option>
+          <option value="deepl" selected>DeepL</option>
+        </select>
+      </div>
+
+      <div id="deepl-warn" class="warn">
+        {% if lang == "zh" %}
+        ⚠️ 将DeepL设置为候选1或候选2时，对于包含日语字符串的公式单元格，可能会破坏公式结构（全角括号等）。建议仅将DeepL用于候选3。
+        {% else %}
+        ⚠️ DeepLを候補1または候補2に設定した場合、日本語文字列を含む数式セルで数式の構造が壊れる可能性があります（全角括弧への変換等）。DeepLは候補3での使用を推奨します。
+        {% endif %}
+      </div>
+      <br>
+      <button onclick="goStep(2)">{% if lang == "zh" %}返回{% else %}戻る{% endif %}</button>
+      <button class="primary" onclick="goStep(4)">{% if lang == "zh" %}下一步{% else %}次へ{% endif %}</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: 確認・実行 -->
+  <div id="step4" class="step">
+    <div class="box">
+      <h2>{% if lang == "zh" %}Step 4：确认内容并执行{% else %}Step 4：内容確認・実行{% endif %}</h2>
+      <table class="confirm-table">
+        <tr><td>{% if lang == "zh" %}文件名{% else %}ファイル名{% endif %}</td><td>{{ filename }}</td></tr>
+        <tr><td>{% if lang == "zh" %}翻译对象工作表{% else %}翻訳対象シート{% endif %}</td><td id="conf-sheets">—</td></tr>
+        <tr><td>{% if lang == "zh" %}课程{% else %}コース{% endif %}</td><td id="conf-course">—</td></tr>
+        <tr><td>{% if lang == "zh" %}引擎分配{% else %}エンジン割り当て{% endif %}</td><td id="conf-engines">—</td></tr>
+      </table>
+      <br>
+      <form id="generate-form" action="/generate" method="post" onsubmit="return submitGenerate();">
+        <input type="hidden" name="filename" value="{{ filename }}">
+        <input type="hidden" name="mode" value="{{ mode }}">
+        <input type="hidden" name="lang" value="{{ lang }}">
+        <input type="hidden" id="f-sheets" name="sheets" value="">
+        <input type="hidden" id="f-course" name="course" value="full">
+        <input type="hidden" id="f-c1" name="c1_provider" value="google">
+        <input type="hidden" id="f-c2" name="c2_provider" value="amazon">
+        <input type="hidden" id="f-c3" name="c3_provider" value="deepl">
+        <button onclick="goStep(3)" type="button">{% if lang == "zh" %}返回{% else %}戻る{% endif %}</button>
+        <button class="primary" type="submit">{% if lang == "zh" %}开始执行{% else %}Generate実行{% endif %}</button>
+      </form>
+      <div id="generate-progress-box" class="progress-box">
+        <strong>{% if lang == "zh" %}正在生成翻译确认用Excel。请稍候。{% else %}翻訳結果確認用Excelを生成中です。しばらくお待ちください。{% endif %}</strong>
+        <div class="progress-bar-bg"><div class="progress-bar-fill"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <p><a href="/?lang={{ lang }}">{% if lang == "zh" %}返回首页{% else %}トップへ戻る{% endif %}</a></p>
+</div>
+
+<script>
+var currentStep = 1;
+
+function goStep(n) {
+  document.getElementById('step' + currentStep).classList.remove('active');
+  if (n === 3) updateEngineVisibility();
+  if (n === 4) updateConfirm();
+  document.getElementById('step' + n).classList.add('active');
+  currentStep = n;
+}
+
+function updateCourse() {
+  updateEngineVisibility();
+}
+
+function updateEngineVisibility() {
+  var course = document.querySelector('input[name="course"]:checked').value;
+  document.getElementById('engine-c2').style.display = (course === 'full') ? 'flex' : 'none';
+  document.getElementById('engine-c3').style.display = (course === 'c1only') ? 'none' : 'flex';
+  checkDeepLWarning();
+}
+
+function checkDeepLWarning() {
+  var course = document.querySelector('input[name="course"]:checked').value;
+  var c1 = document.getElementById('sel-c1').value;
+  var c2 = document.getElementById('sel-c2').value;
+  var warn = false;
+  if (c1 === 'deepl') warn = true;
+  if (course === 'full' && c2 === 'deepl') warn = true;
+  document.getElementById('deepl-warn').style.display = warn ? 'block' : 'none';
+}
+
+function updateConfirm() {
+  var sheets = document.getElementById('sheets-input').value;
+  var course = document.querySelector('input[name="course"]:checked').value;
+  var c1 = document.getElementById('sel-c1').value;
+  var c2 = document.getElementById('sel-c2').value;
+  var c3 = document.getElementById('sel-c3').value;
+
+  var courseLabel = { full: 'フルコース', c1c3: 'C1+C3コース', c1only: 'C1のみコース' };
+  var engineLabel = { google: 'Google', amazon: 'Amazon', deepl: 'DeepL' };
+
+  var enginesText = '候補1: ' + engineLabel[c1];
+  if (course === 'full') enginesText += ' / 候補2: ' + engineLabel[c2];
+  if (course !== 'c1only') enginesText += ' / 候補3: ' + engineLabel[c3];
+
+  document.getElementById('conf-sheets').textContent = sheets;
+  document.getElementById('conf-course').textContent = courseLabel[course];
+  document.getElementById('conf-engines').textContent = enginesText;
+
+  document.getElementById('f-sheets').value = sheets;
+  document.getElementById('f-course').value = course;
+  document.getElementById('f-c1').value = c1;
+  document.getElementById('f-c2').value = c2;
+  document.getElementById('f-c3').value = c3;
+}
+
+function submitGenerate() {
+  document.getElementById('generate-progress-box').style.display = 'block';
+  return true;
+}
+</script>
+</body>
+</html>

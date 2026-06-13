@@ -1,0 +1,21 @@
+{
+  "mode": "paid",
+  "plan_name": "STANDARD_3_CANDIDATES",
+  "enabled_candidates": [
+    1,
+    2,
+    3
+  ],
+  "candidate1_provider": "Google",
+  "candidate2_provider": "Amazon",
+  "candidate3_provider": "DeepL",
+  "default_candidate_priority": [
+    1,
+    2,
+    3
+  ],
+  "job_accept_threshold": 0.8,
+  "charge_unit": "successful_candidate",
+  "experience_range": "A1:D5",
+  "note": "Standard plan. Candidate columns must not be falsified. DefaultSelect may fallback by priority only."
+}

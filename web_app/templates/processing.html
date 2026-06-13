@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="{{ 'zh' if lang == 'zh' else 'ja' }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% if lang == "zh" %}翻译处理中{% else %}翻訳処理中{% endif %}</title>
+<!-- JS無効時のフォールバック: 8秒ごとに結果ページを再読込してポーリングする -->
+<noscript><meta http-equiv="refresh" content="8;url={{ result_url }}"></noscript>
+<style>
+body { font-family: Arial, sans-serif; margin:0; line-height:1.8; background:#f7faff; color:#10213f; }
+.card { max-width:980px; margin:40px auto; padding:32px; background:white; border-radius:18px; box-shadow:0 6px 24px rgba(0,0,0,0.08); }
+.jobid { display:inline-block; padding:8px 14px; background:#eef3ff; border:1px solid #c7d6f5; border-radius:8px; font-family:monospace; font-size:18px; font-weight:bold; letter-spacing:0.5px; }
+.spinner { width:48px; height:48px; margin:24px 0; border:6px solid #dfe7f7; border-top-color:#2d74da; border-radius:50%; animation:spin 1s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.note { border:1px solid #d7b65a; background:#fffdf3; padding:18px 20px; border-radius:12px; margin-top:24px; font-size:15px; }
+.btn { display:inline-block; padding:14px 24px; background:#2d74da; color:white; text-decoration:none; border-radius:8px; font-size:18px; font-weight:bold; }
+.btn.secondary { background:#5c6b85; }
+.err { border:2px solid #d33; background:#fff7f7; padding:18px 20px; border-radius:12px; margin-top:24px; white-space:pre-wrap; }
+.hidden { display:none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>{% if lang == "zh" %}正在翻译处理…{% else %}翻訳処理中です…{% endif %}</h1>
+
+  <div id="working">
+    <div class="spinner"></div>
+    {% if lang == "zh" %}
+      <p>翻译处理需要 <strong>约5〜7分钟</strong>。请保持此页面打开。</p>
+    {% else %}
+      <p>翻訳処理には <strong>約5〜7分</strong> かかります。このページを開いたままお待ちください。</p>
+    {% endif %}
+  </div>
+
+  <div class="note">
+    {% if lang == "zh" %}
+      <p><strong>请记下此 JOB ID。</strong>万一浏览器断开，可用它重新取得结果。</p>
+    {% else %}
+      <p><strong>このJOB IDを控えておいてください。</strong>万一ブラウザが切れても、これで結果を再取得できます。</p>
+    {% endif %}
+    <p style="margin-top:10px;"><span class="jobid">{{ job_id }}</span></p>
+    <p style="margin-top:10px;">
+      {% if lang == "zh" %}重新取得（处理完成后可用）：{% else %}再取得用リンク（処理完了後に有効）：{% endif %}
+      <a href="{{ result_url }}">{{ result_url }}</a>
+    </p>
+  </div>
+
+  <div id="done-box" class="hidden">
+    <p style="margin-top:24px;">
+      {% if lang == "zh" %}处理完成！正在开始下载。{% else %}処理が完了しました。ダウンロードを開始します。{% endif %}
+    </p>
+    <p style="margin-top:16px;">
+      <a id="dl" class="btn" href="#">{% if lang == "zh" %}下载结果{% else %}結果をダウンロード{% endif %}</a>
+      <a class="btn secondary" href="{{ result_url }}">{% if lang == "zh" %}打开结果页{% else %}結果ページを開く{% endif %}</a>
+    </p>
+  </div>
+
+  <div id="error-box" class="hidden">
+    <div class="err" id="error-msg"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var statusUrl = {{ status_url | tojson }};
+  var resultUrl = {{ result_url | tojson }};
+  var pollMs = 5000;
+
+  function show(id) { document.getElementById(id).classList.remove("hidden"); }
+  function hide(id) { document.getElementById(id).classList.add("hidden"); }
+
+  function poll() {
+    fetch(statusUrl, { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data || !data.status) { setTimeout(poll, pollMs); return; }
+        if (data.status === "done" && data.download_url) {
+          hide("working");
+          var dl = document.getElementById("dl");
+          dl.href = data.download_url;
+          show("done-box");
+          // 自動ダウンロード開始
+          window.location.href = data.download_url;
+        } else if (data.status === "error") {
+          hide("working");
+          document.getElementById("error-msg").textContent = data.message || "エラーが発生しました。";
+          show("error-box");
+        } else {
+          setTimeout(poll, pollMs);
+        }
+      })
+      .catch(function () {
+        // 一時的な通信エラーは無視して継続
+        setTimeout(poll, pollMs);
+      });
+  }
+  setTimeout(poll, pollMs);
+})();
+</script>
+</body>
+</html>

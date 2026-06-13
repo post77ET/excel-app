@@ -1,0 +1,1 @@
+use crate::app::orchestrator::run_pipeline; use crate::infra::app_error::AppError; pub fn execute()->Result<(),AppError>{run_pipeline()}
