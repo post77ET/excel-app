@@ -41,7 +41,10 @@ pub fn write_generate_workbook(
 
     write_translation_warnings_sheet_into_book(&mut book, rows)?;
 
-    let main_sheet_names = collect_target_sheet_names(rows);
+    // 体験コース(A1:D5のみ)でも「触らないシート/範囲」を含め全シートをパスワード保護する。
+    // rows 由来だと体験コースで未処理シートが無保護になるため、ブック内の全シート
+    //（特殊シートを除く）を対象にして標準コースと同一の保護を適用する。
+    let main_sheet_names = collect_all_main_sheet_names(&book);
 
     println!("[PROTECT][GENERATE] row_count = {}", rows.len());
     println!("[PROTECT][GENERATE] main_sheet_names = {:?}", main_sheet_names);
@@ -83,13 +86,22 @@ pub fn write_generate_workbook(
     Ok(())
 }
 
-fn collect_target_sheet_names(rows: &[UiRow]) -> Vec<String> {
+fn collect_all_main_sheet_names(book: &umya_spreadsheet::Spreadsheet) -> Vec<String> {
     let mut names: Vec<String> = Vec::new();
 
-    for row in rows {
-        if !names.contains(&row.sheet_name) {
-            names.push(row.sheet_name.clone());
+    for sheet in book.get_sheet_collection() {
+        let name = sheet.get_name().to_string();
+
+        // 特殊シートは protection_targets 側で個別に保護するため除外する。
+        if name == UI_SHEET_NAME
+            || name == SECURITY_REPORT_SHEET_NAME
+            || name == INTERNAL_SHEET_NAME
+            || name == WARNINGS_SHEET_NAME
+        {
+            continue;
         }
+
+        names.push(name);
     }
 
     names

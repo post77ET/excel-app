@@ -53,6 +53,32 @@ body { font-family: Arial, sans-serif; margin:0; line-height:1.8; background:#f7
       <a id="dl" class="btn" href="#">{% if lang == "zh" %}下载结果{% else %}結果をダウンロード{% endif %}</a>
       <a class="btn secondary" href="{{ result_url }}">{% if lang == "zh" %}打开结果页{% else %}結果ページを開く{% endif %}</a>
     </p>
+
+    <div class="note" style="border-color:#7fb0e6; background:#f3f8ff; margin-top:24px;">
+      {% if lang == "zh" %}
+        <p><strong>接下来：Apply（应用）的操作步骤</strong></p>
+        <ol style="margin:10px 0 0 18px; padding:0;">
+          <li>用 Excel 打开下载的 UI 文件。</li>
+          <li>仅编辑 <strong>K 列（UserSelect）</strong> 与 <strong>L 列（Apply＝Y/空）</strong>，需要时在 <strong>M 列（Candidate4）</strong> 输入自定义译文。其他单元格已被保护，无法编辑。</li>
+          <li>保存文件（保持 .xlsx 格式）。</li>
+          <li>点击下方「返回首页」，进入 <strong>Apply 画面</strong>，上传刚保存的 UI 文件。</li>
+          <li>Apply 完成后即可下载已应用译文的成品文件。</li>
+        </ol>
+      {% else %}
+        <p><strong>次のステップ：Apply（適用）のやり方</strong></p>
+        <ol style="margin:10px 0 0 18px; padding:0;">
+          <li>ダウンロードしたUIファイルを Excel で開きます。</li>
+          <li><strong>K列（UserSelect）</strong>と<strong>L列（Apply＝Y/空欄）</strong>だけを編集します。独自訳を入れる場合は<strong>M列（Candidate4）</strong>に入力します。その他のセルは保護されており編集できません。</li>
+          <li>ファイルを保存します（.xlsx のまま）。</li>
+          <li>下の「ホームに戻る」から <strong>Apply画面</strong> へ進み、保存したUIファイルをアップロードします。</li>
+          <li>Apply完了後、訳文が反映された成果物ファイルをダウンロードできます。</li>
+        </ol>
+      {% endif %}
+    </div>
+
+    <p style="margin-top:20px;">
+      <a class="btn secondary" href="/?lang={{ lang }}">{% if lang == "zh" %}返回首页{% else %}ホームに戻る{% endif %}</a>
+    </p>
   </div>
 
   <div id="error-box" class="hidden">

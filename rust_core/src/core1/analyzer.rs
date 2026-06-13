@@ -581,6 +581,19 @@ fn translate_segments_for_cells(
     results
 }
 
+// No.1 fix: candidate3（whole 経路）でも改行・全角スペースを保護する。
+// candidate1/2（segments 経路, analyzer.rs 内）と同一の PUA トークンを使用し、
+// MT エンジンが「\n + 全角スペース」を「\n\n」に変換して改行倍増・U+3000消失する不具合を防ぐ。
+fn protect_structure_for_whole(text: &str) -> String {
+    text.replace('\n', "\u{E001}NL\u{E002}")
+        .replace('\u{3000}', "\u{E001}FS\u{E002}")
+}
+
+fn restore_structure_for_whole(text: &str) -> String {
+    text.replace("\u{E001}NL\u{E002}", "\n")
+        .replace("\u{E001}FS\u{E002}", "\u{3000}")
+}
+
 fn translate_whole_for_cells(
     label: &str,
     logical_cells: &[LogicalCell],
@@ -603,7 +616,8 @@ fn translate_whole_for_cells(
 
         request_plans.push(WholeRequestPlan {
             cell_idx,
-            text: logical_cell.source_text.clone(),
+            // 送信前に改行・全角スペースを退避（候補1/2 と同じ保護）
+            text: protect_structure_for_whole(&logical_cell.source_text),
         });
     }
 
@@ -663,7 +677,8 @@ fn translate_whole_for_cells(
                 }
 
                 for (plan, trans) in request_plans[start..end].iter().zip(translations.into_iter()) {
-                    results[plan.cell_idx] = Ok(trans.translated_text);
+                    // 受信後に退避していた改行・全角スペースを復元
+                    results[plan.cell_idx] = Ok(restore_structure_for_whole(&trans.translated_text));
                 }
             }
             Err(e) => {
