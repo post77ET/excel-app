@@ -4,8 +4,11 @@ set -euo pipefail
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 
-export CARGO_HOME="${CARGO_HOME:-/tmp/cargo}"
-export RUSTUP_HOME="${RUSTUP_HOME:-/tmp/rustup}"
+# Render は CARGO_HOME=/usr/local/cargo（読み取り専用）を設定してくるため、
+# クレートのダウンロード先を書き込み可能な /tmp に強制上書きする。
+export CARGO_HOME="/tmp/cargo"
+export RUSTUP_HOME="/tmp/rustup"
+mkdir -p "$CARGO_HOME" "$RUSTUP_HOME"
 export PATH="$CARGO_HOME/bin:$PATH"
 
 if ! command -v cargo >/dev/null 2>&1; then
