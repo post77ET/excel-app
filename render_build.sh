@@ -4,11 +4,12 @@ set -euo pipefail
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 
-# Render は CARGO_HOME=/usr/local/cargo（読み取り専用）を設定してくるため、
-# クレートのダウンロード先を書き込み可能な /tmp に強制上書きする。
+# CARGO_HOME（部品のダウンロード先）だけ書き込み可能な /tmp に固定する。
+# RUSTUP_HOME（Rust本体）は Render 既設のものをそのまま使う（読むだけ・書き込まない）。
+# ※ ここを /tmp に固定すると toolchain が空になり「no default configured」で失敗するため固定しない。
 export CARGO_HOME="/tmp/cargo"
-export RUSTUP_HOME="/tmp/rustup"
-mkdir -p "$CARGO_HOME" "$RUSTUP_HOME"
+export RUSTUP_HOME="${RUSTUP_HOME:-/tmp/rustup}"
+mkdir -p "$CARGO_HOME"
 export PATH="$CARGO_HOME/bin:$PATH"
 
 if ! command -v cargo >/dev/null 2>&1; then
