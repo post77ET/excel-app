@@ -61,13 +61,13 @@ fn detect_silent_fallback(row: &UiRow, select_code: u8) -> Option<String> {
 
     match select_code {
         1 if row.candidate1.is_none() => Some(
-            "UserSelect=1 を指定しましたが Candidate1 が未設定のため、原文を維持しました（Apply時フォールバック）".to_string(),
+            "UserSelect=1 を指定しましたが Candidate1 が未生成のため、DefaultSelectの候補にクランプしました（Apply時フォールバック）".to_string(),
         ),
         2 if row.candidate2.is_none() => Some(
-            "UserSelect=2 を指定しましたが Candidate2 が未設定のため、原文を維持しました（Apply時フォールバック）".to_string(),
+            "UserSelect=2 を指定しましたが Candidate2 が未生成のため、DefaultSelectの候補にクランプしました（Apply時フォールバック）".to_string(),
         ),
         3 if row.candidate3.is_none() => Some(
-            "UserSelect=3 を指定しましたが Candidate3 が未設定のため、原文を維持しました（Apply時フォールバック）".to_string(),
+            "UserSelect=3 を指定しましたが Candidate3 が未生成のため、DefaultSelectの候補にクランプしました（Apply時フォールバック）".to_string(),
         ),
         4 if row
             .candidate4
@@ -84,30 +84,35 @@ fn detect_silent_fallback(row: &UiRow, select_code: u8) -> Option<String> {
 }
 
 fn resolve_selected_value(row: &UiRow, select_code: u8) -> (String, String) {
+    // まず選択コードで解決を試みる。
+    if let Some(v) = resolve_candidate_text(row, select_code) {
+        return v;
+    }
+
+    // 選択された候補がコース未生成(None)/範囲外だった場合：
+    // オートフィルや貼り付けで不正値が入っても結果が壊れないよう、
+    // DefaultSelect（必ず生成済みの候補）にクランプする。
+    if let Some((text, source)) = resolve_candidate_text(row, row.default_select) {
+        return (text, format!("{} (clamped from US={})", source, select_code));
+    }
+
+    // 最終手段：原文を書き戻す（DefaultSelectすら解決できない稀なケース）。
+    (row.original_writeback.clone(), "Original".to_string())
+}
+
+/// 指定コードの候補テキストを返す。生成されていない候補(None)は None を返す。
+/// code 0(原文) と code 4(ユーザー入力) はユーザーの明示意図として常に Some を返し、
+/// クランプ対象外とする（意図的な原文/空欄を勝手に書き換えない）。
+fn resolve_candidate_text(row: &UiRow, select_code: u8) -> Option<(String, String)> {
     match select_code {
-        0 => (row.original_writeback.clone(), "Original".to_string()),
-        1 => (
-            row.candidate1
-                .clone()
-                .unwrap_or_else(|| row.original_writeback.clone()),
-            "Candidate1".to_string(),
-        ),
-        2 => (
-            row.candidate2
-                .clone()
-                .unwrap_or_else(|| row.original_writeback.clone()),
-            "Candidate2".to_string(),
-        ),
-        3 => (
-            row.candidate3
-                .clone()
-                .unwrap_or_else(|| row.original_writeback.clone()),
-            "Candidate3".to_string(),
-        ),
-        4 => (
+        0 => Some((row.original_writeback.clone(), "Original".to_string())),
+        1 => row.candidate1.clone().map(|t| (t, "Candidate1".to_string())),
+        2 => row.candidate2.clone().map(|t| (t, "Candidate2".to_string())),
+        3 => row.candidate3.clone().map(|t| (t, "Candidate3".to_string())),
+        4 => Some((
             row.candidate4.clone().unwrap_or_default(),
             "Candidate4".to_string(),
-        ),
-        _ => (row.original_writeback.clone(), "Original".to_string()),
+        )),
+        _ => None,
     }
 }
