@@ -386,6 +386,14 @@ def index():
     return render_template("landing.html", lang=request.args.get("lang", "ja"))
 
 
+@app.get("/googlea52e60130d420841.html")
+def google_site_verification():
+    # Google Search Console の所有権確認用ファイル。
+    # 確認状態を維持するため、このルートは削除しないこと。
+    body = "google-site-verification: googlea52e60130d420841.html"
+    return body, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+
 @app.get("/engine")
 def engine():
     return render_template("engine.html", lang=request.args.get("lang", "ja"))
