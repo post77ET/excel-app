@@ -822,10 +822,10 @@ pub fn patch_datavalidation_show_error_in_file(path: &str) -> Result<(), String>
     Ok(())
 }
 
-/// DataValidationタグに showErrorMessage="1" errorStyle="stop" を付与する
+/// DataValidationタグに showErrorMessage="1" と errorStyle="stop" を付与する。
+/// umya が既に showErrorMessage="1" を出力するため、両属性をそれぞれ独立に
+/// 「無ければ付ける」方式にする（errorStyle が欠落するとリスト外の手入力を弾けない）。
 fn inject_show_error_message(xml: &str) -> String {
-    // <dataValidation ... > タグに showErrorMessage と errorStyle を追加
-    // すでに存在する場合は上書きしない
     let mut result = String::with_capacity(xml.len());
     let mut search = xml;
 
@@ -834,11 +834,24 @@ fn inject_show_error_message(xml: &str) -> String {
         let tag_end = search[pos..].find('>').unwrap_or(search.len() - pos);
         let tag = &search[pos..pos + tag_end + 1];
 
-        let patched_tag = if !tag.contains("showErrorMessage") {
-            tag.replacen("<dataValidation ", "<dataValidation showErrorMessage=\"1\" errorStyle=\"stop\" ", 1)
-        } else {
-            tag.to_string()
-        };
+        let mut patched_tag = tag.to_string();
+
+        // errorStyle="stop"（リスト外の入力を拒否）が無ければ付与する
+        if !patched_tag.contains("errorStyle") {
+            patched_tag = patched_tag.replacen(
+                "<dataValidation ",
+                "<dataValidation errorStyle=\"stop\" ",
+                1,
+            );
+        }
+        // showErrorMessage="1"（エラーダイアログを表示）が無ければ付与する
+        if !patched_tag.contains("showErrorMessage") {
+            patched_tag = patched_tag.replacen(
+                "<dataValidation ",
+                "<dataValidation showErrorMessage=\"1\" ",
+                1,
+            );
+        }
 
         result.push_str(&patched_tag);
         search = &search[pos + tag_end + 1..];
