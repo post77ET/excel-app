@@ -18,7 +18,7 @@ pub fn write_ui_workbook(
     if book.get_sheet_by_name("Sheet1").is_some() {
         let _ = book.remove_sheet_by_name("Sheet1");
     }
-    write_ui_sheet_into_book(&mut book, rows, config)?;
+    write_ui_sheet_into_book(&mut book, rows, config, &[1, 2, 3])?;
     umya_spreadsheet::writer::xlsx::write(&book, output_path).map_err(|e| e.to_string())
 }
 

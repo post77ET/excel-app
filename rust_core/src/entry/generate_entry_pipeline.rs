@@ -176,6 +176,7 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
         &job_paths.output_ui_path.to_string_lossy(),
         &cfg,
         &security_report,
+        &job_plan.enabled_candidates,
     ).map_err(|e| EntryError::Internal(format!("generate workbook write failed: {e}")))?;
 
     println!("=== ENTRY generate-select end ===");

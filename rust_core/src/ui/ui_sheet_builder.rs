@@ -127,6 +127,7 @@ pub fn write_ui_sheet_into_book(
     book: &mut Spreadsheet,
     rows: &[UiRow],
     config: &TranslatorConfig,
+    enabled_candidates: &[u8],
 ) -> Result<(), String> {
     let sheet_name = "TRANSLATION_UI";
 
@@ -149,7 +150,7 @@ pub fn write_ui_sheet_into_book(
     write_headers(sheet, config, &enabled);
     write_rows(sheet, rows);
     apply_ui_format(sheet, rows.len() as u32 + 1, 17);
-    apply_ui_input_validation(sheet, rows.len() as u32 + 1);
+    apply_ui_input_validation(sheet, rows.len() as u32 + 1, enabled_candidates);
     apply_ui_protection(book, rows.len() as u32 + 1);
     Ok(())
 }
@@ -235,7 +236,28 @@ fn write_rows(sheet: &mut Worksheet, rows: &[UiRow]) {
     }
 }
 
-fn apply_ui_input_validation(sheet: &mut Worksheet, max_row: u32) {
+/// UserSelect(K列)ドロップダウンの選択肢を、生成されたコースに応じて組み立てる。
+/// 0(原文)と4(ユーザー入力)は常に表示し、生成された候補番号(1/2/3)だけを間に入れる。
+/// 例: enabled=[1]    -> "0,1,4"
+///     enabled=[1,3]  -> "0,1,3,4"
+///     enabled=[1,2,3]-> "0,1,2,3,4"
+fn build_user_select_options(enabled_candidates: &[u8]) -> String {
+    let mut codes: Vec<u8> = vec![0];
+    for n in [1u8, 2, 3] {
+        if enabled_candidates.contains(&n) {
+            codes.push(n);
+        }
+    }
+    codes.push(4);
+    let list = codes
+        .iter()
+        .map(|c| c.to_string())
+        .collect::<Vec<_>>()
+        .join(",");
+    format!("\"{}\"", list)
+}
+
+fn apply_ui_input_validation(sheet: &mut Worksheet, max_row: u32, enabled_candidates: &[u8]) {
     sheet.remove_data_validations();
     if max_row < 2 {
         return;
@@ -243,11 +265,12 @@ fn apply_ui_input_validation(sheet: &mut Worksheet, max_row: u32) {
 
     let mut validations = DataValidations::default();
 
+    let user_select_options = build_user_select_options(enabled_candidates);
     let mut user_select = DataValidation::default();
     user_select
         .set_type(DataValidationValues::List)
         .set_allow_blank(true)
-        .set_formula1("\"0,1,2,3,4\"");
+        .set_formula1(user_select_options);
     user_select
         .get_sequence_of_references_mut()
         .set_sqref(format!("K2:K{}", max_row));

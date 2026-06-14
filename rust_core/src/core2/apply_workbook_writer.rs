@@ -120,7 +120,8 @@ pub fn write_apply_workbook(
     //
     // 注入を保存前に行い、保存を1回だけにすることで往復を排除する。
     // ---------------------------------------------------------------------
-    write_ui_sheet_into_book(&mut book, &ui_rows, &translator_config)
+    // Apply出力のUIシートは再編集しない最終記録のため、ドロップダウンはフル(1,2,3)で出力する。
+    write_ui_sheet_into_book(&mut book, &ui_rows, &translator_config, &[1, 2, 3])
         .map_err(|e| format!("write_ui_sheet_into_book failed: {e}"))?;
     println!("[CL-01] TRANSLATION_UI sheet injected into apply book (single-write path)");
 

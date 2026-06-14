@@ -25,6 +25,7 @@ pub fn write_generate_workbook(
     output_path: &str,
     config: &TranslatorConfig,
     security_report: &SecurityReport,
+    enabled_candidates: &[u8],
 ) -> Result<(), String> {
     let mut book = umya_spreadsheet::reader::xlsx::read(Path::new(source_path))
         .map_err(|e| format!("source workbook read failed: {e}"))?;
@@ -33,7 +34,7 @@ pub fn write_generate_workbook(
     // review the translation result directly in the workbook before running Apply.
     write_default_selected_into_main_sheets(&mut book, rows)?;
 
-    write_ui_sheet_into_book(&mut book, rows, config)?;
+    write_ui_sheet_into_book(&mut book, rows, config, enabled_candidates)?;
     write_security_report_sheet_into_book(&mut book, security_report)?;
 
     let internal = InternalMetadata::from_rows(rows, config);
