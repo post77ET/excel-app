@@ -25,11 +25,14 @@ body { font-family: Arial, sans-serif; margin:0; line-height:1.8; background:#f7
 
   <div id="working">
     <div class="spinner"></div>
+    <div id="run-msg">
     {% if lang == "zh" %}
       <p>翻译处理需要 <strong>约5〜7分钟</strong>。请保持此页面打开。</p>
     {% else %}
       <p>翻訳処理には <strong>約5〜7分</strong> かかります。このページを開いたままお待ちください。</p>
     {% endif %}
+    </div>
+    <p id="queue-msg" class="hidden" style="font-weight:bold; color:#0b4db8;"></p>
   </div>
 
   <div class="note">
@@ -90,6 +93,7 @@ body { font-family: Arial, sans-serif; margin:0; line-height:1.8; background:#f7
 (function () {
   var statusUrl = {{ status_url | tojson }};
   var resultUrl = {{ result_url | tojson }};
+  var lang = {{ lang | tojson }};
   var pollMs = 5000;
 
   function show(id) { document.getElementById(id).classList.remove("hidden"); }
@@ -111,7 +115,22 @@ body { font-family: Arial, sans-serif; margin:0; line-height:1.8; background:#f7
           hide("working");
           document.getElementById("error-msg").textContent = data.message || "エラーが発生しました。";
           show("error-box");
+        } else if (data.status === "queued") {
+          // 順番待ち中: 待ち順を表示する
+          var pos = data.queue_position || 1;
+          var qm = document.getElementById("queue-msg");
+          if (lang === "zh") {
+            qm.textContent = "正在等待其他任务完成。您在等待队列中排第 " + pos + " 位，轮到后会自动开始翻译。请保持此页面打开。";
+          } else {
+            qm.textContent = "ほかの処理の完了を待っています。あなたは順番待ちの " + pos + " 番目です。順番が来ると自動で翻訳を開始します。このページは開いたままお待ちください。";
+          }
+          hide("run-msg");
+          show("queue-msg");
+          setTimeout(poll, pollMs);
         } else {
+          // running 等: 通常の処理中表示に戻す
+          hide("queue-msg");
+          show("run-msg");
           setTimeout(poll, pollMs);
         }
       })
