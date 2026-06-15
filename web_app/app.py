@@ -5,6 +5,7 @@ import hashlib
 import html
 import json
 import os
+import queue
 import re
 import shutil
 import subprocess
@@ -62,6 +63,39 @@ MAX_WORKBOOK_BYTES = 10 * 1024 * 1024
 JOB_ID_PATTERN = r"job\d{14}_[0-9a-fA-F]{8}"
 GENERATE_JOBS: dict[str, dict] = {}
 GENERATE_JOBS_LOCK = threading.Lock()
+
+# 順番待ち（キュー）。重いRust処理が同時に走ると 512MB / 0.5CPU では
+# メモリ不足やタイムアウトで共倒れするため、1件ずつ順番に処理する。
+# GENERATE_WORKERS を増やせば同時処理数を上げられる（メモリと相談）。
+GENERATE_QUEUE: "queue.Queue" = queue.Queue()
+GENERATE_QUEUE_ORDER: list[str] = []  # 待機中 job_id の順序（待ち人数の表示用）
+GENERATE_WORKERS = 1
+
+
+def _generate_queue_worker() -> None:
+    """キューから1件ずつ取り出して処理する常駐ワーカー。"""
+    while True:
+        job_id, original_path, output_path, extra_env = GENERATE_QUEUE.get()
+        try:
+            with GENERATE_JOBS_LOCK:
+                if job_id in GENERATE_QUEUE_ORDER:
+                    GENERATE_QUEUE_ORDER.remove(job_id)
+                job = GENERATE_JOBS.get(job_id, {})
+                job["status"] = "running"
+                GENERATE_JOBS[job_id] = job
+            _generate_worker(job_id, original_path, output_path, extra_env)
+        except Exception as exc:  # ワーカーは絶対に落とさない
+            print("[GENERATE QUEUE WORKER ERROR]", repr(exc), flush=True)
+            with GENERATE_JOBS_LOCK:
+                job = GENERATE_JOBS.get(job_id, {})
+                job.update({"status": "error", "message": str(exc)})
+                GENERATE_JOBS[job_id] = job
+        finally:
+            GENERATE_QUEUE.task_done()
+
+
+for _ in range(GENERATE_WORKERS):
+    threading.Thread(target=_generate_queue_worker, daemon=True).start()
 
 
 def is_valid_job_id(job_id: str) -> bool:
@@ -515,24 +549,20 @@ def generate():
             "ETB_OUTPUT_DIR": str(OUTPUT_DIR),
         }
 
-        # CL-10: 重いRust処理はバックグラウンドで実行し、JOB_IDを即返す。
-        # これによりブラウザが切れてもJOB_IDで結果を再取得できる。
+        # CL-10/順番待ち: 重いRust処理はキューに入れ、常駐ワーカーが1件ずつ処理する。
+        # 同時実行による共倒れを防ぐ。ブラウザが切れてもJOB_IDで結果を再取得できる。
         with GENERATE_JOBS_LOCK:
             GENERATE_JOBS[job_id] = {
-                "status": "running",
+                "status": "queued",
                 "filename": output_path.name,
                 "label": selected_label,
                 "mode": mode,
                 "lang": lang,
                 "message": "",
             }
+            GENERATE_QUEUE_ORDER.append(job_id)
 
-        worker = threading.Thread(
-            target=_generate_worker,
-            args=(job_id, str(original_path), output_path, extra_env),
-            daemon=True,
-        )
-        worker.start()
+        GENERATE_QUEUE.put((job_id, str(original_path), output_path, extra_env))
 
         # 処理中ページを即返す（自動ポーリングで完了後ダウンロードへ遷移）
         return render_template(
@@ -600,6 +630,11 @@ def job_status(job_id: str):
         resp["download_url"] = url_for("download_job", job_id=safe)
     elif status == "error":
         resp["message"] = job.get("message", "")
+    elif status == "queued":
+        with GENERATE_JOBS_LOCK:
+            order = list(GENERATE_QUEUE_ORDER)
+        resp["queue_position"] = (order.index(safe) + 1) if safe in order else 1
+        resp["queue_total"] = len(order)
     return resp
 
 
