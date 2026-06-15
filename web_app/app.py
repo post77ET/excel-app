@@ -1,5 +1,4 @@
 
-
 from __future__ import annotations
 
 import hashlib
@@ -46,6 +45,9 @@ SERVER_ORIGINAL_DIR.mkdir(parents=True, exist_ok=True)
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = int(os.environ.get("MAX_UPLOAD_MB", "30")) * 1024 * 1024
+
+# 1ファイルあたりの上限。Rustコア(core1_etb)の size_check と一致させること(10MB)。
+MAX_WORKBOOK_BYTES = 10 * 1024 * 1024
 
 # ============================================================
 # CL-10: 長時間(5〜7分)のGenerate処理中にブラウザが切れても、
@@ -143,9 +145,32 @@ def save_uploaded_file(field_name: str, prefix: str) -> Path:
     file_storage = request.files.get(field_name)
     if file_storage is None or file_storage.filename == "":
         raise ValueError(f"アップロードファイルがありません: {field_name}")
-    original_name = secure_filename(file_storage.filename) or f"{prefix}.xlsx"
-    if Path(original_name).suffix.lower() != ".xlsx":
+    # 拡張子の判定は「元の」ファイル名で行う。
+    # secure_filename() は日本語・中国語など非ASCII文字を除去するため、
+    # 「売上表.xlsx」のような全角だけの名前だと "xlsx" になり、拡張子が消えて
+    # 正常な .xlsx でも誤って弾かれていた（全角ファイル名のユーザーを直撃）。
+    if Path(file_storage.filename).suffix.lower() != ".xlsx":
         raise ValueError(".xlsx ファイルのみ対応です。")
+    # アップロード直後にサイズを測り、上限超過なら保存・Rust処理の前に即エラー。
+    # （Rust側 size_check と同じ 10MB。重い処理に入る前にユーザーへ分かりやすく伝える）
+    stream = file_storage.stream
+    stream.seek(0, os.SEEK_END)
+    size_bytes = stream.tell()
+    stream.seek(0)
+    if size_bytes > MAX_WORKBOOK_BYTES:
+        size_mb = size_bytes / (1024 * 1024)
+        limit_mb = MAX_WORKBOOK_BYTES / (1024 * 1024)
+        raise ValueError(
+            f"ファイルが大きすぎます。上限は {limit_mb:.0f}MB ですが、"
+            f"このファイルは約 {size_mb:.1f}MB あります。"
+            f"不要なシートや画像を減らして {limit_mb:.0f}MB 以下にしてから、もう一度お試しください。 / "
+            f"文件过大。上限为 {limit_mb:.0f}MB，当前文件约 {size_mb:.1f}MB。"
+            f"请删除不需要的工作表或图片，缩小至 {limit_mb:.0f}MB 以下后重试。"
+        )
+    # 保存用の安全名を作る。本体が非ASCIIで消えても拡張子は必ず付与する。
+    original_name = secure_filename(file_storage.filename)
+    if Path(original_name).suffix.lower() != ".xlsx":
+        original_name = f"{prefix}.xlsx"
     safe_name = f"{timestamp()}_{uuid.uuid4().hex[:8]}_{prefix}_{original_name}"
     save_path = UPLOAD_DIR / safe_name
     file_storage.save(save_path)
@@ -422,6 +447,17 @@ def health():
 def internal_error(error):
     message = getattr(error, "description", str(error))
     return render_template("error.html", message=message), 500
+
+
+@app.errorhandler(413)
+def too_large(error):
+    limit_mb = MAX_WORKBOOK_BYTES / (1024 * 1024)
+    message = (
+        f"ファイルが大きすぎます。上限は {limit_mb:.0f}MB です。"
+        f"{limit_mb:.0f}MB 以下にしてからお試しください。 / "
+        f"文件过大。上限为 {limit_mb:.0f}MB，请缩小后重试。"
+    )
+    return render_template("error.html", message=message), 413
 
 
 @app.post("/upload")
