@@ -1,11 +1,11 @@
 
+
 from __future__ import annotations
 
 import hashlib
 import html
 import json
 import os
-import queue
 import re
 import shutil
 import subprocess
@@ -64,18 +64,19 @@ JOB_ID_PATTERN = r"job\d{14}_[0-9a-fA-F]{8}"
 GENERATE_JOBS: dict[str, dict] = {}
 GENERATE_JOBS_LOCK = threading.Lock()
 
-# 順番待ち（キュー）。重いRust処理が同時に走ると 512MB / 0.5CPU では
-# メモリ不足やタイムアウトで共倒れするため、1件ずつ順番に処理する。
-# GENERATE_WORKERS を増やせば同時処理数を上げられる（メモリと相談）。
-GENERATE_QUEUE: "queue.Queue" = queue.Queue()
-GENERATE_QUEUE_ORDER: list[str] = []  # 待機中 job_id の順序（待ち人数の表示用）
+# 順番待ち（セマフォ直列化）。同時に走るRust処理を GENERATE_WORKERS 件に制限する。
+# 各Generateはリクエスト毎にスレッドを起こし（実績ある方式）、関所(セマフォ)を
+# 取得できるまで待つ。待っている間が「順番待ち」。常駐ワーカー方式と違い、
+# 待機ジョブには必ず生きたスレッドが付くので「消化されず詰まる」問題が起きない。
 GENERATE_WORKERS = 1
+GENERATE_SEMAPHORE = threading.BoundedSemaphore(GENERATE_WORKERS)
+GENERATE_QUEUE_ORDER: list[str] = []  # 待機中 job_id の順序（待ち人数の表示用）
 
 
-def _generate_queue_worker() -> None:
-    """キューから1件ずつ取り出して処理する常駐ワーカー。"""
-    while True:
-        job_id, original_path, output_path, extra_env = GENERATE_QUEUE.get()
+def _run_generate_serialized(job_id: str, original_path: str, output_path: Path, extra_env: dict) -> None:
+    """セマフォで直列化したうえでGenerateを実行する（リクエスト毎スレッドで起動）。"""
+    try:
+        GENERATE_SEMAPHORE.acquire()  # 取得できるまで待機＝順番待ち
         try:
             with GENERATE_JOBS_LOCK:
                 if job_id in GENERATE_QUEUE_ORDER:
@@ -84,18 +85,16 @@ def _generate_queue_worker() -> None:
                 job["status"] = "running"
                 GENERATE_JOBS[job_id] = job
             _generate_worker(job_id, original_path, output_path, extra_env)
-        except Exception as exc:  # ワーカーは絶対に落とさない
-            print("[GENERATE QUEUE WORKER ERROR]", repr(exc), flush=True)
-            with GENERATE_JOBS_LOCK:
-                job = GENERATE_JOBS.get(job_id, {})
-                job.update({"status": "error", "message": str(exc)})
-                GENERATE_JOBS[job_id] = job
         finally:
-            GENERATE_QUEUE.task_done()
-
-
-for _ in range(GENERATE_WORKERS):
-    threading.Thread(target=_generate_queue_worker, daemon=True).start()
+            GENERATE_SEMAPHORE.release()
+    except Exception as exc:  # スレッドは絶対に落とさない
+        print("[GENERATE SERIALIZED ERROR]", repr(exc), flush=True)
+        with GENERATE_JOBS_LOCK:
+            if job_id in GENERATE_QUEUE_ORDER:
+                GENERATE_QUEUE_ORDER.remove(job_id)
+            job = GENERATE_JOBS.get(job_id, {})
+            job.update({"status": "error", "message": str(exc)})
+            GENERATE_JOBS[job_id] = job
 
 
 def is_valid_job_id(job_id: str) -> bool:
@@ -179,14 +178,12 @@ def save_uploaded_file(field_name: str, prefix: str) -> Path:
     file_storage = request.files.get(field_name)
     if file_storage is None or file_storage.filename == "":
         raise ValueError(f"アップロードファイルがありません: {field_name}")
-    # 拡張子の判定は「元の」ファイル名で行う。
-    # secure_filename() は日本語・中国語など非ASCII文字を除去するため、
-    # 「売上表.xlsx」のような全角だけの名前だと "xlsx" になり、拡張子が消えて
-    # 正常な .xlsx でも誤って弾かれていた（全角ファイル名のユーザーを直撃）。
+    # 拡張子は「元の」ファイル名で判定する。secure_filename() は日本語・中国語など
+    # 非ASCII文字を除去するため、「売上表.xlsx」のような全角名だと拡張子が消え、
+    # 正常な.xlsxでも誤って弾かれていた（全角名ユーザーを直撃）。
     if Path(file_storage.filename).suffix.lower() != ".xlsx":
         raise ValueError(".xlsx ファイルのみ対応です。")
     # アップロード直後にサイズを測り、上限超過なら保存・Rust処理の前に即エラー。
-    # （Rust側 size_check と同じ 10MB。重い処理に入る前にユーザーへ分かりやすく伝える）
     stream = file_storage.stream
     stream.seek(0, os.SEEK_END)
     size_bytes = stream.tell()
@@ -201,7 +198,7 @@ def save_uploaded_file(field_name: str, prefix: str) -> Path:
             f"文件过大。上限为 {limit_mb:.0f}MB，当前文件约 {size_mb:.1f}MB。"
             f"请删除不需要的工作表或图片，缩小至 {limit_mb:.0f}MB 以下后重试。"
         )
-    # 保存用の安全名を作る。本体が非ASCIIで消えても拡張子は必ず付与する。
+    # 保存用の安全名。本体が非ASCIIで消えても拡張子は必ず付与する。
     original_name = secure_filename(file_storage.filename)
     if Path(original_name).suffix.lower() != ".xlsx":
         original_name = f"{prefix}.xlsx"
@@ -447,10 +444,9 @@ def index():
 
 @app.get("/googlea52e60130d420841.html")
 def google_site_verification():
-    # Google Search Console の所有権確認用ファイル。
-    # 確認状態を維持するため、このルートは削除しないこと。
-    body = "google-site-verification: googlea52e60130d420841.html"
-    return body, 200, {"Content-Type": "text/html; charset=utf-8"}
+    # Google Search Console 所有権確認用。確認状態維持のため削除しないこと。
+    return ("google-site-verification: googlea52e60130d420841.html", 200,
+            {"Content-Type": "text/html; charset=utf-8"})
 
 
 @app.get("/engine")
@@ -487,8 +483,7 @@ def internal_error(error):
 def too_large(error):
     limit_mb = MAX_WORKBOOK_BYTES / (1024 * 1024)
     message = (
-        f"ファイルが大きすぎます。上限は {limit_mb:.0f}MB です。"
-        f"{limit_mb:.0f}MB 以下にしてからお試しください。 / "
+        f"ファイルが大きすぎます。上限は {limit_mb:.0f}MB です。 / "
         f"文件过大。上限为 {limit_mb:.0f}MB，请缩小后重试。"
     )
     return render_template("error.html", message=message), 413
@@ -549,8 +544,8 @@ def generate():
             "ETB_OUTPUT_DIR": str(OUTPUT_DIR),
         }
 
-        # CL-10/順番待ち: 重いRust処理はキューに入れ、常駐ワーカーが1件ずつ処理する。
-        # 同時実行による共倒れを防ぐ。ブラウザが切れてもJOB_IDで結果を再取得できる。
+        # 順番待ち: queuedで登録し、リクエスト毎スレッドを起こしてセマフォで直列化。
+        # ブラウザが切れてもJOB_IDで結果を再取得できる。
         with GENERATE_JOBS_LOCK:
             GENERATE_JOBS[job_id] = {
                 "status": "queued",
@@ -562,7 +557,12 @@ def generate():
             }
             GENERATE_QUEUE_ORDER.append(job_id)
 
-        GENERATE_QUEUE.put((job_id, str(original_path), output_path, extra_env))
+        worker = threading.Thread(
+            target=_run_generate_serialized,
+            args=(job_id, str(original_path), output_path, extra_env),
+            daemon=True,
+        )
+        worker.start()
 
         # 処理中ページを即返す（自動ポーリングで完了後ダウンロードへ遷移）
         return render_template(
@@ -633,8 +633,9 @@ def job_status(job_id: str):
     elif status == "queued":
         with GENERATE_JOBS_LOCK:
             order = list(GENERATE_QUEUE_ORDER)
-        resp["queue_position"] = (order.index(safe) + 1) if safe in order else 1
-        resp["queue_total"] = len(order)
+            live = [j for j in order if GENERATE_JOBS.get(j, {}).get("status") == "queued"]
+        resp["queue_position"] = (live.index(safe) + 1) if safe in live else 1
+        resp["queue_total"] = len(live)
     return resp
 
 

@@ -1,34 +1,152 @@
 <!doctype html>
-<html lang="ja">
+<html lang="{{ 'zh-CN' if lang == 'zh' else 'ja' }}">
 <head>
 <meta charset="utf-8">
-<title>Excel翻訳作業支援ツール</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ 'Excel翻译作业支持工具｜将日语Excel翻译为中文（保持格式・支持xlsx）' if lang == 'zh' else 'Excel翻訳作業支援ツール｜日本語Excelを中国語に翻訳（書式保持・xlsx対応）' }}</title>
+<meta name="description" content="{{ '将日语Excel（.xlsx）翻译为中文（简体）的作业支持工具。按单元格保持格式、公式与排版，可确认并编辑翻译候选后反映到文件。' if lang == 'zh' else '日本語のExcel（.xlsx）を中国語（簡体字 zh-CN）に翻訳する作業支援ツール。セル単位で書式・数式・レイアウトを保ったまま、翻訳候補を確認・編集して反映できます。' }}">
+<meta name="keywords" content="Excel 翻訳, エクセル 翻訳, 日本語 中国語 翻訳, xlsx 翻訳, Excel 中国語 翻訳, セル 翻訳, 書式 保持 翻訳, Excel 翻译 中文">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ 'Excel翻译作业支持工具' if lang == 'zh' else 'Excel翻訳作業支援ツール' }}">
+<meta property="og:description" content="{{ '保持Excel结构不变，将日语翻译为中文。' if lang == 'zh' else 'Excelの構造をそのまま保持して、日本語を中国語に翻訳。' }}">
+<meta property="og:locale" content="{{ 'zh_CN' if lang == 'zh' else 'ja_JP' }}">
 <style>
-body { font-family: Arial, sans-serif; margin:0; color:#10213f; background:#f7faff; line-height:1.7; }
-header { display:flex; justify-content:space-between; align-items:center; padding:16px 36px; background:#fff; border-bottom:1px solid #d8e3f5; position:sticky; top:0; }
-.logo { font-size:22px; font-weight:bold; }
-nav a { margin:0 12px; color:#0b4db8; text-decoration:none; font-weight:bold; }
-.lang button { font-size:15px; padding:8px 18px; margin-left:6px; }
-.hero { display:grid; grid-template-columns: 1.05fr 0.95fr; gap:28px; padding:48px 56px 34px; background:linear-gradient(180deg,#ffffff,#eef5ff); }
-.hero h1 { font-size:40px; line-height:1.25; margin:0 0 18px; color:#063577; }
-.hero p { font-size:17px; }
-.btn-main { display:inline-block; background:#075be8; color:white; padding:15px 32px; border-radius:8px; text-decoration:none; font-size:20px; font-weight:bold; margin-right:12px; }
-.btn-sub { display:inline-block; background:white; color:#075be8; padding:14px 28px; border:1px solid #9bbcf5; border-radius:8px; text-decoration:none; font-weight:bold; }
-.flow { background:#fff; border:1px solid #d8e3f5; border-radius:12px; padding:18px; }
-.flow-row { display:flex; align-items:center; gap:12px; margin:10px 0; }
-.num { background:#075be8; color:white; width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:bold; flex:0 0 auto; }
-section { padding:28px 56px; }
-h2 { font-size:26px; color:#063577; }
-.cards { display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; }
-.card { background:white; border:1px solid #d8e3f5; border-radius:12px; padding:18px; }
-.card h3 { margin-top:0; color:#063577; }
-.problem { display:grid; grid-template-columns: repeat(2, 1fr); gap:14px; }
-.problem .card { border-left:5px solid #ccc; }
-.solution { border-left-color:#20a464 !important; background:#f3fff7; }
-.warn { background:#fff5f5; border:1px solid #f2b5b5; border-radius:12px; padding:18px; }
-.limit { background:#fffaf0; border:1px solid #f0d28a; border-radius:12px; padding:18px; }
-footer { padding:18px 56px; background:#0b254e; color:white; }
-.small { color:#506070; font-size:14px; }
+:root{
+  --ink:#10213f;
+  --ink-deep:#063577;
+  --blue:#075be8;
+  --blue-strong:#0b4db8;
+  --bg:#f5f8ff;
+  --surface:#ffffff;
+  --line:#dbe6f7;
+  --green:#1f9d62;
+  --green-bg:#f1fdf6;
+  --warn-bg:#fff6f4;
+  --warn-line:#f3bcb2;
+  --limit-bg:#fffaf0;
+  --limit-line:#f0d28a;
+  --muted:#5b6b82;
+  --radius:14px;
+  --shadow:0 10px 34px rgba(8,40,90,.10);
+  --font:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",Meiryo,sans-serif;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:var(--font);
+  margin:0;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 480px at 50% -180px,#e7f0ff 0%,rgba(231,240,255,0) 70%),
+    var(--bg);
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* header */
+.site-header{
+  position:sticky; top:0; z-index:20;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:saturate(160%) blur(8px);
+  border-bottom:1px solid var(--line);
+}
+.site-header .bar{
+  max-width:1040px; margin:0 auto;
+  display:flex; align-items:center; gap:16px;
+  padding:14px 24px;
+}
+.logo{ font-size:20px; font-weight:800; color:var(--ink-deep); letter-spacing:.2px; }
+nav{ margin-left:auto; display:flex; flex-wrap:wrap; }
+nav a{ margin:0 10px; color:var(--blue-strong); text-decoration:none; font-weight:700; font-size:15px; }
+nav a:hover{ text-decoration:underline; }
+.lang{ display:flex; gap:6px; }
+.lang button{
+  font-size:14px; padding:7px 14px; border-radius:999px;
+  border:1px solid var(--line); background:#fff; color:var(--ink-deep);
+  font-weight:700; cursor:pointer; transition:.15s;
+}
+.lang button:hover{ border-color:var(--blue); color:var(--blue); }
+
+/* layout */
+.container{ max-width:1040px; margin:0 auto; padding:0 24px; }
+section{ padding:40px 0; }
+.eyebrow{
+  display:inline-block; font-size:13px; font-weight:800; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--blue); margin-bottom:10px;
+}
+h1{ font-size:clamp(28px,4.4vw,42px); line-height:1.22; margin:0 0 16px; color:var(--ink-deep); letter-spacing:-.01em; }
+h2{ font-size:clamp(21px,2.6vw,27px); color:var(--ink-deep); margin:0 0 16px; letter-spacing:-.01em; }
+h3{ margin:0 0 6px; color:var(--ink-deep); font-size:17px; }
+p{ font-size:16.5px; }
+
+/* hero */
+.hero{ display:grid; grid-template-columns:1.05fr .95fr; gap:32px; align-items:center; padding-top:52px; }
+.hero p.lead{ font-size:17px; color:#243a5e; }
+.tags{ display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 24px; }
+.tag{
+  font-size:13.5px; font-weight:700; color:var(--blue-strong);
+  background:#eaf2ff; border:1px solid #cfe0fb; padding:6px 12px; border-radius:999px;
+}
+.cta-row{ display:flex; flex-wrap:wrap; gap:12px; }
+.btn-main{
+  display:inline-block; background:var(--blue); color:#fff; padding:15px 30px;
+  border-radius:10px; text-decoration:none; font-size:18px; font-weight:800;
+  box-shadow:0 8px 20px rgba(7,91,232,.28); transition:.16s;
+}
+.btn-main:hover{ transform:translateY(-2px); box-shadow:0 12px 26px rgba(7,91,232,.34); }
+.btn-sub{
+  display:inline-block; background:#fff; color:var(--blue); padding:14px 26px;
+  border:1px solid #a9c4f6; border-radius:10px; text-decoration:none; font-weight:800; transition:.16s;
+}
+.btn-sub:hover{ border-color:var(--blue); background:#f3f8ff; }
+
+.flow{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); }
+.flow h2{ font-size:19px; margin-bottom:14px; }
+.flow-row{ display:flex; align-items:flex-start; gap:13px; margin:13px 0; font-size:15.5px; }
+.num{
+  background:var(--blue); color:#fff; width:30px; height:30px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; flex:0 0 auto;
+}
+
+/* cards */
+.cards{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+.card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px; transition:.16s; }
+.card:hover{ transform:translateY(-3px); box-shadow:var(--shadow); border-color:#c6dafa; }
+.card p{ font-size:14.5px; color:var(--muted); margin:0; }
+
+.problem{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+.problem .card{ border-left:5px solid #cdd8e8; }
+.problem .card strong{ font-size:15.5px; }
+.solution{ border-left-color:var(--green) !important; background:var(--green-bg); }
+
+.notice-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.warn{ background:var(--warn-bg); border:1px solid var(--warn-line); border-radius:var(--radius); padding:22px; }
+.limit{ background:var(--limit-bg); border:1px solid var(--limit-line); border-radius:var(--radius); padding:22px; }
+.warn h2,.limit h2{ font-size:19px; }
+.warn p,.limit p{ font-size:15px; margin-bottom:0; }
+
+footer{ margin-top:24px; padding:26px 0; background:#0b254e; color:#dce6f7; }
+footer .container{ font-size:14.5px; }
+
+/* responsive */
+@media (max-width:820px){
+  .hero{ grid-template-columns:1fr; gap:24px; padding-top:36px; }
+  .cards{ grid-template-columns:1fr 1fr; }
+  .notice-grid{ grid-template-columns:1fr; }
+}
+@media (max-width:560px){
+  .site-header .bar{ flex-wrap:wrap; padding:12px 16px; gap:10px; }
+  nav{ order:3; width:100%; margin-left:0; }
+  nav a{ margin:0 12px 0 0; }
+  .lang{ margin-left:auto; }
+  .container{ padding:0 16px; }
+  .cards,.problem{ grid-template-columns:1fr; }
+  section{ padding:30px 0; }
+}
+@media (prefers-reduced-motion:reduce){
+  *{ scroll-behavior:auto !important; transition:none !important; }
+}
 </style>
 <script>
 const HOME_TEXT = {
@@ -39,9 +157,13 @@ const HOME_TEXT = {
     navLimit: "制限事項",
     navOption: "オプション",
     navHelp: "困ったときは",
-    heroTitle: "Excelの構造をそのまま保持して、翻訳・確認・反映できます。",
-    heroLead: "翻訳したいExcelブックをアップロードし、翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。",
-    start: "{{ "进入翻译引擎执行画面" if lang == "zh" else "翻訳エンジン実行画面へ" }}",
+    heroTitle: "Excelの構造をそのまま保持して、日本語を中国語に翻訳・確認・反映できます。",
+    heroLead: "日本語のExcelブック（.xlsx）を、レイアウトや数式を崩さずに中国語（簡体字 zh-CN）へ翻訳。翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。",
+    tagLang: "日本語 → 中国語（簡体字）",
+    tagFormat: "書式・数式を保持",
+    tagCell: "セル単位で翻訳",
+    tagFile: ".xlsx 対応",
+    start: "{{ '进入翻译引擎执行画面' if lang == 'zh' else '翻訳エンジン実行画面へ' }}",
     guide: "使い方を見る",
     flowTitle: "このツールの基本の流れ",
     f1: "翻訳前のExcelブックをアップロード",
@@ -71,7 +193,7 @@ const HOME_TEXT = {
     warningBody: "同じファイルを複数回ダウンロードすると、Windowsによりファイル名末尾に「(1)」「(2)」が追加される場合があります。その状態で編集すると反映処理ができません。編集前に、ダウンロード時の元のファイル名へ戻してください。",
     limitTitle: "このツールではできないこと",
     limitBody: "xlsx以外のファイル、ウイルス感染の可能性があるファイル、極端に大きいファイル、画像内の文字、かな・カナ2文字など短すぎる文字の翻訳には対応できません。翻訳結果の100%の正確性も保証できません。",
-    footer: "Excel翻訳作業支援ツール"
+    footer: "Excel翻訳作業支援ツール｜日本語のExcelを中国語（簡体字）へ、書式を保持したまま翻訳"
   },
   zh: {
     title: "Excel翻译作业支持工具",
@@ -80,8 +202,12 @@ const HOME_TEXT = {
     navLimit: "限制事项",
     navOption: "选项",
     navHelp: "遇到问题时",
-    heroTitle: "保持Excel结构不变，完成翻译、确认与反映处理。",
-    heroLead: "上传需要翻译的Excel工作簿，确认并编辑翻译结果后，生成已反映编辑内容的Excel工作簿。",
+    heroTitle: "保持Excel结构不变，将日语翻译为中文，并完成确认与反映处理。",
+    heroLead: "将日语Excel工作簿（.xlsx）在保持排版与公式的前提下翻译为中文（简体 zh-CN）。确认并编辑翻译结果后，生成已反映编辑内容的Excel工作簿。",
+    tagLang: "日语 → 中文（简体）",
+    tagFormat: "保持格式・公式",
+    tagCell: "按单元格翻译",
+    tagFile: "支持 .xlsx",
     start: "进入翻译引擎执行画面",
     guide: "查看使用方法",
     flowTitle: "本工具的基本流程",
@@ -112,7 +238,7 @@ const HOME_TEXT = {
     warningBody: "如果重复下载同一文件，Windows可能会在文件名末尾自动添加“(1)” “(2)”。如果编辑这种文件，将无法执行反映处理。编辑前，请恢复为下载时的原始文件名。",
     limitTitle: "本工具不能处理的内容",
     limitBody: "不支持xlsx以外的文件、可能感染病毒的文件、过大的文件、图片中的文字、假名/片假名2个字符等过短文字。也不能保证翻译结果100%准确。",
-    footer: "Excel翻译作业支持工具"
+    footer: "Excel翻译作业支持工具｜在保持格式的前提下，将日语Excel翻译为中文（简体）"
   }
 };
 function setHomeLang(lang) {
@@ -127,100 +253,102 @@ function setHomeLang(lang) {
     engine.href = "/engine?lang=" + lang;
     engine.textContent = t.start;
   }
+  document.documentElement.lang = (lang === "zh") ? "zh-CN" : "ja";
 }
 window.addEventListener("DOMContentLoaded", function() {
   setHomeLang(localStorage.getItem("etb_lang") || "ja");
 });
 </script>
 </head>
-<body style="
-font-family:Arial,sans-serif;
-margin:0;
-line-height:1.8;
-background:#f7faff;
-color:#10213f;
-">
+<body>
 
-<div style="
-max-width:980px;
-margin:40px auto;
-padding:32px;
-background:white;
-border-radius:18px;
-box-shadow:0 6px 24px rgba(0,0,0,0.08);
-">
-<header>
-  <div class="logo" id="home-title">Excel翻訳作業支援ツール</div>
-  <nav>
-    <a href="#" id="home-navHome">ホーム</a>
-    <a href="#flow" id="home-navFlow">使い方</a>
-    <a href="#limits" id="home-navLimit">制限事項</a>
-    <a href="#options" id="home-navOption">オプション</a>
-    <a href="#help" id="home-navHelp">困ったときは</a>
-  </nav>
-  <div class="lang">
-    <button onclick="setHomeLang('ja')">日本語</button>
-    <button onclick="setHomeLang('zh')">中文</button>
+<header class="site-header">
+  <div class="bar">
+    <div class="logo" id="home-title">Excel翻訳作業支援ツール</div>
+    <nav>
+      <a href="#" id="home-navHome">ホーム</a>
+      <a href="#flow" id="home-navFlow">使い方</a>
+      <a href="#limits" id="home-navLimit">制限事項</a>
+      <a href="#options" id="home-navOption">オプション</a>
+      <a href="#help" id="home-navHelp">困ったときは</a>
+    </nav>
+    <div class="lang">
+      <button onclick="setHomeLang('ja')">日本語</button>
+      <button onclick="setHomeLang('zh')">中文</button>
+    </div>
   </div>
 </header>
 
-<div class="hero">
-  <div>
-    <h1 id="home-heroTitle">Excelの構造をそのまま保持して、翻訳・確認・反映できます。</h1>
-    <p id="home-heroLead">翻訳したいExcelブックをアップロードし、翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。</p>
-    <p>
-      <a id="engine-link" class="btn-main" href="/engine">{{ "进入翻译引擎执行画面" if lang == "zh" else "翻訳エンジン実行画面へ" }}</a>
-      <a class="btn-sub" href="#flow" id="home-guide">使い方を見る</a>
-    </p>
-  </div>
-  <div class="flow">
-    <h2 id="home-flowTitle">このツールの基本の流れ</h2>
-    <div class="flow-row"><span class="num">1</span><span id="home-f1">翻訳前のExcelブックをアップロード</span></div>
-    <div class="flow-row"><span class="num">2</span><span id="home-f2">Generateで翻訳結果確認・編集用Excelブックを生成</span></div>
-    <div class="flow-row"><span class="num">3</span><span id="home-f3">TRANSLATION_UIシートで翻訳候補を確認・編集</span></div>
-    <div class="flow-row"><span class="num">4</span><span id="home-f4">ファイル名を変えずに保存</span></div>
-    <div class="flow-row"><span class="num">5</span><span id="home-f5">編集内容の反映処理で完成ファイルを生成</span></div>
-  </div>
-</div>
+<main class="container">
 
-<section>
-  <h2 id="home-problemTitle">こんなことで困っていませんか？</h2>
-  <div class="problem">
-    <div class="card"><strong id="home-p1">翻訳するとExcelのレイアウトや数式が崩れる</strong></div>
-    <div class="card solution"><strong id="home-s1">元の構造をできるだけ保持したまま翻訳します</strong></div>
-    <div class="card"><strong id="home-p2">翻訳後のコピー＆ペースト作業に時間がかかる</strong></div>
-    <div class="card solution"><strong id="home-s2">確認・編集した内容を反映処理で戻します</strong></div>
-    <div class="card"><strong id="home-p3">専門用語や文脈により翻訳品質がばらつく</strong></div>
-    <div class="card solution"><strong id="home-s3">文字列翻訳2種類＋文脈翻訳1種類を比較できます</strong></div>
-    <div class="card"><strong id="home-p4">翻訳後の確認・修正の流れが分かりにくい</strong></div>
-    <div class="card solution"><strong id="home-s4">TRANSLATION_UIシートで候補選択・自由修正できます</strong></div>
-  </div>
-</section>
-
-<section id="flow">
-  <h2 id="home-pageTitle">各ページのご案内</h2>
-  <div class="cards">
-    <div class="card"><h3 id="home-c1">使い方</h3><p id="home-c1d">アップロードから反映処理までの手順を確認できます。</p></div>
-    <div class="card"><h3 id="home-c2">できないこと</h3><p id="home-c2d">対応外ファイル、巨大ファイル、短すぎる文字などの制限を確認できます。</p></div>
-    <div class="card"><h3 id="home-c3">オプション</h3><p id="home-c3d">翻訳コース、翻訳方式、専門分野向け設定を今後選べるようにします。</p></div>
-    <div class="card"><h3 id="home-c4">翻訳エンジン実行画面</h3><p id="home-c4d">実際にExcelブックをアップロードして処理を開始します。</p></div>
-  </div>
-</section>
-
-<section id="limits">
-  <div class="cards" style="grid-template-columns: 1fr 1fr;">
-    <div class="warn">
-      <h2 id="home-warningTitle">重要：ファイル名にご注意ください</h2>
-      <p id="home-warningBody">同じファイルを複数回ダウンロードすると、Windowsによりファイル名末尾に「(1)」「(2)」が追加される場合があります。その状態で編集すると反映処理ができません。編集前に、ダウンロード時の元のファイル名へ戻してください。</p>
+  <section class="hero">
+    <div>
+      <h1 id="home-heroTitle">Excelの構造をそのまま保持して、日本語を中国語に翻訳・確認・反映できます。</h1>
+      <p class="lead" id="home-heroLead">日本語のExcelブック（.xlsx）を、レイアウトや数式を崩さずに中国語（簡体字 zh-CN）へ翻訳。翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。</p>
+      <div class="tags">
+        <span class="tag" id="home-tagLang">日本語 → 中国語（簡体字）</span>
+        <span class="tag" id="home-tagFormat">書式・数式を保持</span>
+        <span class="tag" id="home-tagCell">セル単位で翻訳</span>
+        <span class="tag" id="home-tagFile">.xlsx 対応</span>
+      </div>
+      <div class="cta-row">
+        <a id="engine-link" class="btn-main" href="/engine">{{ '进入翻译引擎执行画面' if lang == 'zh' else '翻訳エンジン実行画面へ' }}</a>
+        <a class="btn-sub" href="#flow" id="home-guide">使い方を見る</a>
+      </div>
     </div>
-    <div class="limit">
-      <h2 id="home-limitTitle">このツールではできないこと</h2>
-      <p id="home-limitBody">xlsx以外のファイル、ウイルス感染の可能性があるファイル、極端に大きいファイル、画像内の文字、かな・カナ2文字など短すぎる文字の翻訳には対応できません。翻訳結果の100%の正確性も保証できません。</p>
+    <div class="flow">
+      <h2 id="home-flowTitle">このツールの基本の流れ</h2>
+      <div class="flow-row"><span class="num">1</span><span id="home-f1">翻訳前のExcelブックをアップロード</span></div>
+      <div class="flow-row"><span class="num">2</span><span id="home-f2">Generateで翻訳結果確認・編集用Excelブックを生成</span></div>
+      <div class="flow-row"><span class="num">3</span><span id="home-f3">TRANSLATION_UIシートで翻訳候補を確認・編集</span></div>
+      <div class="flow-row"><span class="num">4</span><span id="home-f4">ファイル名を変えずに保存</span></div>
+      <div class="flow-row"><span class="num">5</span><span id="home-f5">編集内容の反映処理で完成ファイルを生成</span></div>
     </div>
-  </div>
-</section>
+  </section>
 
-<footer id="home-footer">Excel翻訳作業支援ツール</footer>
-</div>
+  <section>
+    <h2 id="home-problemTitle">こんなことで困っていませんか？</h2>
+    <div class="problem">
+      <div class="card"><strong id="home-p1">翻訳するとExcelのレイアウトや数式が崩れる</strong></div>
+      <div class="card solution"><strong id="home-s1">元の構造をできるだけ保持したまま翻訳します</strong></div>
+      <div class="card"><strong id="home-p2">翻訳後のコピー＆ペースト作業に時間がかかる</strong></div>
+      <div class="card solution"><strong id="home-s2">確認・編集した内容を反映処理で戻します</strong></div>
+      <div class="card"><strong id="home-p3">専門用語や文脈により翻訳品質がばらつく</strong></div>
+      <div class="card solution"><strong id="home-s3">文字列翻訳2種類＋文脈翻訳1種類を比較できます</strong></div>
+      <div class="card"><strong id="home-p4">翻訳後の確認・修正の流れが分かりにくい</strong></div>
+      <div class="card solution"><strong id="home-s4">TRANSLATION_UIシートで候補選択・自由修正できます</strong></div>
+    </div>
+  </section>
+
+  <section id="flow">
+    <span class="eyebrow">Guide</span>
+    <h2 id="home-pageTitle">各ページのご案内</h2>
+    <div class="cards">
+      <div class="card"><h3 id="home-c1">使い方</h3><p id="home-c1d">アップロードから反映処理までの手順を確認できます。</p></div>
+      <div class="card"><h3 id="home-c2">できないこと</h3><p id="home-c2d">対応外ファイル、巨大ファイル、短すぎる文字などの制限を確認できます。</p></div>
+      <div class="card"><h3 id="home-c3">オプション</h3><p id="home-c3d">翻訳コース、翻訳方式、専門分野向け設定を今後選べるようにします。</p></div>
+      <div class="card"><h3 id="home-c4">翻訳エンジン実行画面</h3><p id="home-c4d">実際にExcelブックをアップロードして処理を開始します。</p></div>
+    </div>
+  </section>
+
+  <section id="limits">
+    <div class="notice-grid">
+      <div class="warn">
+        <h2 id="home-warningTitle">重要：ファイル名にご注意ください</h2>
+        <p id="home-warningBody">同じファイルを複数回ダウンロードすると、Windowsによりファイル名末尾に「(1)」「(2)」が追加される場合があります。その状態で編集すると反映処理ができません。編集前に、ダウンロード時の元のファイル名へ戻してください。</p>
+      </div>
+      <div class="limit">
+        <h2 id="home-limitTitle">このツールではできないこと</h2>
+        <p id="home-limitBody">xlsx以外のファイル、ウイルス感染の可能性があるファイル、極端に大きいファイル、画像内の文字、かな・カナ2文字など短すぎる文字の翻訳には対応できません。翻訳結果の100%の正確性も保証できません。</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="container" id="home-footer">Excel翻訳作業支援ツール｜日本語のExcelを中国語（簡体字）へ、書式を保持したまま翻訳</div>
+</footer>
+
 </body>
 </html>
