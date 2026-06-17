@@ -76,6 +76,9 @@ section{ padding:40px 0; }
   text-transform:uppercase; color:var(--blue); margin-bottom:10px;
 }
 h1{ font-size:clamp(28px,4.4vw,42px); line-height:1.22; margin:0 0 16px; color:var(--ink-deep); letter-spacing:-.01em; }
+.catch{ font-size:clamp(19px,2.6vw,26px); font-weight:800; color:var(--blue); margin:0 0 14px; line-height:1.3; letter-spacing:-.01em; }
+.catch-sub{ font-size:15.5px; font-weight:700; color:var(--ink-deep); margin:16px 0 0; }
+.disclaimer{ font-size:12px; color:var(--muted); line-height:1.65; margin:16px 0 0; }
 h2{ font-size:clamp(21px,2.6vw,27px); color:var(--ink-deep); margin:0 0 16px; letter-spacing:-.01em; }
 h3{ margin:0 0 6px; color:var(--ink-deep); font-size:17px; }
 p{ font-size:16.5px; }
@@ -159,6 +162,20 @@ const HOME_TEXT = {
     navHelp: "困ったときは",
     heroTitle: "Excelの構造をそのまま保持して、日本語を中国語に翻訳・確認・反映できます。",
     heroLead: "日本語のExcelブック（.xlsx）を、レイアウトや数式を崩さずに中国語（簡体字 zh-CN）へ翻訳。翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。",
+    catch: "文章の翻訳は、AIがぐっと身近に。Excelの翻訳も、同じくらい身近に。",
+    catchSub: "DeepL、Google、Amazonの翻訳APIに対応した、Excel一括翻訳ツール",
+    fvA: "A. 日本語のExcel",
+    fvBad: "ふつうに翻訳すると…",
+    fvB: "B. 候補から選べる",
+    fvMore: "翻訳例をもっと見る（拡大）",
+    fvSteps: "① ② ／ 全4ステップ — この先で「選ぶ・直す → 完成」まで",
+    fvScroll: "下にスクロールで「選んで仕上げる」流れ",
+    fvTrust1: "書式そのまま",
+    fvTrust2: "マクロ・外部リンクは自動ブロック",
+    fvTrust3: "体験は無料",
+    fvDlgTitle: "翻訳例：ふつうの翻訳 と 本ツール（候補から選択）",
+    fvDlgClose: "閉じる",
+    disclaimer: "※本サービスは、各社が提供する翻訳APIを活用した独立したツールであり、Google社、Amazon社、DeepL社との共同開発や公式連携を示すものではありません。",
     tagLang: "日本語 → 中国語（簡体字）",
     tagFormat: "書式・数式を保持",
     tagCell: "セル単位で翻訳",
@@ -204,6 +221,20 @@ const HOME_TEXT = {
     navHelp: "遇到问题时",
     heroTitle: "保持Excel结构不变，将日语翻译为中文，并完成确认与反映处理。",
     heroLead: "将日语Excel工作簿（.xlsx）在保持排版与公式的前提下翻译为中文（简体 zh-CN）。确认并编辑翻译结果后，生成已反映编辑内容的Excel工作簿。",
+    catch: "文章翻译，AI 让它变得触手可及。Excel 翻译，也想让它一样简单。",
+    catchSub: "支持 DeepL、Google、Amazon 翻译API的 Excel 批量翻译工具",
+    fvA: "A. 日语Excel",
+    fvBad: "普通翻译的话…",
+    fvB: "B. 可从候选中选择",
+    fvMore: "查看更多翻译示例（放大）",
+    fvSteps: "① ② ／ 共4步 — 之后「选择·修改 → 完成」",
+    fvScroll: "向下滚动查看「选择并完成」的流程",
+    fvTrust1: "格式原样保留",
+    fvTrust2: "宏·外部链接自动拦截",
+    fvTrust3: "体验免费",
+    fvDlgTitle: "翻译示例：普通翻译 与 本工具（从候选中选择）",
+    fvDlgClose: "关闭",
+    disclaimer: "※本服务为利用各公司所提供翻译API的独立工具，不代表与Google、Amazon、DeepL公司的共同开发或官方合作关系。",
     tagLang: "日语 → 中文（简体）",
     tagFormat: "保持格式・公式",
     tagCell: "按单元格翻译",
@@ -283,8 +314,67 @@ window.addEventListener("DOMContentLoaded", function() {
 
   <section class="hero">
     <div>
+      <p class="catch" id="home-catch">文章の翻訳は、AIがぐっと身近に。Excelの翻訳も、同じくらい身近に。</p>
       <h1 id="home-heroTitle">Excelの構造をそのまま保持して、日本語を中国語に翻訳・確認・反映できます。</h1>
       <p class="lead" id="home-heroLead">日本語のExcelブック（.xlsx）を、レイアウトや数式を崩さずに中国語（簡体字 zh-CN）へ翻訳。翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。</p>
+      <p class="catch-sub" id="home-catchSub">DeepL、Google、Amazonの翻訳APIに対応した、Excel一括翻訳ツール</p>
+
+      <style>
+      .fv-flow{ display:flex; align-items:stretch; gap:8px; margin:18px 0 0; }
+      .fv-card{ flex:1 1 0; min-width:0; border-radius:8px; overflow:hidden; border:0.5px solid #d8dee8; background:#fff; }
+      .fv-h{ font-size:11.5px; padding:5px 8px; border-bottom:0.5px solid #e2e6ee; }
+      .fv-row{ font-size:11px; padding:5px 8px; border-bottom:0.5px solid #eef1f6; line-height:1.45; }
+      .fv-row:last-child{ border-bottom:none; }
+      .fv-mut{ color:#8a93a3; }
+      .fv-a .fv-h{ background:#f3f4f6; color:#5b6b82; }
+      .fv-bad{ background:#fdecec; border-color:#f0b8b8; }
+      .fv-bad .fv-h{ color:#a32d2d; border-bottom-color:#f3c6c6; }
+      .fv-bad .fv-row{ border-bottom-color:#f5d4d4; }
+      .fv-bad-note{ display:block; font-size:10px; color:#c0392b; margin-top:2px; }
+      .fv-b{ background:#e9f1fb; border-color:#b5d4f4; }
+      .fv-b .fv-h{ color:#075be8; border-bottom-color:#cfe0f7; }
+      .fv-b .fv-row{ border-bottom-color:#dbe8f8; }
+      .fv-ok{ color:#2e7d32; }
+      .fv-arrow{ flex:0 0 22px; display:flex; align-items:center; justify-content:center; color:#9aa3b2; font-size:16px; }
+      .fv-more{ text-align:right; margin:8px 2px 0; }
+      .fv-more span{ font-size:11.5px; color:#075be8; cursor:pointer; text-decoration:underline; }
+      .fv-steps{ font-size:12px; color:#5b6b82; margin:12px 0 0; }
+      .fv-scroll{ text-align:center; font-size:11.5px; color:#8a93a3; margin:12px 0 0; }
+      .fv-trust{ font-size:11.5px; color:#5b6b82; display:flex; gap:14px; flex-wrap:wrap; margin:10px 0 0; }
+      @media(max-width:640px){ .fv-flow{ flex-wrap:wrap; } .fv-card{ flex:1 1 100%; } .fv-arrow{ flex-basis:100%; transform:rotate(90deg); height:18px; } }
+      #fvDialog{ border:none; border-radius:12px; padding:0; max-width:760px; width:92%; box-shadow:0 10px 40px rgba(0,0,0,.2); }
+      #fvDialog::backdrop{ background:rgba(10,20,40,.45); }
+      .fv-dlg-head{ display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:0.5px solid #e2e6ee; }
+      .fv-dlg-body{ padding:14px 18px; overflow-x:auto; }
+      .fv-dlg-body table{ width:100%; border-collapse:collapse; font-size:12.5px; min-width:560px; }
+      .fv-dlg-body th,.fv-dlg-body td{ border:0.5px solid #e2e6ee; padding:7px 9px; text-align:left; vertical-align:top; }
+      .fv-dlg-body th{ background:#f5f7fa; color:#063577; font-weight:600; }
+      </style>
+
+      <div class="fv-flow">
+        <div class="fv-card fv-a">
+          <div class="fv-h" id="home-fvA">A. 日本語のExcel</div>
+          <div class="fv-row">静音ワイヤレスマウス（Silent Wireless Mouse）</div>
+          <div class="fv-row">送料無料<br>（5,000円以上）</div>
+          <div class="fv-row fv-mut">型番：BT-M200</div>
+        </div>
+        <div class="fv-arrow">→</div>
+        <div class="fv-card fv-bad">
+          <div class="fv-h" id="home-fvBad">ふつうに翻訳すると…</div>
+          <div class="fv-row">静音无线鼠标（静音无线鼠标）<span class="fv-bad-note">英語併記まで訳して重複</span></div>
+          <div class="fv-row">送料无料（5,000日元以上）<span class="fv-bad-note">改行が消えて1行に</span></div>
+          <div class="fv-row">型号：ＢＴ－Ｍ２００<span class="fv-bad-note">型番が全角化</span></div>
+        </div>
+        <div class="fv-arrow">→</div>
+        <div class="fv-card fv-b">
+          <div class="fv-h" id="home-fvB">B. 候補から選べる</div>
+          <div class="fv-row">静音无线鼠标（Silent…）<span class="fv-ok">✓</span></div>
+          <div class="fv-row">送料無料<br>（5,000円以上）<span class="fv-ok"> 改行も保持</span></div>
+          <div class="fv-row">型番：BT-M200 <span class="fv-ok">保持</span></div>
+        </div>
+      </div>
+      <div class="fv-more"><span id="home-fvMore" onclick="document.getElementById('fvDialog').showModal()">翻訳例をもっと見る（拡大）</span></div>
+      <div class="fv-steps" id="home-fvSteps">① ② ／ 全4ステップ — この先で「選ぶ・直す → 完成」まで</div>
       <div class="tags">
         <span class="tag" id="home-tagLang">日本語 → 中国語（簡体字）</span>
         <span class="tag" id="home-tagFormat">書式・数式を保持</span>
@@ -295,6 +385,30 @@ window.addEventListener("DOMContentLoaded", function() {
         <a id="engine-link" class="btn-main" href="/engine">{{ '进入翻译引擎执行画面' if lang == 'zh' else '翻訳エンジン実行画面へ' }}</a>
         <a class="btn-sub" href="#flow" id="home-guide">使い方を見る</a>
       </div>
+      <div class="fv-trust">
+        <span id="home-fvTrust1">書式そのまま</span>
+        <span id="home-fvTrust2">マクロ・外部リンクは自動ブロック</span>
+        <span id="home-fvTrust3">体験は無料</span>
+      </div>
+      <div class="fv-scroll" id="home-fvScroll">下にスクロールで「選んで仕上げる」流れ</div>
+      <p class="disclaimer" id="home-disclaimer">※本サービスは、各社が提供する翻訳APIを活用した独立したツールであり、Google社、Amazon社、DeepL社との共同開発や公式連携を示すものではありません。</p>
+
+      <dialog id="fvDialog">
+        <div class="fv-dlg-head">
+          <strong id="home-fvDlgTitle">翻訳例：ふつうの翻訳 と 本ツール（候補から選択）</strong>
+          <button onclick="document.getElementById('fvDialog').close()" id="home-fvDlgClose" style="cursor:pointer;">閉じる</button>
+        </div>
+        <div class="fv-dlg-body">
+          <table>
+            <tr><th>原文（日本語）</th><th>ふつうに翻訳（崩れ）</th><th>本ツール：候補から選択</th></tr>
+            <tr><td>静音ワイヤレスマウス（Silent Wireless Mouse）</td><td>静音无线鼠标（静音无线鼠标）<br><span style="color:#c0392b;">英語併記まで訳して重複</span></td><td>静音无线鼠标（Silent Wireless Mouse）<br><span style="color:#2e7d32;">英語併記を残す候補を選択</span></td></tr>
+            <tr><td>送料無料<br>（5,000円以上）</td><td>送料无料（5,000日元以上）<br><span style="color:#c0392b;">改行が消えて1行に</span></td><td>送料无料<br>（5,000日元以上）<br><span style="color:#2e7d32;">改行位置も保持</span></td></tr>
+            <tr><td>型番：BT-M200</td><td>型号：ＢＴ－Ｍ２００<br><span style="color:#c0392b;">型番が全角化</span></td><td>型号：BT-M200<br><span style="color:#2e7d32;">型番はそのまま保持</span></td></tr>
+            <tr><td>="残り"&amp;C2&amp;"個"</td><td><span style="color:#c0392b;">数式ごと壊れる／訳されない</span></td><td>="剩余"&amp;C2&amp;"个"<br><span style="color:#2e7d32;">数式は保持、日本語部分だけ候補化</span></td></tr>
+            <tr><td>詳細はこちら（ハイパーリンク）</td><td><span style="color:#c0392b;">リンク先URLまで翻訳・破損</span></td><td>查看详情（链接维持）<br><span style="color:#2e7d32;">URLは翻訳せず保持</span></td></tr>
+          </table>
+        </div>
+      </dialog>
     </div>
     <div class="flow">
       <h2 id="home-flowTitle">このツールの基本の流れ</h2>
