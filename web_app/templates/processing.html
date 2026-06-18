@@ -54,7 +54,9 @@ body { font-family: Arial, sans-serif; margin:0; line-height:1.8; background:#f7
     </p>
     <p style="margin-top:16px;">
       <a id="dl" class="btn" href="#">{% if lang == "zh" %}下载结果{% else %}結果をダウンロード{% endif %}</a>
-      <a class="btn secondary" href="{{ result_url }}">{% if lang == "zh" %}打开结果页{% else %}結果ページを開く{% endif %}</a>
+    </p>
+    <p style="margin-top:10px; font-size:13px; color:#5b6b82;">
+      {% if lang == "zh" %}下载后，可在浏览器右上角的「下载」中打开该文件。{% else %}ダウンロード後、ブラウザ右上の「ダウンロード」欄からファイルを開けます。{% endif %}
     </p>
 
     <div class="note" style="border-color:#7fb0e6; background:#f3f8ff; margin-top:24px;">
