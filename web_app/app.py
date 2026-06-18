@@ -405,9 +405,13 @@ def server_original_path(job_id: str) -> Path:
 
 
 def extract_job_id_from_ui_filename(filename: str) -> str:
-    match = re.search(r"(job\d{14}_[0-9a-fA-F]{8})", filename)
+    # Windowsが付ける重複連番 "(1)" "(2)" や前後の空白を除いてから探す（保険）。
+    # 本来 job_id はファイル名の途中に埋め込まれているため re.search で足りるが、
+    # 将来の命名変更にも耐えられるよう、明示的に連番・空白を除去しておく。
+    normalized = re.sub(r"\s*\(\d+\)(?=\.[^.]+$|$)", "", filename)
+    match = re.search(r"(job\d{14}_[0-9a-fA-F]{8})", normalized)
     if not match:
-        raise ValueError("UIファイル名からJOB_IDを取得できません。UIファイル名を変更している可能性があります。ダウンロード時の元のファイル名に戻してください。元の名前が分からない場合は、最初からGenerateをやり直してください。")
+        raise ValueError("UIファイル名からJOB_IDを取得できません。ファイル名を大きく変更した可能性があります（末尾に(1)や(2)が付くのは問題ありません）。ダウンロード時の元のファイル名に戻すか、最初からGenerateをやり直してください。")
     return match.group(1)
 
 

@@ -50,7 +50,7 @@ body { font-family: Arial, sans-serif; margin:0; line-height:1.8; background:#f7
 
   <div id="done-box" class="hidden">
     <p style="margin-top:24px;">
-      {% if lang == "zh" %}处理完成！正在开始下载。{% else %}処理が完了しました。ダウンロードを開始します。{% endif %}
+      {% if lang == "zh" %}处理完成！请点击下方按钮下载结果。{% else %}処理が完了しました。下のボタンから結果をダウンロードしてください。{% endif %}
     </p>
     <p style="margin-top:16px;">
       <a id="dl" class="btn" href="#">{% if lang == "zh" %}下载结果{% else %}結果をダウンロード{% endif %}</a>
@@ -109,8 +109,8 @@ body { font-family: Arial, sans-serif; margin:0; line-height:1.8; background:#f7
           var dl = document.getElementById("dl");
           dl.href = data.download_url;
           show("done-box");
-          // 自動ダウンロード開始
-          window.location.href = data.download_url;
+          // 自動ダウンロードはしない（二重ダウンロード＝ファイル名に(1)が付くのを防ぐ）
+          // ユーザーが「結果をダウンロード」ボタンを押して取得する。
         } else if (data.status === "error") {
           hide("working");
           document.getElementById("error-msg").textContent = data.message || "エラーが発生しました。";
