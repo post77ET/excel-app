@@ -175,12 +175,62 @@ const HOME_TEXT = {
     fvTrust3: "体験は無料",
     fvDlgTitle: "翻訳例：ふつうの翻訳 と 本ツール（候補から選択）",
     fvDlgClose: "閉じる",
+    dHsrc: "原文（日本語）",
+    dHbad: "ふつうに翻訳（崩れ）",
+    dHgood: "本ツール：候補から選択",
+    dn1a: "英語併記まで訳して重複",
+    dn1b: "英語併記を残す候補を選択",
+    dn2a: "改行が消えて1行に",
+    dn2b: "改行位置も保持",
+    dn3a: "型番が全角化",
+    dn3b: "型番はそのまま保持",
+    dn4a: "数式ごと壊れる／訳されない",
+    dn4b: "数式は保持、日本語部分だけ候補化",
+    dn5a: "人名まで訳される",
+    dn5b: "K=0で原文のまま残せる",
+    stepsTitle: "操作はこの5ステップ",
+    stepsSub: "アップロードから、確認・編集、完成版の生成まで。難しい設定はありません。",
+    s1t: "日本語のExcelをアップロード",
+    s1d: "翻訳したい .xlsx を選ぶだけ。ファイル名は日本語・中国語のままでOK。",
+    s2t: "翻訳して、確認・編集用のExcelを生成",
+    s2d: "「Generate」を押すと、元のシートがそのまま中国語に翻訳されます。あわせて、直したい箇所を選んで修正するための TRANSLATION_UI シートも作られます。",
+    s3t: "候補から選ぶ・必要なら自分で直す",
+    s3d: "K列に番号で選択（1〜3＝候補、4＝自分で入力しM列に記入、0＝原文のまま）。L列に Y で反映対象に。",
+    s3more: "ふつうの翻訳だと崩れる例を見る（拡大）",
+    s3note: "TRANSLATION_UI シートには、対象シートの全セルの内容と属性が並びます。そのうち翻訳対象のセルだけ、候補1〜3に翻訳結果が入り、選択・編集できます。",
+    s3must: "※ UIで編集してもしなくても、最後に「反映（Apply）」は必ず必要です。",
+    s4t: "ファイル名を変えずに保存",
+    s4d: "編集した TRANSLATION_UI シートを保存。ファイル名は変えないでください（変えると反映できません）。",
+    s5t: "反映して、完成版Excelを生成",
+    s5d: "反映処理を実行すると、③で選んだ・直した内容が元のExcelに反映され、書式そのままの完成版ができます。",
+    uUpload: "アップロード",
+    uChoose: "ファイルを選択",
+    uChoose2: "ファイルを選択",
+    uUiSheet: "TRANSLATION_UI シート",
+    uOrigTab: "元のシート",
+    uGenTab: "TRANSLATION_UI（生成）",
+    uSave: "保存",
+    s4warn: "「売上表(1).xlsx」のように名前が変わると反映できません",
+    uApplyBar: "反映（Apply）",
+    uApplyBtn: "反映（Apply）▶",
+    uEdited: "（編集済み）",
+    uDoneBar: "完成版Excel（中国語）",
+    uColProduct: "商品（中国語）",
+    uColNote: "備考",
+    s5reflect: "③の選択・自由入力・原文維持が、そのまま反映されています",
+    uHsrc: "原文",
+    uHc1: "候補1",
+    uHc2: "候補2",
+    uHc3: "候補3",
+    uHk: "K 選択",
+    uHl: "L 適用",
+    uHm: "M 編集内容",
     disclaimer: "※本サービスは、各社が提供する翻訳APIを活用した独立したツールであり、Google社、Amazon社、DeepL社との共同開発や公式連携を示すものではありません。",
     tagLang: "日本語 → 中国語（簡体字）",
     tagFormat: "書式・数式を保持",
     tagCell: "セル単位で翻訳",
     tagFile: ".xlsx 対応",
-    start: "{{ '进入翻译引擎执行画面' if lang == 'zh' else '翻訳エンジン実行画面へ' }}",
+    start: "翻訳エンジン実行画面へ",
     guide: "使い方を見る",
     flowTitle: "このツールの基本の流れ",
     f1: "翻訳前のExcelブックをアップロード",
@@ -234,6 +284,56 @@ const HOME_TEXT = {
     fvTrust3: "体验免费",
     fvDlgTitle: "翻译示例：普通翻译 与 本工具（从候选中选择）",
     fvDlgClose: "关闭",
+    dHsrc: "原文（日语）",
+    dHbad: "普通翻译（出错）",
+    dHgood: "本工具：从候选中选择",
+    dn1a: "连英文也翻译，造成重复",
+    dn1b: "选择保留英文标注的候选",
+    dn2a: "换行消失变成一行",
+    dn2b: "换行位置也保留",
+    dn3a: "型号变成全角",
+    dn3b: "型号原样保留",
+    dn4a: "公式被破坏／未翻译",
+    dn4b: "公式保留，仅日文部分生成候选",
+    dn5a: "连人名也被翻译",
+    dn5b: "用K=0可保持原文不变",
+    stepsTitle: "操作只需这5步",
+    stepsSub: "从上传到确认·编辑，再到生成完成版。没有复杂的设置。",
+    s1t: "上传日语Excel",
+    s1d: "只需选择要翻译的 .xlsx。文件名保持日语·中文均可。",
+    s2t: "翻译并生成确认·编辑用Excel",
+    s2d: "点击「Generate」，原工作表会直接被翻译为中文。同时还会生成用于挑选并修改个别单元格的 TRANSLATION_UI 工作表。",
+    s3t: "从候选中选择·必要时自行修改",
+    s3d: "在K列用数字选择（1〜3＝候选，4＝自行输入并填入M列，0＝保持原文）。L列填 Y 即纳入反映对象。",
+    s3more: "查看普通翻译会出错的示例（放大）",
+    s3note: "TRANSLATION_UI 工作表中列出对象工作表的全部单元格内容及其属性。其中仅翻译对象的单元格，会在候选1〜3中填入翻译结果，可供选择·编辑。",
+    s3must: "※ 无论是否在UI中编辑，最后都必须执行「反映（Apply）」。",
+    s4t: "不改文件名直接保存",
+    s4d: "保存已编辑的 TRANSLATION_UI 工作表。请勿更改文件名（更改后将无法反映）。",
+    s5t: "反映并生成完成版Excel",
+    s5d: "执行反映处理后，③中选择·修改的内容会反映到原Excel，生成格式原样保留的完成版。",
+    uUpload: "上传",
+    uChoose: "选择文件",
+    uChoose2: "选择文件",
+    uUiSheet: "TRANSLATION_UI 工作表",
+    uOrigTab: "原工作表",
+    uGenTab: "TRANSLATION_UI（生成）",
+    uSave: "保存",
+    s4warn: "若文件名变成「売上表(1).xlsx」之类将无法反映",
+    uApplyBar: "反映（Apply）",
+    uApplyBtn: "反映（Apply）▶",
+    uEdited: "（已编辑）",
+    uDoneBar: "完成版Excel（中文）",
+    uColProduct: "商品（中文）",
+    uColNote: "备注",
+    s5reflect: "③中的选择·自由输入·保持原文，均已原样反映",
+    uHsrc: "原文",
+    uHc1: "候选1",
+    uHc2: "候选2",
+    uHc3: "候选3",
+    uHk: "K 选择",
+    uHl: "L 适用",
+    uHm: "M 编辑内容",
     disclaimer: "※本服务为利用各公司所提供翻译API的独立工具，不代表与Google、Amazon、DeepL公司的共同开发或官方合作关系。",
     tagLang: "日语 → 中文（简体）",
     tagFormat: "保持格式・公式",
@@ -312,113 +412,173 @@ window.addEventListener("DOMContentLoaded", function() {
 
 <main class="container">
 
-  <section class="hero">
+  <a id="engine-link" class="cta-fixed" href="/engine">翻訳エンジン実行画面へ</a>
+
+  <section class="hero hero-lite">
     <div>
       <p class="catch" id="home-catch">文章の翻訳は、AIがぐっと身近に。Excelの翻訳も、同じくらい身近に。</p>
       <h1 id="home-heroTitle">Excelの構造をそのまま保持して、日本語を中国語に翻訳・確認・反映できます。</h1>
       <p class="lead" id="home-heroLead">日本語のExcelブック（.xlsx）を、レイアウトや数式を崩さずに中国語（簡体字 zh-CN）へ翻訳。翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。</p>
       <p class="catch-sub" id="home-catchSub">DeepL、Google、Amazonの翻訳APIに対応した、Excel一括翻訳ツール</p>
-
-      <style>
-      .fv-flow{ display:flex; align-items:stretch; gap:8px; margin:18px 0 0; }
-      .fv-card{ flex:1 1 0; min-width:0; border-radius:8px; overflow:hidden; border:0.5px solid #d8dee8; background:#fff; }
-      .fv-h{ font-size:11.5px; padding:5px 8px; border-bottom:0.5px solid #e2e6ee; }
-      .fv-row{ font-size:11px; padding:5px 8px; border-bottom:0.5px solid #eef1f6; line-height:1.45; }
-      .fv-row:last-child{ border-bottom:none; }
-      .fv-mut{ color:#8a93a3; }
-      .fv-a .fv-h{ background:#f3f4f6; color:#5b6b82; }
-      .fv-bad{ background:#fdecec; border-color:#f0b8b8; }
-      .fv-bad .fv-h{ color:#a32d2d; border-bottom-color:#f3c6c6; }
-      .fv-bad .fv-row{ border-bottom-color:#f5d4d4; }
-      .fv-bad-note{ display:block; font-size:10px; color:#c0392b; margin-top:2px; }
-      .fv-b{ background:#e9f1fb; border-color:#b5d4f4; }
-      .fv-b .fv-h{ color:#075be8; border-bottom-color:#cfe0f7; }
-      .fv-b .fv-row{ border-bottom-color:#dbe8f8; }
-      .fv-ok{ color:#2e7d32; }
-      .fv-arrow{ flex:0 0 22px; display:flex; align-items:center; justify-content:center; color:#9aa3b2; font-size:16px; }
-      .fv-more{ text-align:right; margin:8px 2px 0; }
-      .fv-more span{ font-size:11.5px; color:#075be8; cursor:pointer; text-decoration:underline; }
-      .fv-steps{ font-size:12px; color:#5b6b82; margin:12px 0 0; }
-      .fv-scroll{ text-align:center; font-size:11.5px; color:#8a93a3; margin:12px 0 0; }
-      .fv-trust{ font-size:11.5px; color:#5b6b82; display:flex; gap:14px; flex-wrap:wrap; margin:10px 0 0; }
-      @media(max-width:640px){ .fv-flow{ flex-wrap:wrap; } .fv-card{ flex:1 1 100%; } .fv-arrow{ flex-basis:100%; transform:rotate(90deg); height:18px; } }
-      #fvDialog{ border:none; border-radius:12px; padding:0; max-width:760px; width:92%; box-shadow:0 10px 40px rgba(0,0,0,.2); }
-      #fvDialog::backdrop{ background:rgba(10,20,40,.45); }
-      .fv-dlg-head{ display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:0.5px solid #e2e6ee; }
-      .fv-dlg-body{ padding:14px 18px; overflow-x:auto; }
-      .fv-dlg-body table{ width:100%; border-collapse:collapse; font-size:12.5px; min-width:560px; }
-      .fv-dlg-body th,.fv-dlg-body td{ border:0.5px solid #e2e6ee; padding:7px 9px; text-align:left; vertical-align:top; }
-      .fv-dlg-body th{ background:#f5f7fa; color:#063577; font-weight:600; }
-      </style>
-
-      <div class="fv-flow">
-        <div class="fv-card fv-a">
-          <div class="fv-h" id="home-fvA">A. 日本語のExcel</div>
-          <div class="fv-row">静音ワイヤレスマウス（Silent Wireless Mouse）</div>
-          <div class="fv-row">送料無料<br>（5,000円以上）</div>
-          <div class="fv-row fv-mut">型番：BT-M200</div>
-        </div>
-        <div class="fv-arrow">→</div>
-        <div class="fv-card fv-bad">
-          <div class="fv-h" id="home-fvBad">ふつうに翻訳すると…</div>
-          <div class="fv-row">静音无线鼠标（静音无线鼠标）<span class="fv-bad-note">英語併記まで訳して重複</span></div>
-          <div class="fv-row">送料无料（5,000日元以上）<span class="fv-bad-note">改行が消えて1行に</span></div>
-          <div class="fv-row">型号：ＢＴ－Ｍ２００<span class="fv-bad-note">型番が全角化</span></div>
-        </div>
-        <div class="fv-arrow">→</div>
-        <div class="fv-card fv-b">
-          <div class="fv-h" id="home-fvB">B. 候補から選べる</div>
-          <div class="fv-row">静音无线鼠标（Silent…）<span class="fv-ok">✓</span></div>
-          <div class="fv-row">送料無料<br>（5,000円以上）<span class="fv-ok"> 改行も保持</span></div>
-          <div class="fv-row">型番：BT-M200 <span class="fv-ok">保持</span></div>
-        </div>
-      </div>
-      <div class="fv-more"><span id="home-fvMore" onclick="document.getElementById('fvDialog').showModal()">翻訳例をもっと見る（拡大）</span></div>
-      <div class="fv-steps" id="home-fvSteps">① ② ／ 全4ステップ — この先で「選ぶ・直す → 完成」まで</div>
       <div class="tags">
         <span class="tag" id="home-tagLang">日本語 → 中国語（簡体字）</span>
         <span class="tag" id="home-tagFormat">書式・数式を保持</span>
         <span class="tag" id="home-tagCell">セル単位で翻訳</span>
         <span class="tag" id="home-tagFile">.xlsx 対応</span>
       </div>
-      <div class="cta-row">
-        <a id="engine-link" class="btn-main" href="/engine">{{ '进入翻译引擎执行画面' if lang == 'zh' else '翻訳エンジン実行画面へ' }}</a>
-        <a class="btn-sub" href="#flow" id="home-guide">使い方を見る</a>
-      </div>
       <div class="fv-trust">
         <span id="home-fvTrust1">書式そのまま</span>
         <span id="home-fvTrust2">マクロ・外部リンクは自動ブロック</span>
         <span id="home-fvTrust3">体験は無料</span>
       </div>
-      <div class="fv-scroll" id="home-fvScroll">下にスクロールで「選んで仕上げる」流れ</div>
       <p class="disclaimer" id="home-disclaimer">※本サービスは、各社が提供する翻訳APIを活用した独立したツールであり、Google社、Amazon社、DeepL社との共同開発や公式連携を示すものではありません。</p>
-
-      <dialog id="fvDialog">
-        <div class="fv-dlg-head">
-          <strong id="home-fvDlgTitle">翻訳例：ふつうの翻訳 と 本ツール（候補から選択）</strong>
-          <button onclick="document.getElementById('fvDialog').close()" id="home-fvDlgClose" style="cursor:pointer;">閉じる</button>
-        </div>
-        <div class="fv-dlg-body">
-          <table>
-            <tr><th>原文（日本語）</th><th>ふつうに翻訳（崩れ）</th><th>本ツール：候補から選択</th></tr>
-            <tr><td>静音ワイヤレスマウス（Silent Wireless Mouse）</td><td>静音无线鼠标（静音无线鼠标）<br><span style="color:#c0392b;">英語併記まで訳して重複</span></td><td>静音无线鼠标（Silent Wireless Mouse）<br><span style="color:#2e7d32;">英語併記を残す候補を選択</span></td></tr>
-            <tr><td>送料無料<br>（5,000円以上）</td><td>送料无料（5,000日元以上）<br><span style="color:#c0392b;">改行が消えて1行に</span></td><td>送料无料<br>（5,000日元以上）<br><span style="color:#2e7d32;">改行位置も保持</span></td></tr>
-            <tr><td>型番：BT-M200</td><td>型号：ＢＴ－Ｍ２００<br><span style="color:#c0392b;">型番が全角化</span></td><td>型号：BT-M200<br><span style="color:#2e7d32;">型番はそのまま保持</span></td></tr>
-            <tr><td>="残り"&amp;C2&amp;"個"</td><td><span style="color:#c0392b;">数式ごと壊れる／訳されない</span></td><td>="剩余"&amp;C2&amp;"个"<br><span style="color:#2e7d32;">数式は保持、日本語部分だけ候補化</span></td></tr>
-            <tr><td>詳細はこちら（ハイパーリンク）</td><td><span style="color:#c0392b;">リンク先URLまで翻訳・破損</span></td><td>查看详情（链接维持）<br><span style="color:#2e7d32;">URLは翻訳せず保持</span></td></tr>
-          </table>
-        </div>
-      </dialog>
-    </div>
-    <div class="flow">
-      <h2 id="home-flowTitle">このツールの基本の流れ</h2>
-      <div class="flow-row"><span class="num">1</span><span id="home-f1">翻訳前のExcelブックをアップロード</span></div>
-      <div class="flow-row"><span class="num">2</span><span id="home-f2">Generateで翻訳結果確認・編集用Excelブックを生成</span></div>
-      <div class="flow-row"><span class="num">3</span><span id="home-f3">TRANSLATION_UIシートで翻訳候補を確認・編集</span></div>
-      <div class="flow-row"><span class="num">4</span><span id="home-f4">ファイル名を変えずに保存</span></div>
-      <div class="flow-row"><span class="num">5</span><span id="home-f5">編集内容の反映処理で完成ファイルを生成</span></div>
     </div>
   </section>
+
+  <style>
+  .cta-fixed{ position:fixed; top:78px; right:22px; z-index:50; background:#075be8; color:#fff; font-weight:600; font-size:15px; padding:12px 20px; border-radius:10px; box-shadow:0 6px 20px rgba(7,91,232,.3); text-decoration:none; }
+  .cta-fixed:hover{ background:#0a4fc4; }
+  .hero-lite{ display:block; }
+  .steps{ }
+  .steps-title{ font-size:clamp(22px,3vw,30px); color:#063577; margin:0 0 6px; }
+  .steps-sub{ color:#5b6b82; font-size:14px; margin:0 0 22px; }
+  .step{ display:flex; gap:16px; align-items:flex-start; padding:20px 0; border-top:1px solid #e6eaf1; }
+  .step-badge{ flex:0 0 56px; height:56px; border-radius:50%; background:#075be8; color:#fff; font-size:26px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .step-body{ flex:1 1 auto; min-width:0; }
+  .step-h{ font-size:18px; font-weight:700; color:#063577; margin:0 0 4px; }
+  .step-d{ font-size:14px; color:#46556b; margin:0 0 12px; line-height:1.6; }
+  .scr{ border:1px solid #d8dee8; border-radius:10px; overflow:hidden; background:#fff; max-width:680px; }
+  .scr-bar{ font-size:12px; padding:6px 10px; background:#f3f5f8; color:#5b6b82; border-bottom:1px solid #e6eaf1; }
+  .scr-pad{ padding:14px; }
+  .chip{ display:inline-block; background:#eef3fb; color:#075be8; border:1px solid #cfe0f7; border-radius:6px; padding:6px 12px; font-size:13px; }
+  .drop{ border:2px dashed #b5c6e0; border-radius:10px; padding:18px; text-align:center; color:#6b7a93; font-size:13px; background:#f8fbff; }
+  .btn-fake{ display:inline-block; background:#075be8; color:#fff; font-size:13px; font-weight:600; padding:8px 16px; border-radius:8px; }
+  .btn-ghost{ display:inline-block; background:#fff; color:#075be8; border:1px solid #b5d4f4; font-size:13px; font-weight:600; padding:7px 14px; border-radius:8px; }
+  .tabs{ display:flex; gap:6px; font-size:12px; }
+  .tab{ padding:5px 10px; border:1px solid #d8dee8; border-bottom:none; border-radius:6px 6px 0 0; background:#f3f5f8; color:#5b6b82; }
+  .tab.on{ background:#e9f1fb; color:#075be8; border-color:#b5d4f4; font-weight:600; }
+  .uitbl{ width:100%; border-collapse:collapse; font-size:12px; }
+  .uitbl th,.uitbl td{ border:1px solid #e6eaf1; padding:5px 7px; text-align:left; white-space:nowrap; }
+  .uitbl th{ background:#eef3fb; color:#063577; font-weight:600; font-size:11.5px; }
+  .uitbl .col-k,.uitbl .col-l,.uitbl .col-m{ background:#fffaf0; }
+  .uitbl thead .col-k,.uitbl thead .col-l,.uitbl thead .col-m{ background:#fdeecb; color:#8a5b00; }
+  .pick{ background:#d6efe9; color:#0f5e57; font-weight:600; }
+  .scr-scroll{ overflow-x:auto; }
+  .scr-note{ font-size:12px; color:#0f766e; padding:8px 12px; border-top:1px solid #e6eaf1; }
+  .scr-note.warn{ color:#a86b00; }
+  .scr-link{ font-size:12px; color:#075be8; cursor:pointer; text-decoration:underline; padding:8px 12px; display:inline-block; }
+  .s3-row{ display:flex; gap:16px; align-items:flex-start; }
+  .s3-row .scr{ flex:0 1 680px; }
+  .step-note{ flex:1 1 240px; min-width:200px; font-size:13px; color:#46556b; line-height:1.6; }
+  .step-note .must{ color:#c0392b; font-weight:700; margin-top:10px; }
+  @media(max-width:860px){ .s3-row{ flex-wrap:wrap; } .s3-row .scr{ flex:1 1 100%; } }
+  .grn .scr-bar{ background:#eef7f0; color:#2e7d32; }
+  .grn{ border-color:#bcdcc2; }
+  .reflect{ background:#eafbef; }
+  @media(max-width:640px){ .cta-fixed{ position:static; display:block; text-align:center; margin:0 0 16px; } }
+  #fvDialog{ border:none; border-radius:12px; padding:0; max-width:760px; width:92%; box-shadow:0 10px 40px rgba(0,0,0,.2); }
+  #fvDialog::backdrop{ background:rgba(10,20,40,.45); }
+  .fv-dlg-head{ display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #e6eaf1; }
+  .fv-dlg-body{ padding:14px 18px; overflow-x:auto; }
+  .fv-dlg-body table{ width:100%; border-collapse:collapse; font-size:12.5px; min-width:560px; }
+  .fv-dlg-body th,.fv-dlg-body td{ border:1px solid #e6eaf1; padding:7px 9px; text-align:left; vertical-align:top; }
+  .fv-dlg-body th{ background:#f5f7fa; color:#063577; font-weight:600; }
+  </style>
+
+  <section class="steps">
+    <h2 class="steps-title" id="home-stepsTitle">操作はこの5ステップ</h2>
+    <p class="steps-sub" id="home-stepsSub">アップロードから、確認・編集、完成版の生成まで。難しい設定はありません。</p>
+
+    <div class="step">
+      <div class="step-badge">①</div>
+      <div class="step-body">
+        <p class="step-h" id="home-s1t">日本語のExcelをアップロード</p>
+        <p class="step-d" id="home-s1d">翻訳したい .xlsx を選ぶだけ。ファイル名は日本語・中国語のままでOK。</p>
+        <div class="scr"><div class="scr-bar" id="home-uUpload">アップロード</div><div class="scr-pad"><span class="btn-ghost" id="home-uChoose">ファイルを選択</span> <span class="chip">📄 売上表.xlsx</span></div></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-badge">②</div>
+      <div class="step-body">
+        <p class="step-h" id="home-s2t">翻訳して、確認・編集用のExcelを生成</p>
+        <p class="step-d" id="home-s2d">「Generate」を押すと、元のシートがそのまま中国語に翻訳されます。あわせて、直したい箇所を選んで修正するための TRANSLATION_UI シートも作られます。</p>
+        <div class="scr"><div class="scr-bar"><span class="btn-fake">Generate ▶</span></div><div class="scr-pad"><div class="tabs"><span class="tab" id="home-uOrigTab">元のシート</span><span class="tab on" id="home-uGenTab">TRANSLATION_UI（生成）</span></div></div></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-badge">③</div>
+      <div class="step-body">
+        <p class="step-h" id="home-s3t">候補から選ぶ・必要なら自分で直す</p>
+        <p class="step-d" id="home-s3d">K列に番号で選択（1〜3＝候補、4＝自分で入力しM列に記入、0＝原文のまま）。L列に Y で反映対象に。</p>
+        <div class="s3-row">
+          <div class="scr"><div class="scr-bar" id="home-uUiSheet">TRANSLATION_UI シート</div><div class="scr-scroll"><table class="uitbl">
+            <thead><tr><th id="home-uHsrc">原文</th><th id="home-uHc1">候補1</th><th id="home-uHc2">候補2</th><th id="home-uHc3">候補3</th><th class="col-k" id="home-uHk">K 選択</th><th class="col-l" id="home-uHl">L 適用</th><th class="col-m" id="home-uHm">M 編集内容</th></tr></thead>
+            <tbody>
+            <tr><td>静音ワイヤレスマウス</td><td class="pick">静音无线鼠标（Silent…）</td><td>静音无线鼠标（静音…）</td><td>静音无线鼠标</td><td class="col-k">1</td><td class="col-l">Y</td><td class="col-m"></td></tr>
+            <tr><td>LEDデスクライト</td><td>LED台灯</td><td>LED书桌灯</td><td class="pick">护眼台灯（调光）</td><td class="col-k">3</td><td class="col-l">Y</td><td class="col-m"></td></tr>
+            <tr><td>A4コピー用紙 高白色</td><td>A4复印纸</td><td>A4打印纸</td><td>复印纸</td><td class="col-k">4</td><td class="col-l">Y</td><td class="col-m reflect">A4复印纸 高白度500张</td></tr>
+            <tr><td>担当：山田太郎</td><td>负责人：山田太郎</td><td>担当：山田太郎</td><td>山田</td><td class="col-k">0</td><td class="col-l">Y</td><td class="col-m"></td></tr>
+            <tr><td>USB-C急速充電器</td><td class="pick">USB-C快速充电器</td><td>USB-C充电器</td><td>快充</td><td class="col-k">1</td><td class="col-l">Y</td><td class="col-m"></td></tr>
+            </tbody>
+          </table></div>
+          <span class="scr-link" id="home-s3more" onclick="document.getElementById('fvDialog').showModal()">ふつうの翻訳だと崩れる例を見る（拡大）</span>
+          </div>
+          <div class="step-note">
+            <p id="home-s3note">TRANSLATION_UI シートには、対象シートの<b>全セルの内容と属性</b>が並びます。そのうち<b>翻訳対象のセルだけ</b>、候補1〜3に翻訳結果が入り、選択・編集できます。</p>
+            <p class="must" id="home-s3must">※ UIで編集してもしなくても、最後に「反映（Apply）」は必ず必要です。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-badge">④</div>
+      <div class="step-body">
+        <p class="step-h" id="home-s4t">ファイル名を変えずに保存</p>
+        <p class="step-d" id="home-s4d">編集した TRANSLATION_UI シートを保存。ファイル名は変えないでください（変えると反映できません）。</p>
+        <div class="scr"><div class="scr-bar" id="home-uSave">保存</div><div class="scr-pad"><span class="chip">📄 売上表.xlsx</span><span class="scr-note warn" id="home-s4warn" style="border:none; padding:8px 0 0; display:block;">「売上表(1).xlsx」のように名前が変わると反映できません</span></div></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-badge">⑤</div>
+      <div class="step-body">
+        <p class="step-h" id="home-s5t">反映して、完成版Excelを生成</p>
+        <p class="step-d" id="home-s5d">反映処理を実行すると、③で選んだ・直した内容が元のExcelに反映され、書式そのままの完成版ができます。</p>
+        <div class="scr"><div class="scr-bar" id="home-uApplyBar">反映（Apply）</div><div class="scr-pad"><span class="btn-ghost" id="home-uChoose2">ファイルを選択</span> <span class="chip">📄 売上表.xlsx<span id="home-uEdited">（編集済み）</span></span><span style="margin:0 8px; color:#9aa3b2;">→</span><span class="btn-fake" id="home-uApplyBtn">反映（Apply）▶</span></div></div>
+        <div style="height:10px;"></div>
+        <div class="scr grn"><div class="scr-bar" id="home-uDoneBar">完成版Excel（中国語）</div><div class="scr-scroll"><table class="uitbl">
+          <thead><tr><th id="home-uColProduct">商品（中国語）</th><th id="home-uColNote">備考</th></tr></thead>
+          <tbody>
+          <tr><td>静音无线鼠标（Silent…）</td><td>型号：BT-M200</td></tr>
+          <tr><td>护眼台灯（调光）</td><td>送料无料<br>（5,000日元以上）</td></tr>
+          <tr><td class="reflect">A4复印纸 高白度500张</td><td>※冲绳、离岛另收运费</td></tr>
+          <tr><td class="reflect">担当：山田太郎</td><td>USB-C快速充电器</td></tr>
+          </tbody>
+        </table></div><div class="scr-note" id="home-s5reflect">③の選択・自由入力・原文維持が、そのまま反映されています</div></div>
+      </div>
+    </div>
+
+    <dialog id="fvDialog">
+      <div class="fv-dlg-head">
+        <strong id="home-fvDlgTitle">翻訳例：ふつうの翻訳 と 本ツール（候補から選択）</strong>
+        <button onclick="document.getElementById('fvDialog').close()" id="home-fvDlgClose" style="cursor:pointer;">閉じる</button>
+      </div>
+      <div class="fv-dlg-body">
+        <table>
+          <tr><th id="home-dHsrc">原文（日本語）</th><th id="home-dHbad">ふつうに翻訳（崩れ）</th><th id="home-dHgood">本ツール：候補から選択</th></tr>
+          <tr><td>静音ワイヤレスマウス（Silent Wireless Mouse）</td><td>静音无线鼠标（静音无线鼠标）<br><span style="color:#c0392b;" id="home-dn1a">英語併記まで訳して重複</span></td><td>静音无线鼠标（Silent Wireless Mouse）<br><span style="color:#2e7d32;" id="home-dn1b">英語併記を残す候補を選択</span></td></tr>
+          <tr><td>送料無料<br>（5,000円以上）</td><td>送料无料（5,000日元以上）<br><span style="color:#c0392b;" id="home-dn2a">改行が消えて1行に</span></td><td>送料无料<br>（5,000日元以上）<br><span style="color:#2e7d32;" id="home-dn2b">改行位置も保持</span></td></tr>
+          <tr><td>型番：BT-M200</td><td>型号：ＢＴ－Ｍ２００<br><span style="color:#c0392b;" id="home-dn3a">型番が全角化</span></td><td>型号：BT-M200<br><span style="color:#2e7d32;" id="home-dn3b">型番はそのまま保持</span></td></tr>
+          <tr><td>="残り"&amp;C2&amp;"個"</td><td><span style="color:#c0392b;" id="home-dn4a">数式ごと壊れる／訳されない</span></td><td>="剩余"&amp;C2&amp;"个"<br><span style="color:#2e7d32;" id="home-dn4b">数式は保持、日本語部分だけ候補化</span></td></tr>
+          <tr><td>担当：山田太郎</td><td>负责人：山田太郎<br><span style="color:#c0392b;" id="home-dn5a">人名まで訳される</span></td><td>担当：山田太郎<br><span style="color:#2e7d32;" id="home-dn5b">K=0で原文のまま残せる</span></td></tr>
+        </table>
+      </div>
+    </dialog>
+  </section>
+
 
   <section>
     <h2 id="home-problemTitle">こんなことで困っていませんか？</h2>
