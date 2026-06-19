@@ -453,6 +453,29 @@ def google_site_verification():
             {"Content-Type": "text/html; charset=utf-8"})
 
 
+@app.get("/robots.txt")
+def robots_txt():
+    body = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Sitemap: https://excel-app-t3dn.onrender.com/sitemap.xml\n"
+    )
+    return (body, 200, {"Content-Type": "text/plain; charset=utf-8"})
+
+
+@app.get("/sitemap.xml")
+def sitemap_xml():
+    base = "https://excel-app-t3dn.onrender.com"
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f'  <url><loc>{base}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n'
+        f'  <url><loc>{base}/engine</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n'
+        '</urlset>\n'
+    )
+    return (body, 200, {"Content-Type": "application/xml; charset=utf-8"})
+
+
 @app.get("/engine")
 def engine():
     return render_template("engine.html", lang=request.args.get("lang", "ja"))

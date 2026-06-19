@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ 'Excel翻译作业支持工具｜将日语Excel翻译为中文（保持格式・支持xlsx）' if lang == 'zh' else 'Excel翻訳作業支援ツール｜日本語Excelを中国語に翻訳（書式保持・xlsx対応）' }}</title>
-<meta name="description" content="{{ '将日语Excel（.xlsx）翻译为中文（简体）的作业支持工具。按单元格保持格式、公式与排版，可确认并编辑翻译候选后反映到文件。' if lang == 'zh' else '日本語のExcel（.xlsx）を中国語（簡体字 zh-CN）に翻訳する作業支援ツール。セル単位で書式・数式・レイアウトを保ったまま、翻訳候補を確認・編集して反映できます。' }}">
+<title>{{ 'Excel翻译工具 | 日语⇔中文 | 保留格式' if lang == 'zh' else 'Excel翻訳ツール | 日本語⇔中国語 | 書式保持対応' }}</title>
+<meta name="description" content="{{ '保留Excel格式、公式、合并单元格，实现日语⇔中文互译的Excel翻译工具' if lang == 'zh' else 'Excelの書式・数式・結合セルを保持したまま日本語⇔中国語翻訳ができるExcel翻訳ツール' }}">
 <meta name="keywords" content="Excel 翻訳, エクセル 翻訳, 日本語 中国語 翻訳, xlsx 翻訳, Excel 中国語 翻訳, セル 翻訳, 書式 保持 翻訳, Excel 翻译 中文">
 <meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
@@ -164,6 +164,13 @@ const HOME_TEXT = {
     heroLead: "日本語のExcelブック（.xlsx）を、レイアウトや数式を崩さずに中国語（簡体字 zh-CN）へ翻訳。翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。",
     catch: "文章の翻訳は、AIがぐっと身近に。Excelの翻訳も、同じくらい身近に。",
     catchSub: "DeepL、Google、Amazonの翻訳APIに対応した、Excel一括翻訳ツール",
+    featTitle: "このツールでできること",
+    feat1: "日本語⇔中国語翻訳",
+    feat2: "書式保持",
+    feat3: "結合セル保持",
+    feat4: "数式保持",
+    feat5: "複数シート対応",
+    feat6: "Excel構造保持翻訳",
     fvA: "A. 日本語のExcel",
     fvBad: "ふつうに翻訳すると…",
     fvB: "B. 候補から選べる",
@@ -369,7 +376,14 @@ const HOME_TEXT = {
     warningBody: "如果重复下载同一文件，Windows可能会在文件名末尾自动添加“(1)” “(2)”。如果编辑这种文件，将无法执行反映处理。编辑前，请恢复为下载时的原始文件名。",
     limitTitle: "本工具不能处理的内容",
     limitBody: "不支持xlsx以外的文件、可能感染病毒的文件、过大的文件、图片中的文字、假名/片假名2个字符等过短文字。也不能保证翻译结果100%准确。",
-    footer: "Excel翻译作业支持工具｜在保持格式的前提下，将日语Excel翻译为中文（简体）"
+    footer: "Excel翻译作业支持工具｜在保持格式的前提下，将日语Excel翻译为中文（简体）",
+    featTitle: "本工具的功能",
+    feat1: "日语⇔中文互译",
+    feat2: "保留格式",
+    feat3: "保留合并单元格",
+    feat4: "保留公式",
+    feat5: "支持多个工作表",
+    feat6: "保持Excel结构翻译"
   }
 };
 function setHomeLang(lang) {
@@ -433,6 +447,25 @@ window.addEventListener("DOMContentLoaded", function() {
       </div>
       <p class="disclaimer" id="home-disclaimer">※本サービスは、各社が提供する翻訳APIを活用した独立したツールであり、Google社、Amazon社、DeepL社との共同開発や公式連携を示すものではありません。</p>
     </div>
+  </section>
+
+  <section class="seo-features" aria-label="主な機能">
+    <style>
+      .seo-features{ margin:28px 0 8px; }
+      .seo-features h2{ font-size:clamp(20px,2.6vw,26px); color:#063577; margin:0 0 14px; }
+      .seo-features ul{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
+      .seo-features li{ background:#fff; border:1px solid #dbe6f7; border-radius:10px; padding:12px 14px; font-size:15px; font-weight:600; color:#10213f; box-shadow:0 4px 14px rgba(8,40,90,.05); }
+      .seo-features li::before{ content:"\2713"; color:#1f9d62; font-weight:700; margin-right:8px; }
+    </style>
+    <h2 id="home-featTitle">このツールでできること</h2>
+    <ul>
+      <li id="home-feat1">日本語⇔中国語翻訳</li>
+      <li id="home-feat2">書式保持</li>
+      <li id="home-feat3">結合セル保持</li>
+      <li id="home-feat4">数式保持</li>
+      <li id="home-feat5">複数シート対応</li>
+      <li id="home-feat6">Excel構造保持翻訳</li>
+    </ul>
   </section>
 
   <style>
