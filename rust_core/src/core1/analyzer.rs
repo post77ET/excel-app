@@ -3,8 +3,13 @@ use crate::adapters::types::{Lang, TranslateRequest};
 use crate::core1::text_structure_analyzer::analyze_text_structure;
 use crate::core1::translation_policy::TranslationPolicyDecision;
 use crate::core1::types::{CandidateAlarms, CandidateBundle, DefaultSelect, Segment};
-use crate::core2::formula_text::split_preserving_structure;
+use crate::core2::formula_text::{
+    split_preserving_structure,
+    extract_quoted_literals,
+    reassemble_formula,
+};
 use crate::core2::structure_types::LogicalCell;
+use crate::core2::structure_types::LogicalCellKind;
 use crate::infra::app_error::AppError;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -628,6 +633,11 @@ fn translate_whole_for_cells(
             continue;
         }
 
+        // F-2: 数式セルは構文を翻訳機へ渡さない。後段でリテラルのみ翻訳して再合成する。
+        if is_formula_cell(logical_cell) {
+            continue;
+        }
+
         request_plans.push(WholeRequestPlan {
             cell_idx,
             // 送信前に改行・全角スペースを退避（候補1/2 と同じ保護）
@@ -643,6 +653,18 @@ fn translate_whole_for_cells(
     );
 
     if request_plans.is_empty() {
+        // 通常whole対象が無くても、数式セルのリテラル翻訳は必ず実行する（F-2）
+        translate_formula_literals(
+            label,
+            logical_cells,
+            policies,
+            adapter,
+            batch_max_items,
+            batch_max_chars,
+            from_lang,
+            to_lang,
+            &mut results,
+        );
         return results;
     }
 
@@ -712,7 +734,145 @@ fn translate_whole_for_cells(
         }
     }
 
+    // F-2: 数式セルはリテラルのみ翻訳して再合成する（構文は翻訳機へ渡さない）
+    translate_formula_literals(
+        label,
+        logical_cells,
+        policies,
+        adapter,
+        batch_max_items,
+        batch_max_chars,
+        from_lang,
+        to_lang,
+        &mut results,
+    );
+
     results
+}
+
+/// F-2: 数式セル（CellKind=Formula 系）かどうか。
+/// FormulaRaw と SharedFormulaParent を数式として扱う。
+fn is_formula_cell(cell: &LogicalCell) -> bool {
+    matches!(
+        cell.cell_kind,
+        LogicalCellKind::FormulaRaw | LogicalCellKind::SharedFormulaParent
+    )
+}
+
+/// F-2: 数式セルのリテラルだけを翻訳して数式を再合成する。
+/// 数式構文（=, 関数, 参照, 括弧, 区切り）は翻訳機へ渡さない。
+#[allow(clippy::too_many_arguments)]
+fn translate_formula_literals(
+    label: &str,
+    logical_cells: &[LogicalCell],
+    policies: &[TranslationPolicyDecision],
+    adapter: &dyn TranslatorAdapter,
+    batch_max_items: usize,
+    batch_max_chars: usize,
+    from_lang: Lang,
+    to_lang: Lang,
+    results: &mut [Result<String, String>],
+) {
+    struct CellTpl {
+        cell_idx: usize,
+        template: String,
+        lit_start: usize,
+        lit_count: usize,
+    }
+
+    let mut cell_tpls: Vec<CellTpl> = Vec::new();
+    let mut flat_literals: Vec<String> = Vec::new();
+
+    for (cell_idx, logical_cell) in logical_cells.iter().enumerate() {
+        if !policies[cell_idx].translate_candidates {
+            continue;
+        }
+        if !is_formula_cell(logical_cell) {
+            continue;
+        }
+
+        let (template, lits) = extract_quoted_literals(&logical_cell.source_text);
+        if lits.is_empty() {
+            // リテラルなし数式 → 翻訳機を呼ばず原文維持
+            results[cell_idx] = Ok(logical_cell.source_text.clone());
+            continue;
+        }
+
+        let lit_start = flat_literals.len();
+        let lit_count = lits.len();
+        for lit in lits {
+            flat_literals.push(lit);
+        }
+        cell_tpls.push(CellTpl {
+            cell_idx,
+            template,
+            lit_start,
+            lit_count,
+        });
+    }
+
+    if flat_literals.is_empty() {
+        return;
+    }
+
+    // リテラルを平坦な翻訳キューに（WholeRequestPlan.cell_idx は平坦インデックスとして使う）
+    let lit_plans: Vec<WholeRequestPlan> = flat_literals
+        .iter()
+        .enumerate()
+        .map(|(i, lit)| WholeRequestPlan {
+            cell_idx: i,
+            text: lit.clone(),
+        })
+        .collect();
+
+    let mut translated_literals: Vec<Option<String>> = vec![None; flat_literals.len()];
+
+    let batches = build_whole_batches(&lit_plans, batch_max_items, batch_max_chars);
+    for (batch_idx, batch_range) in batches.into_iter().enumerate() {
+        let start = batch_range.start;
+        let end = batch_range.end;
+        let requests: Vec<TranslateRequest> = lit_plans[start..end]
+            .iter()
+            .enumerate()
+            .map(|(offset, plan)| TranslateRequest {
+                request_id: format!("{}-lit-{}-{}", label, batch_idx + 1, offset + 1),
+                provider: adapter.provider_kind(),
+                text: plan.text.clone(),
+                from_lang,
+                to_lang,
+                timeout_ms: 1000,
+            })
+            .collect();
+
+        match adapter.translate_batch(&requests) {
+            Ok(translations) => {
+                if translations.len() != requests.len() {
+                    // 数不一致のバッチは未翻訳のまま（原文リテラルを維持）
+                    continue;
+                }
+                for (plan, trans) in lit_plans[start..end].iter().zip(translations.into_iter()) {
+                    translated_literals[plan.cell_idx] = Some(trans.translated_text);
+                }
+            }
+            Err(_e) => {
+                // バッチ失敗は未翻訳のまま（原文リテラルを維持）
+                continue;
+            }
+        }
+    }
+
+    // 数式ごとに再合成（翻訳できなかったリテラルは原文を使う）
+    for tpl in &cell_tpls {
+        let mut lits: Vec<String> = Vec::with_capacity(tpl.lit_count);
+        for k in 0..tpl.lit_count {
+            let gi = tpl.lit_start + k;
+            let lit = translated_literals[gi]
+                .clone()
+                .unwrap_or_else(|| flat_literals[gi].clone());
+            lits.push(lit);
+        }
+        results[tpl.cell_idx] = Ok(reassemble_formula(&tpl.template, &lits));
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

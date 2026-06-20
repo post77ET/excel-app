@@ -78,3 +78,95 @@ fn is_connector(ch: char) -> bool {
 fn is_japanese_like(ch: char) -> bool {
     matches!(ch as u32, 0x3040..=0x309F | 0x30A0..=0x30FF | 0x4E00..=0x9FFF)
 }
+// =============================================================================
+// F-2: 数式セルの構文保護（whole経路用）
+// 数式の構文（=, 関数名, セル参照, 括弧, 演算子, 区切り）は翻訳機へ渡さず、
+// 二重引用符内の文字列リテラルのみを翻訳対象とする。
+// =============================================================================
+
+const LIT_OPEN: char = '\u{E020}';
+const LIT_CLOSE: char = '\u{E021}';
+
+/// 数式セルかどうか（先頭が '='）。
+pub fn is_formula_text(text: &str) -> bool {
+    text.trim_start().starts_with('=')
+}
+
+/// 数式から "..." リテラルを抽出し、プレースホルダ化したテンプレートとリテラル列を返す。
+/// Excel数式の "" エスケープはリテラル内の " として保持する。
+pub fn extract_quoted_literals(formula: &str) -> (String, Vec<String>) {
+    let chars: Vec<char> = formula.chars().collect();
+    let mut template = String::new();
+    let mut literals: Vec<String> = Vec::new();
+    let mut i = 0;
+    while i < chars.len() {
+        let ch = chars[i];
+        if ch == '"' {
+            let mut lit = String::new();
+            i += 1;
+            loop {
+                if i >= chars.len() {
+                    break;
+                }
+                if chars[i] == '"' {
+                    if i + 1 < chars.len() && chars[i + 1] == '"' {
+                        lit.push('"');
+                        i += 2;
+                        continue;
+                    }
+                    i += 1; // 閉じ引用符
+                    break;
+                }
+                lit.push(chars[i]);
+                i += 1;
+            }
+            template.push(LIT_OPEN);
+            template.push_str(&literals.len().to_string());
+            template.push(LIT_CLOSE);
+            literals.push(lit);
+        } else {
+            template.push(ch);
+            i += 1;
+        }
+    }
+    (template, literals)
+}
+
+/// extract_quoted_literals のテンプレートに翻訳済みリテラルを戻す。
+/// リテラル内の " は Excel数式の "" に再エスケープする。
+pub fn reassemble_formula(template: &str, translated: &[String]) -> String {
+    let chars: Vec<char> = template.chars().collect();
+    let mut out = String::new();
+    let mut i = 0;
+    while i < chars.len() {
+        if chars[i] == LIT_OPEN {
+            let mut num = String::new();
+            i += 1;
+            while i < chars.len() && chars[i] != LIT_CLOSE {
+                num.push(chars[i]);
+                i += 1;
+            }
+            if i < chars.len() {
+                i += 1; // LIT_CLOSE をスキップ
+            }
+            out.push('"');
+            if let Ok(idx) = num.parse::<usize>() {
+                if let Some(lit) = translated.get(idx) {
+                    for c in lit.chars() {
+                        if c == '"' {
+                            out.push('"');
+                            out.push('"');
+                        } else {
+                            out.push(c);
+                        }
+                    }
+                }
+            }
+            out.push('"');
+        } else {
+            out.push(chars[i]);
+            i += 1;
+        }
+    }
+    out
+}
