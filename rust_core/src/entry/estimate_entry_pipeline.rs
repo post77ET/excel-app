@@ -10,6 +10,8 @@ use crate::entry::job_plan_settings::{load_job_plan_settings, EXPERIENCE_MAX_COL
 use crate::entry::sheet_select_cli::{confirm, select_sheets};
 use crate::entry::workbook_sheet_inventory::load_sheet_inventory;
 use crate::infra::config_loader::load_translator_config;
+use crate::planning::ExecutionPlan;
+use crate::plan::CellScope;
 use crate::pricing::estimate::{calculate_billing_estimate, BillingEstimate, EstimateInput};
 use crate::security::pipeline::{inspect_xlsx, print_report};
 use crate::security::types::SecurityResult;
@@ -32,6 +34,21 @@ pub fn run_estimate_select_pipeline(input_path: &str) -> Result<BillingEstimate,
     let inventory = load_sheet_inventory(input).map_err(|e| EntryError::Internal(format!("{:?}", e)))?;
     let job_plan = load_job_plan_settings();
     let cfg = load_translator_config();
+
+    // === Phase 1: ExecutionPlan を確定し direction / plan を resolve（恒等マッピング）===
+    let execution_plan = ExecutionPlan::from_runtime(&job_plan);
+    let _direction_profile = execution_plan
+        .resolve_direction()
+        .map_err(EntryError::Internal)?;
+    let plan_policy = execution_plan
+        .resolve_plan()
+        .map_err(EntryError::Internal)?;
+    let cell_scope = plan_policy.cell_scope();
+    println!(
+        "[EXECUTION_PLAN][RESOLVED][ESTIMATE] plan={} cell_scope={:?}",
+        plan_policy.id(),
+        cell_scope
+    );
 
     let selected_sheets = loop {
         let selected = match select_sheets(&inventory.sheets, job_plan.is_experience()) {
@@ -73,9 +90,13 @@ pub fn run_estimate_select_pipeline(input_path: &str) -> Result<BillingEstimate,
         std::env::set_var("ETB_TARGET_SHEET", sheet);
         let mut logical_cells = read_source_logical_cells().map_err(|e| EntryError::Internal(format!("{:?}", e)))?;
 
-        if job_plan.is_experience() {
+        // Phase 1: 範囲制限を plan_policy.cell_scope() の値で実際に判定する（現行と同値）。
+        if let CellScope::Range { .. } = cell_scope {
             let before = logical_cells.len();
-            logical_cells.retain(|cell| is_in_experience_range(&cell.anchor_address));
+            logical_cells.retain(|cell| match split_cell_address(&cell.anchor_address) {
+                Some((col, row)) => cell_scope.contains(col, row),
+                None => false,
+            });
             println!(
                 "[EXPERIENCE][ESTIMATE] sheet={} range={} target_cells={} filtered_out={}",
                 sheet,
@@ -157,6 +178,9 @@ pub fn run_estimate_select_pipeline(input_path: &str) -> Result<BillingEstimate,
     Ok(estimate)
 }
 
+// Phase 1 以降は plan_policy.cell_scope().contains() で範囲判定するため未使用。
+// Phase 3 で free_plan へ完全移設後に撤去する。
+#[allow(dead_code)]
 fn is_in_experience_range(address: &str) -> bool {
     match split_cell_address(address) {
         Some((col, row)) => row >= 1 && row <= EXPERIENCE_MAX_ROW && col >= 1 && col <= EXPERIENCE_MAX_COL,

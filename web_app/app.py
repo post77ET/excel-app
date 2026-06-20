@@ -306,6 +306,8 @@ def print_env_check(rust_env: dict[str, str]) -> None:
     print("[ENV CHECK] ETB_TRANSLATOR_CONFIG =", rust_env.get("ETB_TRANSLATOR_CONFIG", "MISSING"), flush=True)
     print("[ENV CHECK] ETB_JOB_PLAN_CONFIG =", rust_env.get("ETB_JOB_PLAN_CONFIG", "MISSING"), flush=True)
     print("[ENV CHECK] ETB_SELECTED_SHEETS =", rust_env.get("ETB_SELECTED_SHEETS", "MISSING"), flush=True)
+    print("[ENV CHECK] ETB_DIRECTION_ID =", rust_env.get("ETB_DIRECTION_ID", "MISSING"), flush=True)
+    print("[ENV CHECK] ETB_BILLING_MODE =", rust_env.get("ETB_BILLING_MODE", "MISSING"), flush=True)
     print("[ENV CHECK] ETB_BIN_PATH =", os.environ.get("ETB_BIN_PATH", "MISSING"), flush=True)
 
 
@@ -563,12 +565,18 @@ def generate():
         c2_provider = request.form.get("c2_provider", None)
         c3_provider = request.form.get("c3_provider", None)
         plan_path = write_job_plan_config(job_id, mode, course, c1_provider, c2_provider, c3_provider)
+        # Phase 1: ExecutionPlan の実行条件を Rust へ明示的に渡す。
+        # direction_id は現状 ja2zh のみ。billing_mode は既存 mode から導出（experience->free / paid->paid_standard）。
+        # これらは Rust 側 ExecutionPlan::from_runtime が env として受け取り resolve に流す。
+        billing_mode = "free" if mode == "experience" else "paid_standard"
         extra_env = {
             "ETB_REQUEST_ID": job_id,
             "ETB_SELECTED_SHEETS": selected_token,
             "ETB_JOB_PLAN_CONFIG": str(plan_path),
             "ETB_UI_OUTPUT": str(output_path),
             "ETB_OUTPUT_DIR": str(OUTPUT_DIR),
+            "ETB_DIRECTION_ID": "ja2zh",
+            "ETB_BILLING_MODE": billing_mode,
         }
 
         # 順番待ち: queuedで登録し、リクエスト毎スレッドを起こしてセマフォで直列化。

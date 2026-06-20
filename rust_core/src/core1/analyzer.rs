@@ -171,6 +171,8 @@ pub fn build_candidate_bundle(
         50,
         3000,
         &CandidateGenerationPlan::default(),
+        Lang::Ja,
+        Lang::Zh,
     )?;
 
     bundles
@@ -189,6 +191,8 @@ pub fn build_candidate_bundles_batch(
     batch_max_items: usize,
     batch_max_chars: usize,
     candidate_plan: &CandidateGenerationPlan,
+    from_lang: Lang,
+    to_lang: Lang,
 ) -> Result<Vec<CandidateBundle>, AppError> {
     if logical_cells.len() != policies.len() || logical_cells.len() != default_selects.len() {
         return Err(AppError::Internal(format!(
@@ -222,6 +226,8 @@ pub fn build_candidate_bundles_batch(
                         adapter1,
                         safe_max_items,
                         safe_max_chars,
+                        from_lang,
+                        to_lang,
                     ))
                 }))
             } else {
@@ -238,6 +244,8 @@ pub fn build_candidate_bundles_batch(
                         adapter2,
                         safe_max_items,
                         safe_max_chars,
+                        from_lang,
+                        to_lang,
                     ))
                 }))
             } else {
@@ -254,6 +262,8 @@ pub fn build_candidate_bundles_batch(
                         adapter3,
                         safe_max_items,
                         safe_max_chars,
+                        from_lang,
+                        to_lang,
                     ))
                 }))
             } else {
@@ -396,6 +406,8 @@ fn translate_segments_for_cells(
     adapter: &dyn TranslatorAdapter,
     batch_max_items: usize,
     batch_max_chars: usize,
+    from_lang: Lang,
+    to_lang: Lang,
 ) -> Vec<Result<String, String>> {
     let mut results: Vec<Result<String, String>> = logical_cells
         .iter()
@@ -465,8 +477,8 @@ fn translate_segments_for_cells(
                 request_id: format!("{}-{}-{}", label, batch_idx + 1, offset + 1),
                 provider: adapter.provider_kind(),
                 text: plan.text.clone(),
-                from_lang: Lang::Ja,
-                to_lang: Lang::Zh,
+                from_lang,
+                to_lang,
                 timeout_ms: 1000,
             })
             .collect();
@@ -601,6 +613,8 @@ fn translate_whole_for_cells(
     adapter: &dyn TranslatorAdapter,
     batch_max_items: usize,
     batch_max_chars: usize,
+    from_lang: Lang,
+    to_lang: Lang,
 ) -> Vec<Result<String, String>> {
     let mut results: Vec<Result<String, String>> = logical_cells
         .iter()
@@ -645,8 +659,8 @@ fn translate_whole_for_cells(
                 request_id: format!("{}-{}-{}", label, batch_idx + 1, offset + 1),
                 provider: adapter.provider_kind(),
                 text: plan.text.clone(),
-                from_lang: Lang::Ja,
-                to_lang: Lang::Zh,
+                from_lang,
+                to_lang,
                 timeout_ms: 1000,
             })
             .collect();

@@ -14,6 +14,8 @@ use crate::entry::runtime_paths::{build_job_paths, ensure_runtime_dirs, project_
 use crate::entry::sheet_select_cli::{confirm, select_sheets};
 use crate::entry::workbook_sheet_inventory::load_sheet_inventory;
 use crate::infra::config_loader::load_translator_config;
+use crate::planning::ExecutionPlan;
+use crate::plan::CellScope;
 use crate::entry::job_plan_settings::{load_job_plan_settings, EXPERIENCE_MAX_COL, EXPERIENCE_MAX_ROW, EXPERIENCE_RANGE_LABEL};
 use crate::security::pipeline::{inspect_xlsx, print_report};
 use crate::security::types::SecurityResult;
@@ -45,6 +47,28 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
     }
     let inventory = load_sheet_inventory(&job_paths.replica_path).map_err(|e| EntryError::Internal(format!("{:?}", e)))?;
     let job_plan = load_job_plan_settings();
+
+    // === Phase 1: ExecutionPlan を確定し、direction / plan を resolve する ===
+    // direction_id / billing_mode を正式な実行条件としてシステムへ流し込む。
+    // Phase 1 では resolve の中身は現行挙動と同一（恒等マッピング）。
+    // 解決した結果（言語ペア・範囲制約）は、以降の既存処理で実際に参照される。
+    let execution_plan = ExecutionPlan::from_runtime(&job_plan);
+    let direction_profile = execution_plan
+        .resolve_direction()
+        .map_err(EntryError::Internal)?;
+    let plan_policy = execution_plan
+        .resolve_plan()
+        .map_err(EntryError::Internal)?;
+    let (src_lang, dst_lang) = direction_profile.lang_pair();
+    let cell_scope = plan_policy.cell_scope();
+    println!(
+        "[EXECUTION_PLAN][RESOLVED] direction={} lang_pair={:?}->{:?} plan={} cell_scope={:?}",
+        direction_profile.id(),
+        src_lang,
+        dst_lang,
+        plan_policy.id(),
+        cell_scope
+    );
 
     let selected_sheets = loop {
         let selected = match select_sheets(&inventory.sheets, job_plan.is_experience()) {
@@ -102,9 +126,15 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
         std::env::set_var("ETB_TARGET_SHEET", sheet);
         let mut logical_cells = read_source_logical_cells().map_err(|e| EntryError::Internal(format!("{:?}", e)))?;
 
-        if job_plan.is_experience() {
+        // Phase 1: 範囲制限を plan_policy.cell_scope() の値で実際に判定する。
+        // free -> Range(A1:D5) のとき contains() で範囲内のみ残す（現行 is_in_experience_range と同値）。
+        // paid_standard -> Full のときフィルタ自体を行わない（現行 paid と同一）。
+        if let CellScope::Range { .. } = cell_scope {
             let before = logical_cells.len();
-            logical_cells.retain(|cell| is_in_experience_range(&cell.anchor_address));
+            logical_cells.retain(|cell| match split_cell_address(&cell.anchor_address) {
+                Some((col, row)) => cell_scope.contains(col, row),
+                None => false,
+            });
             println!(
                 "[EXPERIENCE] sheet={} range={} target_cells={} filtered_out={}",
                 sheet,
@@ -135,6 +165,8 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
             cfg.batch_max_items,
             cfg.batch_max_chars,
             &candidate_generation_plan,
+            src_lang,
+            dst_lang,
         ).map_err(|e| EntryError::Internal(format!("{:?}", e)))?;
 
         if bundles.len() != logical_cells.len() {
@@ -186,6 +218,9 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
         selected_sheets,
     })
 }
+// Phase 1 以降は plan_policy.cell_scope().contains() で範囲判定するため未使用。
+// Phase 3 で free_plan へ完全移設後に撤去する。
+#[allow(dead_code)]
 fn is_in_experience_range(address: &str) -> bool {
     match split_cell_address(address) {
         Some((col, row)) => row >= 1 && row <= EXPERIENCE_MAX_ROW && col >= 1 && col <= EXPERIENCE_MAX_COL,
