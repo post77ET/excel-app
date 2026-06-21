@@ -69,6 +69,7 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
         plan_policy.id(),
         cell_scope
     );
+    println!("[ETB_PHASE1_MARKER] generate path reached: direction={} plan={}", direction_profile.id(), plan_policy.id());
 
     let selected_sheets = loop {
         let selected = match select_sheets(&inventory.sheets, job_plan.is_experience()) {

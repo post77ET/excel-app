@@ -49,6 +49,7 @@ pub fn run_estimate_select_pipeline(input_path: &str) -> Result<BillingEstimate,
         plan_policy.id(),
         cell_scope
     );
+    println!("[ETB_PHASE1_MARKER] estimate path reached: plan={}", plan_policy.id());
 
     let selected_sheets = loop {
         let selected = match select_sheets(&inventory.sheets, job_plan.is_experience()) {
