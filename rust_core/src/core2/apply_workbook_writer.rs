@@ -52,6 +52,8 @@ pub fn write_apply_workbook(
         .map_err(|e| format!("shared formula parent lookup failed: {e}"))?;
 
     let mut shared_overrides: Vec<SharedFormulaOverride> = Vec::new();
+    // F-3: 無効候補でベース数式を保持した行の警告（sheet, addr, message）
+    let mut formula_guard_warnings: Vec<(String, String, String)> = Vec::new();
 
     for row in rows {
         if row.writeback_mode == "Preserve" || row.writeback_mode == "SharedFormulaFollower" {
@@ -81,18 +83,77 @@ pub fn write_apply_workbook(
 
             let shared_parent_key = format!("{}!{}", row.sheet_name, row.anchor_address);
 
+            // F-3: shared / 非shared の両経路に入る前に、候補数式を正規化＋構文検証する。
+            // 無効（全角構文/空白混入など）ならベース数式を保持し警告（dt=s化を防ぐ）。
+            let normalized = normalize_formula_syntax(&formula_body);
+            if !is_formula_syntax_valid(&normalized) {
+                println!(
+                    "[F3][FORMULA][rejected->keep_base] sheet={} addr={} US={} mode={} candidate={:?}",
+                    row.sheet_name, row.anchor_address, row.selected_source,
+                    if shared_parent_lookup.contains(&shared_parent_key) { "shared" } else { "single" },
+                    formula_body
+                );
+                formula_guard_warnings.push((
+                    row.sheet_name.clone(),
+                    row.anchor_address.clone(),
+                    format!(
+                        "数式候補が無効な構文のため不適用。元の数式を保持しました（候補: {}）",
+                        formula_body
+                    ),
+                ));
+                continue; // セルは変更しない（ベース数式のまま）
+            }
+
+            // shared formula parent も同じ正規化済み・検証済みの本文を使う。
             if shared_parent_lookup.contains(&shared_parent_key) {
+                println!(
+                    "[F3][FORMULA][shared_override] sheet={} addr={} formula={:?}",
+                    row.sheet_name, row.anchor_address, normalized
+                );
                 shared_overrides.push(SharedFormulaOverride {
                     sheet_name: row.sheet_name.clone(),
                     anchor_address: row.anchor_address.clone(),
-                    formula_body,
+                    formula_body: normalized,
                 });
                 continue;
             }
 
-            sheet
-                .get_cell_mut(row.anchor_address.as_str())
-                .set_formula(formula_body);
+            let addr = row.anchor_address.as_str();
+            let base_formula = sheet
+                .get_cell(addr)
+                .map(|c| c.get_formula().to_string())
+                .unwrap_or_default();
+
+            sheet.get_cell_mut(addr).set_formula(normalized.clone());
+
+            // 条件3: set_formula 後に get_formula() で read-back 確認。
+            // 数式として保持されていなければベース数式へ戻し、警告する。
+            let readback = sheet
+                .get_cell(addr)
+                .map(|c| (c.is_formula(), c.get_formula().to_string()))
+                .unwrap_or((false, String::new()));
+            if readback.0 && readback.1.trim() == normalized.trim() {
+                println!(
+                    "[F3][FORMULA][applied] sheet={} addr={} US={} formula={:?}",
+                    row.sheet_name, addr, row.selected_source, normalized
+                );
+            } else {
+                if !base_formula.trim().is_empty() {
+                    sheet.get_cell_mut(addr).set_formula(base_formula.clone());
+                }
+                println!(
+                    "[F3][FORMULA][readback_failed->keep_base] sheet={} addr={} US={} normalized={:?} readback={:?} base={:?}",
+                    row.sheet_name, addr, row.selected_source, normalized, readback, base_formula
+                );
+                formula_guard_warnings.push((
+                    row.sheet_name.clone(),
+                    row.anchor_address.clone(),
+                    format!(
+                        "数式の書き戻し検証に失敗したため元の数式を保持しました（候補: {}）",
+                        formula_body
+                    ),
+                ));
+            }
         } else {
             sheet
                 .get_cell_mut(row.anchor_address.as_str())
@@ -127,7 +188,7 @@ pub fn write_apply_workbook(
 
     // No.2 fix: ユーザーが明示選択した候補が空で原文/空にフォールバックした
     // ケースを TRANSLATION_WARNINGS シートに出力する（サイレントフェイル解消）。
-    let warning_count = write_apply_warnings_sheet_into_book(&mut book, rows)?;
+    let warning_count = write_apply_warnings_sheet_into_book(&mut book, rows, &formula_guard_warnings)?;
     if warning_count > 0 {
         println!(
             "[WARN][APPLY] silent-fallback warnings written to {} sheet: {} row(s)",
@@ -182,6 +243,96 @@ fn normalize_formula_body(input: &str) -> String {
     text.to_string()
 }
 
+/// 数式構文の正規化：引用符の外側にある全角の構文記号・スマート引用符を ASCII に直す。
+/// 引用符内（文字列リテラル、中国語など）は一切変更しない。
+/// Excel数式の "" エスケープ（リテラル内の " 表現）に対応する。
+fn normalize_formula_syntax(input: &str) -> String {
+    let chars: Vec<char> = input.chars().collect();
+    let mut out = String::with_capacity(input.len());
+    let mut in_quote = false;
+    let mut i = 0;
+    while i < chars.len() {
+        let ch = chars[i];
+        if !in_quote {
+            let mapped = match ch {
+                '（' => '(',
+                '）' => ')',
+                '：' => ':',
+                '，' => ',',
+                '；' => ';',
+                '“' | '”' | '＂' => '"',
+                other => other,
+            };
+            if mapped == '"' {
+                in_quote = true;
+            }
+            out.push(mapped);
+            i += 1;
+        } else {
+            // "" は文字列内の " （エスケープ）。引用符終端ではない。
+            if ch == '"' && i + 1 < chars.len() && chars[i + 1] == '"' {
+                out.push('"');
+                out.push('"');
+                i += 2;
+                continue;
+            }
+            if ch == '"' || ch == '“' || ch == '”' || ch == '＂' {
+                in_quote = false;
+                out.push('"');
+                i += 1;
+            } else {
+                out.push(ch);
+                i += 1;
+            }
+        }
+    }
+    out
+}
+
+/// set_formula して安全な数式かを保守的に判定する。
+/// NG の場合、呼び出し側はベース数式を保持し警告する（=安全側に倒す）。
+/// Excel数式の "" エスケープに対応する。
+fn is_formula_syntax_valid(body: &str) -> bool {
+    if body.trim().is_empty() {
+        return false;
+    }
+    let chars: Vec<char> = body.chars().collect();
+    let mut depth: i32 = 0;
+    let mut in_quote = false;
+    let mut i = 0;
+    while i < chars.len() {
+        let ch = chars[i];
+        if in_quote {
+            // "" はリテラル内のエスケープ。終端ではない。
+            if ch == '"' && i + 1 < chars.len() && chars[i + 1] == '"' {
+                i += 2;
+                continue;
+            }
+            if ch == '"' {
+                in_quote = false;
+            }
+            i += 1;
+            continue;
+        }
+        match ch {
+            '"' => in_quote = true,
+            '(' => depth += 1,
+            ')' => {
+                depth -= 1;
+                if depth < 0 {
+                    return false;
+                }
+            }
+            // 引用符の外側に全角構文記号・スマート引用符・空白が残っていたら NG
+            '（' | '）' | '：' | '，' | '；' | '“' | '”' | '＂' | '　' => return false,
+            c if c.is_whitespace() => return false,
+            _ => {}
+        }
+        i += 1;
+    }
+    !in_quote && depth == 0
+}
+
 fn collect_target_sheet_names(rows: &[ApplyPayloadRow]) -> Vec<String> {
     let mut names: Vec<String> = Vec::new();
 
@@ -223,13 +374,14 @@ fn collect_main_sheet_names_from_workbook(book: &umya_spreadsheet::Spreadsheet) 
 fn write_apply_warnings_sheet_into_book(
     book: &mut umya_spreadsheet::Spreadsheet,
     rows: &[ApplyPayloadRow],
+    extra_warnings: &[(String, String, String)],
 ) -> Result<usize, String> {
     let warned: Vec<&ApplyPayloadRow> = rows
         .iter()
         .filter(|r| r.apply_warning.is_some())
         .collect();
 
-    if warned.is_empty() {
+    if warned.is_empty() && extra_warnings.is_empty() {
         return Ok(0);
     }
 
@@ -257,6 +409,13 @@ fn write_apply_warnings_sheet_into_book(
         sheet.get_cell_mut(format!("D{}", out_row)).set_value(msg);
         out_row += 1;
     }
+    for (sheet_name, addr, msg) in extra_warnings {
+        sheet.get_cell_mut(format!("A{}", out_row)).set_value(sheet_name);
+        sheet.get_cell_mut(format!("B{}", out_row)).set_value(addr);
+        sheet.get_cell_mut(format!("C{}", out_row)).set_value("formula-guard");
+        sheet.get_cell_mut(format!("D{}", out_row)).set_value(msg);
+        out_row += 1;
+    }
 
     for (col, width) in [("A", 18.0), ("B", 12.0), ("C", 16.0), ("D", 64.0)] {
         sheet.get_column_dimension_mut(col).set_width(width);
@@ -271,7 +430,7 @@ fn write_apply_warnings_sheet_into_book(
         }
     }
 
-    Ok(warned.len())
+    Ok(warned.len() + extra_warnings.len())
 }
 
 fn col_index_to_letters(mut col: u32) -> String {

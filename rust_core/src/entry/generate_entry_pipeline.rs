@@ -152,7 +152,7 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
 
         for logical_cell in &logical_cells {
             let structure = analyze_text_structure(&logical_cell.source_text);
-            let policy = decide_translation_policy(logical_cell.cell_kind, &structure);
+            let policy = decide_translation_policy(logical_cell.cell_kind, &structure, direction_profile.as_ref());
             policies.push(policy);
         }
 
@@ -168,6 +168,7 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
             &candidate_generation_plan,
             src_lang,
             dst_lang,
+            direction_profile.as_ref(),
         ).map_err(|e| EntryError::Internal(format!("{:?}", e)))?;
 
         if bundles.len() != logical_cells.len() {
@@ -189,6 +190,7 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
                 policy.translate_candidates,
                 candidate1_text,
                 &logical_cell.source_text,
+                direction_profile.as_ref(),
             );
         }
 
@@ -235,6 +237,10 @@ fn split_cell_address(address: &str) -> Option<(u32, u32)> {
     let mut seen_digit = false;
 
     for ch in address.chars() {
+        if ch == '$' {
+            // 絶対参照記号は無視（A1 形式・$A$1 形式の双方を許容。現行は A1 のみのため挙動不変）
+            continue;
+        }
         if ch.is_ascii_alphabetic() && !seen_digit {
             col = col * 26 + ((ch.to_ascii_uppercase() as u8 - b'A' + 1) as u32);
         } else if ch.is_ascii_digit() {

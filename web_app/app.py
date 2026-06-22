@@ -296,7 +296,7 @@ def build_rust_env(extra_env: dict[str, str] | None = None) -> dict[str, str]:
     return rust_env
 
 
-def print_env_check(rust_env: dict[str, str]) -> None:
+def print_env_check(rust_env: dict[str, str], command: str = "") -> None:
     print("[ENV CHECK] DEEPL_API_KEY =", "OK" if rust_env.get("DEEPL_API_KEY") else "MISSING", flush=True)
     print("[ENV CHECK] DEEPL_KEY =", "OK" if rust_env.get("DEEPL_KEY") else "MISSING", flush=True)
     print("[ENV CHECK] AWS_ACCESS_KEY_ID =", "OK" if rust_env.get("AWS_ACCESS_KEY_ID") else "MISSING", flush=True)
@@ -306,14 +306,25 @@ def print_env_check(rust_env: dict[str, str]) -> None:
     print("[ENV CHECK] ETB_TRANSLATOR_CONFIG =", rust_env.get("ETB_TRANSLATOR_CONFIG", "MISSING"), flush=True)
     print("[ENV CHECK] ETB_JOB_PLAN_CONFIG =", rust_env.get("ETB_JOB_PLAN_CONFIG", "MISSING"), flush=True)
     print("[ENV CHECK] ETB_SELECTED_SHEETS =", rust_env.get("ETB_SELECTED_SHEETS", "MISSING"), flush=True)
-    print("[ENV CHECK] ETB_DIRECTION_ID =", rust_env.get("ETB_DIRECTION_ID", "MISSING"), flush=True)
-    print("[ENV CHECK] ETB_BILLING_MODE =", rust_env.get("ETB_BILLING_MODE", "MISSING"), flush=True)
+
+    # ETB_DIRECTION_ID / ETB_BILLING_MODE は generate / estimate でのみ必要。
+    # apply など他コマンドでは不要なので MISSING ではなく NOT_REQUIRED_FOR_APPLY を表示する。
+    requires_direction = command in ("generate-select", "estimate-select")
+    if requires_direction:
+        did = rust_env.get("ETB_DIRECTION_ID")
+        bmode = rust_env.get("ETB_BILLING_MODE")
+        print("[ENV CHECK] ETB_DIRECTION_ID =", ("OK " + did) if did else "MISSING", flush=True)
+        print("[ENV CHECK] ETB_BILLING_MODE =", ("OK " + bmode) if bmode else "MISSING", flush=True)
+    else:
+        print("[ENV CHECK] ETB_DIRECTION_ID = NOT_REQUIRED_FOR_APPLY", flush=True)
+        print("[ENV CHECK] ETB_BILLING_MODE = NOT_REQUIRED_FOR_APPLY", flush=True)
+
     print("[ENV CHECK] ETB_BIN_PATH =", os.environ.get("ETB_BIN_PATH", "MISSING"), flush=True)
 
 
 def run_rust(args: list[str], extra_env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
     rust_env = build_rust_env(extra_env)
-    print_env_check(rust_env)
+    print_env_check(rust_env, args[0] if args else "")
     cmd = [rust_binary_path(), *args]
     print("[RUST CMD]", " ".join(str(x) for x in cmd), flush=True)
     print("[RUST CWD]", str(WORK_DIR), flush=True)

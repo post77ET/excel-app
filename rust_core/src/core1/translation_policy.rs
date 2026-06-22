@@ -1,5 +1,6 @@
 use crate::core1::text_structure_analyzer::TextStructure;
 use crate::core2::structure_types::LogicalCellKind;
+use crate::direction::DirectionProfile;
 
 #[derive(Debug, Clone)]
 pub struct TranslationPolicyDecision {
@@ -10,6 +11,7 @@ pub struct TranslationPolicyDecision {
 pub fn decide_translation_policy(
     cell_kind: LogicalCellKind,
     structure: &TextStructure,
+    direction: &dyn DirectionProfile,
 ) -> TranslationPolicyDecision {
     match cell_kind {
         LogicalCellKind::Empty | LogicalCellKind::NonTranslatable => TranslationPolicyDecision {
@@ -23,7 +25,7 @@ pub fn decide_translation_policy(
         },
 
         LogicalCellKind::FormulaRaw | LogicalCellKind::SharedFormulaParent => {
-            if structure.kanji_count >= 1 || structure.kana_kana_count >= 3 {
+            if direction.should_translate_by_text_structure(structure) {
                 TranslationPolicyDecision {
                     translate_candidates: true,
                     note: "formula cell -> candidates enabled".to_string(),
@@ -52,7 +54,7 @@ pub fn decide_translation_policy(
         },
 
         LogicalCellKind::Text => {
-            if structure.kanji_count >= 1 || structure.kana_kana_count >= 3 {
+            if direction.should_translate_by_text_structure(structure) {
                 TranslationPolicyDecision {
                     translate_candidates: true,
                     note: "text cell -> candidates enabled".to_string(),
@@ -65,4 +67,4 @@ pub fn decide_translation_policy(
             }
         }
     }
-}
+}

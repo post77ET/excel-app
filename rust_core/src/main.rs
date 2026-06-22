@@ -8,12 +8,30 @@ use core1_etb::entry::estimate_entry_pipeline::run_estimate_select_pipeline;
 
 fn main() {
     dotenvy::dotenv().ok();
-    println!("DEEPL_API_KEY={:?}", std::env::var("DEEPL_API_KEY"));
     println!(
-        "GOOGLE_APPLICATION_CREDENTIALS={:?}",
-        std::env::var("GOOGLE_APPLICATION_CREDENTIALS")
+        "DEEPL_API_KEY={}",
+        if std::env::var("DEEPL_API_KEY").map(|v| !v.trim().is_empty()).unwrap_or(false) {
+            "present"
+        } else {
+            "missing"
+        }
     );
-    println!("AWS_ACCESS_KEY_ID={:?}", std::env::var("AWS_ACCESS_KEY_ID"));
+    println!(
+        "GOOGLE_APPLICATION_CREDENTIALS={}",
+        if std::env::var("GOOGLE_APPLICATION_CREDENTIALS").map(|v| !v.trim().is_empty()).unwrap_or(false) {
+            "present"
+        } else {
+            "missing"
+        }
+    );
+    println!(
+        "AWS_ACCESS_KEY_ID={}",
+        if std::env::var("AWS_ACCESS_KEY_ID").map(|v| !v.trim().is_empty()).unwrap_or(false) {
+            "present"
+        } else {
+            "missing"
+        }
+    );
     println!(
         "AWS_SECRET_ACCESS_KEY={:?}",
         mask_secret(std::env::var("AWS_SECRET_ACCESS_KEY").ok())

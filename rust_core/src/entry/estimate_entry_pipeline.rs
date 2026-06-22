@@ -37,7 +37,7 @@ pub fn run_estimate_select_pipeline(input_path: &str) -> Result<BillingEstimate,
 
     // === Phase 1: ExecutionPlan を確定し direction / plan を resolve（恒等マッピング）===
     let execution_plan = ExecutionPlan::from_runtime(&job_plan);
-    let _direction_profile = execution_plan
+    let direction_profile = execution_plan
         .resolve_direction()
         .map_err(EntryError::Internal)?;
     let plan_policy = execution_plan
@@ -112,11 +112,11 @@ pub fn run_estimate_select_pipeline(input_path: &str) -> Result<BillingEstimate,
         let mut policies = Vec::with_capacity(logical_cells.len());
         for logical_cell in &logical_cells {
             let structure = analyze_text_structure(&logical_cell.source_text);
-            let policy = decide_translation_policy(logical_cell.cell_kind, &structure);
+            let policy = decide_translation_policy(logical_cell.cell_kind, &structure, direction_profile.as_ref());
             policies.push(policy);
         }
 
-        let usage = estimate_candidate_usage(&logical_cells, &policies, &candidate_generation_plan)
+        let usage = estimate_candidate_usage(&logical_cells, &policies, &candidate_generation_plan, direction_profile.as_ref())
             .map_err(|e| EntryError::Internal(format!("{:?}", e)))?;
 
         println!(
@@ -195,6 +195,10 @@ fn split_cell_address(address: &str) -> Option<(u32, u32)> {
     let mut seen_digit = false;
 
     for ch in address.chars() {
+        if ch == '$' {
+            // 絶対参照記号は無視（A1 形式・$A$1 形式の双方を許容。現行は A1 のみのため挙動不変）
+            continue;
+        }
         if ch.is_ascii_alphabetic() && !seen_digit {
             col = col * 26 + ((ch.to_ascii_uppercase() as u8 - b'A' + 1) as u32);
         } else if ch.is_ascii_digit() {

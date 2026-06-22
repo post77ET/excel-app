@@ -1,6 +1,7 @@
 use crate::core1::text_structure_analyzer::TextStructure;
 use crate::core1::types::DefaultSelect;
 use crate::core2::structure_types::LogicalCellKind;
+use crate::direction::DirectionProfile;
 
 /// DefaultSelect を決定する。
 ///
@@ -18,6 +19,7 @@ pub fn decide_default_select(
     translate_candidates: bool,
     candidate1_text: Option<&str>,
     original_text: &str,
+    direction: &dyn DirectionProfile,
 ) -> DefaultSelect {
     // ルール1: 翻訳自体をスキップするセル
     if !translate_candidates {
@@ -44,7 +46,7 @@ pub fn decide_default_select(
     }
 
     // ルール4: 翻訳価値がある日本語テキスト
-    if structure.kanji_count >= 1 || structure.kana_kana_count >= 3 {
+    if direction.should_translate_by_text_structure(structure) {
         return DefaultSelect::Candidate1;
     }
 

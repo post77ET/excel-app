@@ -11,6 +11,7 @@
 // ============================================================
 
 use crate::adapters::types::Lang;
+use crate::core1::text_structure_analyzer::TextStructure;
 
 pub mod ja_zh;
 
@@ -20,6 +21,12 @@ pub trait DirectionProfile: Send + Sync {
 
     /// (翻訳元, 翻訳先) の言語ペア
     fn lang_pair(&self) -> (Lang, Lang);
+
+    /// 計測済みの文字構造から、この方向で翻訳対象とするか判断する。
+    /// 計測（analyze_text_structure）は共通ライブラリ、判断のみ本 trait に閉じる。
+    /// 設計メモ: 将来の方向では文字構造だけで表現できない可能性があり、
+    /// その際は別メソッド（例: should_translate_by_text(&str)）を追加する拡張余地を残す。
+    fn should_translate_by_text_structure(&self, structure: &TextStructure) -> bool;
 }
 
 /// direction_id から DirectionProfile を解決する。

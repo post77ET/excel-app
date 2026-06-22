@@ -10,6 +10,7 @@ use crate::core2::formula_text::{
 };
 use crate::core2::structure_types::LogicalCell;
 use crate::core2::structure_types::LogicalCellKind;
+use crate::direction::DirectionProfile;
 use crate::infra::app_error::AppError;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -102,6 +103,7 @@ pub fn estimate_candidate_usage(
     logical_cells: &[LogicalCell],
     policies: &[TranslationPolicyDecision],
     candidate_plan: &CandidateGenerationPlan,
+    direction: &dyn DirectionProfile,
 ) -> Result<CandidateUsageEstimate, AppError> {
     if logical_cells.len() != policies.len() {
         return Err(AppError::Internal(format!(
@@ -122,34 +124,48 @@ pub fn estimate_candidate_usage(
 
         if candidate_plan.is_enabled(1) {
             out.candidate_units += 1;
-            let (requests, chars) = estimate_segment_requests(&logical_cell.source_text);
+            let (requests, chars) = estimate_segment_requests(&logical_cell.source_text, direction);
             out.candidate1_requests += requests;
             out.candidate1_chars += chars;
         }
 
         if candidate_plan.is_enabled(2) {
             out.candidate_units += 1;
-            let (requests, chars) = estimate_segment_requests(&logical_cell.source_text);
+            let (requests, chars) = estimate_segment_requests(&logical_cell.source_text, direction);
             out.candidate2_requests += requests;
             out.candidate2_chars += chars;
         }
 
         if candidate_plan.is_enabled(3) {
             out.candidate_units += 1;
-            out.candidate3_requests += 1;
-            out.candidate3_chars += logical_cell.source_text.chars().count();
+            // F-2 整合: candidate3 は実処理と一致させる。
+            // - 数式セル: 引用符内リテラルのみ翻訳 → リテラル数=request, リテラル文字数合計=chars。
+            //             リテラル無し数式は翻訳機を呼ばない → request=0, chars=0。
+            // - 非数式セル: 従来どおり全文1リクエスト=全文字数。
+            if is_formula_cell(logical_cell) {
+                let (_template, literals) = extract_quoted_literals(&logical_cell.source_text);
+                // リテラル無し数式は翻訳機を呼ばない → request=0 / chars=0。
+                if !literals.is_empty() {
+                    out.candidate3_requests += literals.len();
+                    out.candidate3_chars +=
+                        literals.iter().map(|l| l.chars().count()).sum::<usize>();
+                }
+            } else {
+                out.candidate3_requests += 1;
+                out.candidate3_chars += logical_cell.source_text.chars().count();
+            }
         }
     }
 
     Ok(out)
 }
 
-fn estimate_segment_requests(text: &str) -> (usize, usize) {
+fn estimate_segment_requests(text: &str, direction: &dyn DirectionProfile) -> (usize, usize) {
     let mut requests = 0usize;
     let mut chars = 0usize;
 
     for seg in split_preserving_structure(text) {
-        if should_translate_segment(seg.target, &seg.text) {
+        if should_translate_segment(seg.target, &seg.text, direction) {
             requests += 1;
             chars += seg.text.chars().count();
         }
@@ -165,7 +181,9 @@ pub fn build_candidate_bundle(
     adapter1: &dyn TranslatorAdapter,
     adapter2: &dyn TranslatorAdapter,
     adapter3: &dyn TranslatorAdapter,
+    direction: &dyn DirectionProfile,
 ) -> Result<CandidateBundle, AppError> {
+    let (from_lang, to_lang) = direction.lang_pair();
     let bundles = build_candidate_bundles_batch(
         std::slice::from_ref(logical_cell),
         std::slice::from_ref(policy),
@@ -176,8 +194,9 @@ pub fn build_candidate_bundle(
         50,
         3000,
         &CandidateGenerationPlan::default(),
-        Lang::Ja,
-        Lang::Zh,
+        from_lang,
+        to_lang,
+        direction,
     )?;
 
     bundles
@@ -198,6 +217,7 @@ pub fn build_candidate_bundles_batch(
     candidate_plan: &CandidateGenerationPlan,
     from_lang: Lang,
     to_lang: Lang,
+    direction: &dyn DirectionProfile,
 ) -> Result<Vec<CandidateBundle>, AppError> {
     if logical_cells.len() != policies.len() || logical_cells.len() != default_selects.len() {
         return Err(AppError::Internal(format!(
@@ -233,6 +253,7 @@ pub fn build_candidate_bundles_batch(
                         safe_max_chars,
                         from_lang,
                         to_lang,
+                        direction,
                     ))
                 }))
             } else {
@@ -251,6 +272,7 @@ pub fn build_candidate_bundles_batch(
                         safe_max_chars,
                         from_lang,
                         to_lang,
+                        direction,
                     ))
                 }))
             } else {
@@ -323,6 +345,7 @@ pub fn build_candidate_bundles_batch(
             cand1.as_ref().unwrap_or(&Ok(String::new())),
             cand2.as_ref().unwrap_or(&Ok(String::new())),
             cand3.as_ref().unwrap_or(&Ok(String::new())),
+            direction,
         );
 
         let default_select = decide_fallback_default_select(
@@ -413,6 +436,7 @@ fn translate_segments_for_cells(
     batch_max_chars: usize,
     from_lang: Lang,
     to_lang: Lang,
+    direction: &dyn DirectionProfile,
 ) -> Vec<Result<String, String>> {
     let mut results: Vec<Result<String, String>> = logical_cells
         .iter()
@@ -431,7 +455,7 @@ fn translate_segments_for_cells(
         let mut request_positions = Vec::new();
 
         for (segment_idx, seg) in segments.iter().enumerate() {
-            if should_translate_segment(seg.target, &seg.text) {
+            if should_translate_segment(seg.target, &seg.text, direction) {
                 request_positions.push(request_plans.len());
                 // \n/全角スペースをPrivate Use Areaトークンで保護（翻訳エンジンが変換しないよう）
                 let protected_text = seg.text
@@ -543,7 +567,7 @@ fn translate_segments_for_cells(
         let mut cell_error: Option<String> = None;
 
         for (segment_idx, seg) in plan.segments.iter().enumerate() {
-            if should_translate_segment(seg.target, &seg.text) {
+            if should_translate_segment(seg.target, &seg.text, direction) {
                 let req_pos = plan
                     .request_positions
                     .iter()
@@ -995,22 +1019,19 @@ fn build_whole_batches(
     out
 }
 
-fn should_translate_segment(seg_target: bool, text: &str) -> bool {
+fn should_translate_segment(
+    seg_target: bool,
+    text: &str,
+    direction: &dyn DirectionProfile,
+) -> bool {
     if !seg_target {
         return false;
     }
 
     let st = analyze_text_structure(text);
-
-    if !st.contains_japanese_like {
-        return false;
-    }
-
-    if st.kanji_count == 0 && st.kana_kana_count <= 2 {
-        return false;
-    }
-
-    true
+    // 段階2(contains_japanese_like)・段階3(閾値)を direction に統合。
+    // ja2zh では kanji>=1 || kana>=3。実コード同値証明により現行挙動と一致。
+    direction.should_translate_by_text_structure(&st)
 }
 
 fn diag_log(
@@ -1018,6 +1039,7 @@ fn diag_log(
     seg1: &Result<String, String>,
     seg2: &Result<String, String>,
     whole3: &Result<String, String>,
+    direction: &dyn DirectionProfile,
 ) {
     if logical_cell.anchor_address != "A2" && logical_cell.anchor_address != "A7" {
         return;
@@ -1033,7 +1055,7 @@ fn diag_log(
                 f,
                 "SEG[{i}] target={} send={} text={}",
                 seg.target,
-                should_translate_segment(seg.target, &seg.text),
+                should_translate_segment(seg.target, &seg.text, direction),
                 seg.text
             );
         }
