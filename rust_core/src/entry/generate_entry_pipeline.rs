@@ -16,7 +16,7 @@ use crate::entry::workbook_sheet_inventory::load_sheet_inventory;
 use crate::infra::config_loader::load_translator_config;
 use crate::planning::ExecutionPlan;
 use crate::plan::CellScope;
-use crate::entry::job_plan_settings::{load_job_plan_settings, EXPERIENCE_MAX_COL, EXPERIENCE_MAX_ROW, EXPERIENCE_RANGE_LABEL};
+use crate::entry::job_plan_settings::{load_job_plan_settings, EXPERIENCE_RANGE_LABEL};
 use crate::security::pipeline::{inspect_xlsx, print_report};
 use crate::security::types::SecurityResult;
 use crate::ui::types::UiRow;
@@ -128,14 +128,11 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
         let mut logical_cells = read_source_logical_cells().map_err(|e| EntryError::Internal(format!("{:?}", e)))?;
 
         // Phase 1: 範囲制限を plan_policy.cell_scope() の値で実際に判定する。
-        // free -> Range(A1:D5) のとき contains() で範囲内のみ残す（現行 is_in_experience_range と同値）。
+        // free -> Range(A1:D5) のとき cell_scope.contains_address() で範囲内のみ残す（Phase 3 で plan へ集約）。
         // paid_standard -> Full のときフィルタ自体を行わない（現行 paid と同一）。
         if let CellScope::Range { .. } = cell_scope {
             let before = logical_cells.len();
-            logical_cells.retain(|cell| match split_cell_address(&cell.anchor_address) {
-                Some((col, row)) => cell_scope.contains(col, row),
-                None => false,
-            });
+            logical_cells.retain(|cell| cell_scope.contains_address(&cell.anchor_address));
             println!(
                 "[EXPERIENCE] sheet={} range={} target_cells={} filtered_out={}",
                 sheet,
@@ -220,41 +217,4 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
         output_ui_path: job_paths.output_ui_path,
         selected_sheets,
     })
-}
-// Phase 1 以降は plan_policy.cell_scope().contains() で範囲判定するため未使用。
-// Phase 3 で free_plan へ完全移設後に撤去する。
-#[allow(dead_code)]
-fn is_in_experience_range(address: &str) -> bool {
-    match split_cell_address(address) {
-        Some((col, row)) => row >= 1 && row <= EXPERIENCE_MAX_ROW && col >= 1 && col <= EXPERIENCE_MAX_COL,
-        None => false,
-    }
-}
-
-fn split_cell_address(address: &str) -> Option<(u32, u32)> {
-    let mut col: u32 = 0;
-    let mut row_text = String::new();
-    let mut seen_digit = false;
-
-    for ch in address.chars() {
-        if ch == '$' {
-            // 絶対参照記号は無視（A1 形式・$A$1 形式の双方を許容。現行は A1 のみのため挙動不変）
-            continue;
-        }
-        if ch.is_ascii_alphabetic() && !seen_digit {
-            col = col * 26 + ((ch.to_ascii_uppercase() as u8 - b'A' + 1) as u32);
-        } else if ch.is_ascii_digit() {
-            seen_digit = true;
-            row_text.push(ch);
-        } else {
-            return None;
-        }
-    }
-
-    if col == 0 || row_text.is_empty() {
-        return None;
-    }
-
-    let row = row_text.parse::<u32>().ok()?;
-    Some((col, row))
 }

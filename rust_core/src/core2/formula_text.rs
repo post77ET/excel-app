@@ -1,4 +1,5 @@
 use crate::core1::types::Segment;
+use crate::core1::text_structure_analyzer::is_japanese_like;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum CharClass {
@@ -73,10 +74,6 @@ fn classify_char(ch: char) -> CharClass {
 
 fn is_connector(ch: char) -> bool {
     matches!(ch, '、' | '。' | '？' | '！')
-}
-
-fn is_japanese_like(ch: char) -> bool {
-    matches!(ch as u32, 0x3040..=0x309F | 0x30A0..=0x30FF | 0x4E00..=0x9FFF)
 }
 // =============================================================================
 // F-2: 数式セルの構文保護（whole経路用）

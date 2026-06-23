@@ -6,7 +6,7 @@ use crate::core1::text_structure_analyzer::analyze_text_structure;
 use crate::core1::translation_policy::decide_translation_policy;
 use crate::core2::source_workbook_reader::read_source_logical_cells;
 use crate::entry::entry_state::EntryError;
-use crate::entry::job_plan_settings::{load_job_plan_settings, EXPERIENCE_MAX_COL, EXPERIENCE_MAX_ROW, EXPERIENCE_RANGE_LABEL};
+use crate::entry::job_plan_settings::{load_job_plan_settings, EXPERIENCE_RANGE_LABEL};
 use crate::entry::sheet_select_cli::{confirm, select_sheets};
 use crate::entry::workbook_sheet_inventory::load_sheet_inventory;
 use crate::infra::config_loader::load_translator_config;
@@ -94,10 +94,7 @@ pub fn run_estimate_select_pipeline(input_path: &str) -> Result<BillingEstimate,
         // Phase 1: 範囲制限を plan_policy.cell_scope() の値で実際に判定する（現行と同値）。
         if let CellScope::Range { .. } = cell_scope {
             let before = logical_cells.len();
-            logical_cells.retain(|cell| match split_cell_address(&cell.anchor_address) {
-                Some((col, row)) => cell_scope.contains(col, row),
-                None => false,
-            });
+            logical_cells.retain(|cell| cell_scope.contains_address(&cell.anchor_address));
             println!(
                 "[EXPERIENCE][ESTIMATE] sheet={} range={} target_cells={} filtered_out={}",
                 sheet,
@@ -177,42 +174,4 @@ pub fn run_estimate_select_pipeline(input_path: &str) -> Result<BillingEstimate,
 
     println!("=== ENTRY estimate-select end ===");
     Ok(estimate)
-}
-
-// Phase 1 以降は plan_policy.cell_scope().contains() で範囲判定するため未使用。
-// Phase 3 で free_plan へ完全移設後に撤去する。
-#[allow(dead_code)]
-fn is_in_experience_range(address: &str) -> bool {
-    match split_cell_address(address) {
-        Some((col, row)) => row >= 1 && row <= EXPERIENCE_MAX_ROW && col >= 1 && col <= EXPERIENCE_MAX_COL,
-        None => false,
-    }
-}
-
-fn split_cell_address(address: &str) -> Option<(u32, u32)> {
-    let mut col: u32 = 0;
-    let mut row_text = String::new();
-    let mut seen_digit = false;
-
-    for ch in address.chars() {
-        if ch == '$' {
-            // 絶対参照記号は無視（A1 形式・$A$1 形式の双方を許容。現行は A1 のみのため挙動不変）
-            continue;
-        }
-        if ch.is_ascii_alphabetic() && !seen_digit {
-            col = col * 26 + ((ch.to_ascii_uppercase() as u8 - b'A' + 1) as u32);
-        } else if ch.is_ascii_digit() {
-            seen_digit = true;
-            row_text.push(ch);
-        } else {
-            return None;
-        }
-    }
-
-    if col == 0 || row_text.is_empty() {
-        return None;
-    }
-
-    let row = row_text.parse::<u32>().ok()?;
-    Some((col, row))
 }

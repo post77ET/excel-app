@@ -34,6 +34,46 @@ impl CellScope {
             }
         }
     }
+
+    /// セル住所文字列（A1 / $A$1 形式）がスコープ内かどうか。
+    /// 住所のパースは split_cell_address に委譲する。
+    /// パース不能な住所は false（現行 pipeline の None => false と同一挙動）。
+    pub fn contains_address(&self, address: &str) -> bool {
+        match split_cell_address(address) {
+            Some((col, row)) => self.contains(col, row),
+            None => false,
+        }
+    }
+}
+
+/// セル住所（A1 / $A$1）を 1始まりの (col, row) へ分解する。
+/// 絶対参照記号 $ は無視する（pipeline から移設。挙動は現行と同一）。
+/// Phase 3: 範囲判定を CellScope へ集約するため plan モジュール内に private 配置。
+fn split_cell_address(address: &str) -> Option<(u32, u32)> {
+    let mut col: u32 = 0;
+    let mut row_text = String::new();
+    let mut seen_digit = false;
+
+    for ch in address.chars() {
+        if ch == '$' {
+            continue;
+        }
+        if ch.is_ascii_alphabetic() && !seen_digit {
+            col = col * 26 + ((ch.to_ascii_uppercase() as u8 - b'A' + 1) as u32);
+        } else if ch.is_ascii_digit() {
+            seen_digit = true;
+            row_text.push(ch);
+        } else {
+            return None;
+        }
+    }
+
+    if col == 0 || row_text.is_empty() {
+        return None;
+    }
+
+    let row = row_text.parse::<u32>().ok()?;
+    Some((col, row))
 }
 
 pub trait PlanPolicy: Send + Sync {
