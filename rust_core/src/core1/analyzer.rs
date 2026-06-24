@@ -1,6 +1,5 @@
 use crate::adapters::translator_trait::TranslatorAdapter;
 use crate::adapters::types::{Lang, TranslateRequest};
-use crate::core1::text_structure_analyzer::analyze_text_structure;
 use crate::core1::translation_policy::TranslationPolicyDecision;
 use crate::core1::types::{CandidateAlarms, CandidateBundle, DefaultSelect, Segment};
 use crate::core2::formula_text::{
@@ -1028,10 +1027,9 @@ fn should_translate_segment(
         return false;
     }
 
-    let st = analyze_text_structure(text);
-    // 段階2(contains_japanese_like)・段階3(閾値)を direction に統合。
-    // ja2zh では kanji>=1 || kana>=3。実コード同値証明により現行挙動と一致。
-    direction.should_translate_by_text_structure(&st)
+    // Phase 3.6: 計測は direction 内部へ移設。源語中立な &str を渡すだけ。
+    // ja2zh では内部で kanji>=1 || kana>=3 を評価（現行挙動と一致）。
+    direction.should_translate_by_text(text)
 }
 
 fn diag_log(

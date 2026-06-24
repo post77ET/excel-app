@@ -3,7 +3,6 @@ use std::path::Path;
 use crate::adapters::provider_factory::create_adapter;
 use crate::core1::analyzer::{build_candidate_bundles_batch, CandidateGenerationPlan};
 use crate::core1::default_select::decide_default_select;
-use crate::core1::text_structure_analyzer::analyze_text_structure;
 use crate::core1::translation_policy::decide_translation_policy;
 use crate::core1::types::DefaultSelect;
 use crate::core2::generate_workbook_writer::write_generate_workbook;
@@ -148,8 +147,7 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
         let mut default_selects = vec![DefaultSelect::Original; logical_cells.len()];
 
         for logical_cell in &logical_cells {
-            let structure = analyze_text_structure(&logical_cell.source_text);
-            let policy = decide_translation_policy(logical_cell.cell_kind, &structure, direction_profile.as_ref());
+            let policy = decide_translation_policy(logical_cell.cell_kind, &logical_cell.source_text, direction_profile.as_ref());
             policies.push(policy);
         }
 
@@ -178,12 +176,10 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
 
         // 第2パス: candidate1 テキストが確定したので DefaultSelect を上書きする
         for (idx, (logical_cell, bundle)) in logical_cells.iter().zip(bundles.iter()).enumerate() {
-            let structure = analyze_text_structure(&logical_cell.source_text);
             let policy = &policies[idx];
             let candidate1_text = bundle.candidate1.as_deref();
             default_selects[idx] = decide_default_select(
                 logical_cell.cell_kind,
-                &structure,
                 policy.translate_candidates,
                 candidate1_text,
                 &logical_cell.source_text,

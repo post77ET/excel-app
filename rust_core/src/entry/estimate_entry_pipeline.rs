@@ -2,7 +2,6 @@ use std::fs;
 use std::path::Path;
 
 use crate::core1::analyzer::{estimate_candidate_usage, CandidateGenerationPlan};
-use crate::core1::text_structure_analyzer::analyze_text_structure;
 use crate::core1::translation_policy::decide_translation_policy;
 use crate::core2::source_workbook_reader::read_source_logical_cells;
 use crate::entry::entry_state::EntryError;
@@ -108,8 +107,7 @@ pub fn run_estimate_select_pipeline(input_path: &str) -> Result<BillingEstimate,
 
         let mut policies = Vec::with_capacity(logical_cells.len());
         for logical_cell in &logical_cells {
-            let structure = analyze_text_structure(&logical_cell.source_text);
-            let policy = decide_translation_policy(logical_cell.cell_kind, &structure, direction_profile.as_ref());
+            let policy = decide_translation_policy(logical_cell.cell_kind, &logical_cell.source_text, direction_profile.as_ref());
             policies.push(policy);
         }
 

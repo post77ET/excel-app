@@ -1,4 +1,3 @@
-use crate::core1::text_structure_analyzer::TextStructure;
 use crate::core2::structure_types::LogicalCellKind;
 use crate::direction::DirectionProfile;
 
@@ -10,7 +9,7 @@ pub struct TranslationPolicyDecision {
 
 pub fn decide_translation_policy(
     cell_kind: LogicalCellKind,
-    structure: &TextStructure,
+    source_text: &str,
     direction: &dyn DirectionProfile,
 ) -> TranslationPolicyDecision {
     match cell_kind {
@@ -25,7 +24,7 @@ pub fn decide_translation_policy(
         },
 
         LogicalCellKind::FormulaRaw | LogicalCellKind::SharedFormulaParent => {
-            if direction.should_translate_by_text_structure(structure) {
+            if direction.should_translate_by_text(source_text) {
                 TranslationPolicyDecision {
                     translate_candidates: true,
                     note: "formula cell -> candidates enabled".to_string(),
@@ -54,7 +53,7 @@ pub fn decide_translation_policy(
         },
 
         LogicalCellKind::Text => {
-            if direction.should_translate_by_text_structure(structure) {
+            if direction.should_translate_by_text(source_text) {
                 TranslationPolicyDecision {
                     translate_candidates: true,
                     note: "text cell -> candidates enabled".to_string(),

@@ -1,4 +1,3 @@
-use crate::core1::text_structure_analyzer::TextStructure;
 use crate::core1::types::DefaultSelect;
 use crate::core2::structure_types::LogicalCellKind;
 use crate::direction::DirectionProfile;
@@ -15,7 +14,6 @@ use crate::direction::DirectionProfile;
 ///   5. それ以外は Original
 pub fn decide_default_select(
     cell_kind: LogicalCellKind,
-    structure: &TextStructure,
     translate_candidates: bool,
     candidate1_text: Option<&str>,
     original_text: &str,
@@ -46,7 +44,7 @@ pub fn decide_default_select(
     }
 
     // ルール4: 翻訳価値がある日本語テキスト
-    if direction.should_translate_by_text_structure(structure) {
+    if direction.should_translate_by_text(original_text) {
         return DefaultSelect::Candidate1;
     }
 

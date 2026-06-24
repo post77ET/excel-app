@@ -41,6 +41,11 @@
   <div id="step1" class="step active">
     <div class="box">
       <h2>{% if lang == "zh" %}Step 1：选择工作表{% else %}Step 1：翻訳対象シートを選択{% endif %}</h2>
+      <div style="margin:10px 0 16px;">
+        <strong>{% if lang == "zh" %}翻译方向{% else %}翻訳方向{% endif %}</strong><br>
+        <label><input type="radio" name="direction" value="ja2zh" checked> {% if lang == "zh" %}日语 → 中文{% else %}日本語 → 中国語{% endif %}</label>
+        <label style="margin-left:14px;"><input type="radio" name="direction" value="zh2ja"> {% if lang == "zh" %}中文 → 日语{% else %}中国語 → 日本語{% endif %}</label>
+      </div>
       {% if mode == "experience" %}
         <p class="note">{% if lang == "zh" %}体验模式：仅处理1个工作表的 <strong>A1:D5</strong> 范围{% else %}体験コース：1シートの <strong>A1:D5</strong> の範囲で処理{% endif %}</p>
       {% endif %}
@@ -143,6 +148,7 @@
         <tr><td>{% if lang == "zh" %}文件名{% else %}ファイル名{% endif %}</td><td>{{ filename }}</td></tr>
         <tr><td>{% if lang == "zh" %}翻译对象工作表{% else %}翻訳対象シート{% endif %}</td><td id="conf-sheets">—</td></tr>
         <tr><td>{% if lang == "zh" %}课程{% else %}コース{% endif %}</td><td id="conf-course">—</td></tr>
+        <tr><td>{% if lang == "zh" %}翻译方向{% else %}翻訳方向{% endif %}</td><td id="conf-direction">—</td></tr>
         <tr><td>{% if lang == "zh" %}引擎分配{% else %}エンジン割り当て{% endif %}</td><td id="conf-engines">—</td></tr>
       </table>
       <br>
@@ -150,6 +156,7 @@
         <input type="hidden" name="filename" value="{{ filename }}">
         <input type="hidden" name="mode" value="{{ mode }}">
         <input type="hidden" name="lang" value="{{ lang }}">
+        <input type="hidden" id="f-direction" name="direction" value="ja2zh">
         <input type="hidden" id="f-sheets" name="sheets" value="">
         <input type="hidden" id="f-course" name="course" value="full">
         <input type="hidden" id="f-c1" name="c1_provider" value="google">
@@ -218,6 +225,12 @@ function updateConfirm() {
   document.getElementById('conf-course').textContent = courseLabel[course];
   document.getElementById('conf-engines').textContent = enginesText;
 
+  var direction = document.querySelector('input[name="direction"]:checked').value;
+  var directionLabel = ('{{ "zh" if lang == "zh" else "ja" }}' === 'zh')
+    ? { ja2zh: '日语 → 中文', zh2ja: '中文 → 日语' }
+    : { ja2zh: '日本語 → 中国語', zh2ja: '中国語 → 日本語' };
+  document.getElementById('conf-direction').textContent = directionLabel[direction];
+  document.getElementById('f-direction').value = direction;
   document.getElementById('f-sheets').value = sheets;
   document.getElementById('f-course').value = course;
   document.getElementById('f-c1').value = c1;

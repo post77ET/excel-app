@@ -561,6 +561,10 @@ def generate():
 
         mode = normalize_mode(request.form.get("mode"))
         lang = request.form.get("lang", "ja")
+        # Phase 4B: 翻訳方向（表示言語 lang とは別物）。許可値以外は黙ってja2zhに落とさずエラー。
+        direction = request.form.get("direction", "ja2zh")
+        if direction not in ("ja2zh", "zh2ja"):
+            raise ValueError(f"不正な翻訳方向です: {direction!r}")
         sheet_names = workbook_sheet_names(original_path)
         selected_token, selected_label = parse_selected_sheets(request.form.get("sheets", ""), sheet_names, mode)
 
@@ -577,7 +581,7 @@ def generate():
         c3_provider = request.form.get("c3_provider", None)
         plan_path = write_job_plan_config(job_id, mode, course, c1_provider, c2_provider, c3_provider)
         # Phase 1: ExecutionPlan の実行条件を Rust へ明示的に渡す。
-        # direction_id は現状 ja2zh のみ。billing_mode は既存 mode から導出（experience->free / paid->paid_standard）。
+        # direction_id は Web の方向選択（ja2zh / zh2ja）から受け取り検証済みの値を渡す。billing_mode は既存 mode から導出（experience->free / paid->paid_standard）。
         # これらは Rust 側 ExecutionPlan::from_runtime が env として受け取り resolve に流す。
         billing_mode = "free" if mode == "experience" else "paid_standard"
         extra_env = {
@@ -586,7 +590,7 @@ def generate():
             "ETB_JOB_PLAN_CONFIG": str(plan_path),
             "ETB_UI_OUTPUT": str(output_path),
             "ETB_OUTPUT_DIR": str(OUTPUT_DIR),
-            "ETB_DIRECTION_ID": "ja2zh",
+            "ETB_DIRECTION_ID": direction,
             "ETB_BILLING_MODE": billing_mode,
         }
 
