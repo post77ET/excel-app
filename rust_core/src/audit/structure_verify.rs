@@ -1,4 +1,3 @@
-use std::path::Path;
 
 use crate::ui::ui_apply_payload::ApplyPayloadRow;
 
@@ -7,8 +6,7 @@ pub fn verify_apply_output(
     output_path: &str,
     rows: &[ApplyPayloadRow],
 ) -> Result<(), String> {
-    let output = umya_spreadsheet::reader::xlsx::read(Path::new(output_path))
-        .map_err(|e| format!("audit output read failed: {e}"))?;
+    let output = crate::infra::xlsx_safe::safe_read_xlsx(output_path, "audit_structure_verify")?;
 
     for row in rows {
         let output_sheet = output

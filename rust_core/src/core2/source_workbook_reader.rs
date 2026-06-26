@@ -2,7 +2,6 @@ use std::collections::HashSet;
 use std::env;
 use std::fs::File;
 use std::io::Read;
-use std::path::Path;
 
 use calamine::{open_workbook_auto, Data, Range, Reader};
 use zip::ZipArchive;
@@ -25,8 +24,8 @@ pub fn read_source_logical_cells() -> Result<Vec<LogicalCell>, AppError> {
 
     let selected_sheets = resolve_reader_target_sheets(&workbook_sheet_names)?;
 
-    let display_book = umya_spreadsheet::reader::xlsx::read(Path::new(&source_path))
-        .map_err(|e| AppError::WorkbookReadFailed(format!("umya workbook read failed: {e}")))?;
+    let display_book = crate::infra::xlsx_safe::safe_read_xlsx(&source_path, "source_workbook_reader")
+        .map_err(AppError::WorkbookReadFailed)?;
 
     println!(
         "[SOURCE_READER] workbook={} selected_sheets={}",

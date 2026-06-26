@@ -1,4 +1,3 @@
-use std::path::Path;
 
 use crate::infra::config_loader::TranslatorConfig;
 use crate::security::internal_metadata::{write_internal_metadata_sheet_into_book, InternalMetadata};
@@ -27,8 +26,7 @@ pub fn write_generate_workbook(
     security_report: &SecurityReport,
     enabled_candidates: &[u8],
 ) -> Result<(), String> {
-    let mut book = umya_spreadsheet::reader::xlsx::read(Path::new(source_path))
-        .map_err(|e| format!("source workbook read failed: {e}"))?;
+    let mut book = crate::infra::xlsx_safe::safe_read_xlsx(source_path, "generate_workbook_writer")?;
 
     // Generate step: write default-selected text into main sheets so users can
     // review the translation result directly in the workbook before running Apply.

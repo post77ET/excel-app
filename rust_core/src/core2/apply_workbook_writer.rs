@@ -1,4 +1,3 @@
-use std::path::Path;
 
 use crate::core2::shared_formula_apply_patch::{
     load_shared_formula_parent_lookup,
@@ -25,8 +24,7 @@ pub fn write_apply_workbook(
     rows: &[ApplyPayloadRow],
     output_path: &str,
 ) -> Result<(), String> {
-    let mut book = umya_spreadsheet::reader::xlsx::read(Path::new(base_workbook_path))
-        .map_err(|e| format!("base workbook read failed: {e}"))?;
+    let mut book = crate::infra::xlsx_safe::safe_read_xlsx(base_workbook_path, "apply_workbook_writer")?;
 
     let unlock_sheet_names = collect_main_sheet_names_from_workbook(&book);
 

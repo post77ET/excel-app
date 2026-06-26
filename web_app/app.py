@@ -322,6 +322,29 @@ def print_env_check(rust_env: dict[str, str], command: str = "") -> None:
     print("[ENV CHECK] ETB_BIN_PATH =", os.environ.get("ETB_BIN_PATH", "MISSING"), flush=True)
 
 
+class WorkbookParseError(Exception):
+    """umya がファイルを読めず内部 panic（WORKBOOK_PARSE_FAILED）した場合の専用例外。"""
+    pass
+
+
+# Rust 側が返す安定キー。これを ja/zh の客向け文言に変換する（表示は Web の責務）。
+WORKBOOK_PARSE_FAILED_KEY = "WORKBOOK_PARSE_FAILED"
+WORKBOOK_PARSE_MESSAGES = {
+    "ja": (
+        "翻訳処理を完了できませんでした。\n\n"
+        "【対処方法】\n"
+        "対象のファイルを Excel で開き、改めて .xlsx 形式で「名前を付けて保存」してから再度アップロードしてください。\n\n"
+        "※上記を行っても改善しない場合、ファイルの構造上の原因により対応していない可能性がございます。恐れ入りますが、あらかじめご了承ください。"
+    ),
+    "zh": (
+        "翻译处理未能完成。\n\n"
+        "【解决方法】\n"
+        "请在 Excel 中打开目标文件，重新通过\"另存为\"保存为 .xlsx 格式后，再次上传。\n\n"
+        "※ 如果完成上述操作后仍无法改善，可能是文件结构方面的原因导致暂不支持，敬请谅解。"
+    ),
+}
+
+
 def run_rust(args: list[str], extra_env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
     rust_env = build_rust_env(extra_env)
     print_env_check(rust_env, args[0] if args else "")
@@ -345,6 +368,8 @@ def run_rust(args: list[str], extra_env: dict[str, str] | None = None) -> subpro
     if result.stderr:
         print("[RUST STDERR]\n" + result.stderr, flush=True)
     if result.returncode != 0:
+        if result.stderr and WORKBOOK_PARSE_FAILED_KEY in result.stderr:
+            raise WorkbookParseError()
         raise RuntimeError("Rust処理に失敗しました。Renderログの [RUST STDERR] を確認してください。")
     return result
 
@@ -645,7 +670,12 @@ def _generate_worker(job_id: str, original_path: str, output_path: Path, extra_e
         print("[GENERATE WORKER ERROR]", repr(exc), flush=True)
         with GENERATE_JOBS_LOCK:
             job = GENERATE_JOBS.get(job_id, {})
-            job.update({"status": "error", "message": str(exc)})
+            if isinstance(exc, WorkbookParseError):
+                lang = job.get("lang", "ja")
+                msg = WORKBOOK_PARSE_MESSAGES.get(lang, WORKBOOK_PARSE_MESSAGES["ja"])
+            else:
+                msg = str(exc)
+            job.update({"status": "error", "message": msg})
             GENERATE_JOBS[job_id] = job
 
 
