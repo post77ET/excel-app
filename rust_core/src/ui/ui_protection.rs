@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use calamine::{open_workbook_auto, Data, Reader};
 use umya_spreadsheet::structs::{Color, Fill, PatternFill, PatternValues};
-use umya_spreadsheet::{Spreadsheet, Style, Worksheet};
+use umya_spreadsheet::{Workbook, Style, Worksheet};
 use zip::write::SimpleFileOptions;
 use zip::{ZipArchive, ZipWriter};
 
@@ -25,10 +25,10 @@ fn all_ui_cols() -> [&'static str; 17] {
 
 fn locked_gray() -> Style {
     let mut style = Style::default();
-    style.get_protection_mut().set_locked(true);
+    style.protection_mut().set_locked(true);
 
     let mut color = Color::default();
-    color.set_argb("FFE7E6E6");
+    color.set_argb_str("FFE7E6E6");
 
     let mut pattern = PatternFill::default();
     pattern.set_pattern_type(PatternValues::Solid);
@@ -43,10 +43,10 @@ fn locked_gray() -> Style {
 
 fn unlocked_orange() -> Style {
     let mut style = Style::default();
-    style.get_protection_mut().set_locked(false);
+    style.protection_mut().set_locked(false);
 
     let mut color = Color::default();
-    color.set_argb("FFFFF2CC");
+    color.set_argb_str("FFFFF2CC");
 
     let mut pattern = PatternFill::default();
     pattern.set_pattern_type(PatternValues::Solid);
@@ -64,8 +64,8 @@ fn normalize_cell_string(value: String) -> String {
 }
 
 fn get_cell_string(sheet: &Worksheet, addr: &str) -> String {
-    match sheet.get_cell(addr) {
-        Some(cell) => normalize_cell_string(cell.get_value().to_string()),
+    match sheet.cell(addr) {
+        Some(cell) => normalize_cell_string(cell.value().to_string()),
         None => String::new(),
     }
 }
@@ -105,7 +105,7 @@ fn set_ui_row_lock_state(sheet: &mut Worksheet, row: u32) {
 
     for col in all_ui_cols() {
         let addr = format!("{col}{row}");
-        let cell = sheet.get_cell_mut(addr.as_str());
+        let cell = sheet.cell_mut(addr.as_str());
 
         let is_input_col = matches!(col, "K" | "L" | "M");
 
@@ -118,7 +118,7 @@ fn set_ui_row_lock_state(sheet: &mut Worksheet, row: u32) {
 }
 
 fn apply_password_sheet_protection(sheet: &mut Worksheet, password: &str) {
-    let protection = sheet.get_sheet_protection_mut();
+    let protection = sheet.sheet_protection_mut();
 
     protection.set_sheet(true);
     protection.set_password(password);
@@ -144,7 +144,7 @@ fn apply_password_sheet_protection(sheet: &mut Worksheet, password: &str) {
 }
 
 fn apply_passwordless_sheet_protection(sheet: &mut Worksheet) {
-    let protection = sheet.get_sheet_protection_mut();
+    let protection = sheet.sheet_protection_mut();
 
     protection.set_sheet(true);
     protection.set_password("");
@@ -168,25 +168,25 @@ fn apply_passwordless_sheet_protection(sheet: &mut Worksheet) {
 }
 
 fn protect_entire_sheet_with_password(
-    book: &mut Spreadsheet,
+    book: &mut Workbook,
     sheet_name: &str,
     password: &str,
 ) -> Result<(), String> {
     let sheet = book
-        .get_sheet_by_name_mut(sheet_name)
-        .ok_or_else(|| format!("sheet not found for protection: {sheet_name}"))?;
+        .sheet_by_name_mut(sheet_name)
+        .map_err(|_| format!("sheet not found for protection: {sheet_name}"))?;
 
     apply_password_sheet_protection(sheet, password);
     Ok(())
 }
 
 fn protect_entire_sheet_without_password(
-    book: &mut Spreadsheet,
+    book: &mut Workbook,
     sheet_name: &str,
 ) -> Result<(), String> {
     let sheet = book
-        .get_sheet_by_name_mut(sheet_name)
-        .ok_or_else(|| format!("sheet not found for protection: {sheet_name}"))?;
+        .sheet_by_name_mut(sheet_name)
+        .map_err(|_| format!("sheet not found for protection: {sheet_name}"))?;
 
     apply_passwordless_sheet_protection(sheet);
     Ok(())
@@ -200,10 +200,10 @@ pub fn load_sheet_protection_password() -> String {
         .unwrap_or_else(|| "ETB_PROTECT".to_string())
 }
 
-pub fn apply_ui_protection(book: &mut Spreadsheet, max_row: u32) {
+pub fn apply_ui_protection(book: &mut Workbook, max_row: u32) {
     let password = load_sheet_protection_password();
 
-    let Some(sheet) = book.get_sheet_by_name_mut(UI_SHEET_NAME) else {
+    let Ok(sheet) = book.sheet_by_name_mut(UI_SHEET_NAME) else {
         return;
     };
 
@@ -215,15 +215,15 @@ pub fn apply_ui_protection(book: &mut Spreadsheet, max_row: u32) {
 }
 
 pub fn apply_generate_protection(
-    book: &mut Spreadsheet,
+    book: &mut Workbook,
     main_sheet_names: &[String],
     ui_max_row: u32,
     password: &str,
 ) -> Result<(), String> {
     {
         let ui_sheet = book
-            .get_sheet_by_name_mut(UI_SHEET_NAME)
-            .ok_or_else(|| format!("sheet not found for protection: {UI_SHEET_NAME}"))?;
+            .sheet_by_name_mut(UI_SHEET_NAME)
+            .map_err(|_| format!("sheet not found for protection: {UI_SHEET_NAME}"))?;
 
         apply_password_sheet_protection(ui_sheet, password);
 
@@ -244,11 +244,11 @@ pub fn apply_generate_protection(
 }
 
 pub fn apply_apply_output_protection(
-    book: &mut Spreadsheet,
+    book: &mut Workbook,
     main_sheet_names: &[String],
 ) -> Result<(), String> {
     for sheet_name in main_sheet_names {
-        if book.get_sheet_by_name(sheet_name.as_str()).is_some() {
+        if book.sheet_by_name(sheet_name.as_str()).is_ok() {
             protect_entire_sheet_without_password(book, sheet_name.as_str())?;
         }
     }
@@ -256,11 +256,11 @@ pub fn apply_apply_output_protection(
     // Apply output is based on the server-side original workbook.
     // It normally does not contain TRANSLATION_UI / TRANSLATION_WARNINGS.
     // Therefore UI-only sheets are protected only when they actually exist.
-    if book.get_sheet_by_name(UI_SHEET_NAME).is_some() {
+    if book.sheet_by_name(UI_SHEET_NAME).is_ok() {
         protect_entire_sheet_without_password(book, UI_SHEET_NAME)?;
     }
 
-    if book.get_sheet_by_name(WARNINGS_SHEET_NAME).is_some() {
+    if book.sheet_by_name(WARNINGS_SHEET_NAME).is_ok() {
         protect_entire_sheet_without_password(book, WARNINGS_SHEET_NAME)?;
     }
 

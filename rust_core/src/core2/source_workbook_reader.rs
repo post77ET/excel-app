@@ -40,7 +40,7 @@ pub fn read_source_logical_cells() -> Result<Vec<LogicalCell>, AppError> {
             .worksheet_range(&target_sheet)
             .map_err(|e| AppError::WorkbookReadFailed(format!("sheet read failed: {e}")))?;
 
-        let display_sheet = display_book.get_sheet_by_name(&target_sheet).ok_or_else(|| {
+        let display_sheet = display_book.sheet_by_name(&target_sheet).map_err(|_| {
             AppError::WorkbookReadFailed(format!("sheet not found in umya: {target_sheet}"))
         })?;
 
@@ -67,7 +67,7 @@ pub fn read_source_logical_cells() -> Result<Vec<LogicalCell>, AppError> {
                 let abs = ((row - 1) as u32, (col - 1) as u32);
 
                 let value = range.get_value(abs);
-                let display_text = display_sheet.get_value(anchor_address.as_str()).to_string();
+                let display_text = display_sheet.value(anchor_address.as_str()).to_string();
                 let formula_meta = formula_cells
                     .get(&anchor_address)
                     .cloned()

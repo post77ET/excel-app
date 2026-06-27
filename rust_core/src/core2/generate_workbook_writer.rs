@@ -85,11 +85,11 @@ pub fn write_generate_workbook(
     Ok(())
 }
 
-fn collect_all_main_sheet_names(book: &umya_spreadsheet::Spreadsheet) -> Vec<String> {
+fn collect_all_main_sheet_names(book: &umya_spreadsheet::Workbook) -> Vec<String> {
     let mut names: Vec<String> = Vec::new();
 
-    for sheet in book.get_sheet_collection() {
-        let name = sheet.get_name().to_string();
+    for sheet in book.sheet_collection() {
+        let name = sheet.name().to_string();
 
         // 特殊シートは protection_targets 側で個別に保護するため除外する。
         if name == UI_SHEET_NAME
@@ -111,7 +111,7 @@ fn collect_all_main_sheet_names(book: &umya_spreadsheet::Spreadsheet) -> Vec<Str
 /// - default_select >= 1 (Candidate) → 対応するcandidateテキストを書き込む
 /// - writeback_mode == "Preserve" または "SharedFormulaFollower" はスキップ
 fn write_default_selected_into_main_sheets(
-    book: &mut umya_spreadsheet::Spreadsheet,
+    book: &mut umya_spreadsheet::Workbook,
     rows: &[UiRow],
 ) -> Result<(), String> {
     for row in rows {
@@ -136,9 +136,9 @@ fn write_default_selected_into_main_sheets(
             _ => continue,
         };
 
-        let sheet = match book.get_sheet_by_name_mut(&row.sheet_name) {
-            Some(s) => s,
-            None => continue,
+        let sheet = match book.sheet_by_name_mut(&row.sheet_name) {
+            Ok(s) => s,
+            Err(_) => continue,
         };
 
         if row.writeback_mode == "Formula" {
@@ -149,12 +149,12 @@ fn write_default_selected_into_main_sheets(
             };
             if !formula_body.trim().is_empty() {
                 sheet
-                    .get_cell_mut(row.anchor_address.as_str())
+                    .cell_mut(row.anchor_address.as_str())
                     .set_formula(formula_body);
             }
         } else {
             sheet
-                .get_cell_mut(row.anchor_address.as_str())
+                .cell_mut(row.anchor_address.as_str())
                 .set_value_string(text.to_string());
         }
     }

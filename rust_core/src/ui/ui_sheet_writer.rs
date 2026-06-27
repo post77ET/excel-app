@@ -15,7 +15,7 @@ pub fn write_ui_workbook(
     config: &TranslatorConfig,
 ) -> Result<(), String> {
     let mut book = umya_spreadsheet::new_file();
-    if book.get_sheet_by_name("Sheet1").is_some() {
+    if book.sheet_by_name("Sheet1").is_ok() {
         let _ = book.remove_sheet_by_name("Sheet1");
     }
     write_ui_sheet_into_book(&mut book, rows, config, &[1, 2, 3])?;

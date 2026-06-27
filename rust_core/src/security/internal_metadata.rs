@@ -3,7 +3,7 @@ use std::hash::{Hash, Hasher};
 
 use crate::infra::config_loader::TranslatorConfig;
 use crate::ui::types::UiRow;
-use umya_spreadsheet::{Spreadsheet, Worksheet};
+use umya_spreadsheet::{Workbook, Worksheet};
 
 pub const INTERNAL_SHEET_NAME: &str = "__ETB_INTERNAL";
 pub const INTERNAL_APP_ID: &str = "CORE1_ETB_UI";
@@ -51,17 +51,17 @@ impl InternalMetadata {
 }
 
 pub fn write_internal_metadata_sheet_into_book(
-    book: &mut Spreadsheet,
+    book: &mut Workbook,
     metadata: &InternalMetadata,
 ) -> Result<(), String> {
-    if book.get_sheet_by_name(INTERNAL_SHEET_NAME).is_some() {
+    if book.sheet_by_name(INTERNAL_SHEET_NAME).is_ok() {
         let _ = book.remove_sheet_by_name(INTERNAL_SHEET_NAME);
     }
 
     let _ = book.new_sheet(INTERNAL_SHEET_NAME);
     let sheet = book
-        .get_sheet_by_name_mut(INTERNAL_SHEET_NAME)
-        .ok_or_else(|| "internal metadata sheet create error".to_string())?;
+        .sheet_by_name_mut(INTERNAL_SHEET_NAME)
+        .map_err(|_| "internal metadata sheet create error".to_string())?;
 
     let pairs = [
         ("app_id", metadata.app_id.as_str()),
@@ -76,8 +76,8 @@ pub fn write_internal_metadata_sheet_into_book(
 
     for (idx, (key, value)) in pairs.iter().enumerate() {
         let row = idx + 1;
-        sheet.get_cell_mut(format!("A{}", row)).set_value(*key);
-        sheet.get_cell_mut(format!("B{}", row)).set_value(*value);
+        sheet.cell_mut(format!("A{}", row)).set_value(*key);
+        sheet.cell_mut(format!("B{}", row)).set_value(*value);
     }
 
     hide_sheet(sheet);

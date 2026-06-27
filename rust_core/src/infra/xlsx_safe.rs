@@ -15,14 +15,14 @@ use std::any::Any;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::Path;
 
-use umya_spreadsheet::Spreadsheet;
+use umya_spreadsheet::Workbook;
 
 /// Web 側がこのキーを検出して客向け文言（ja/zh）に変換する安定トークン。
 pub const WORKBOOK_PARSE_FAILED: &str = "WORKBOOK_PARSE_FAILED";
 
 /// xlsx を読み込む。umya が内部 panic しても即死させず Err を返す。
 /// caller: 呼び出し元の識別子（ログ用。例 "source_workbook_reader"）。
-pub fn safe_read_xlsx(path: &str, caller: &str) -> Result<Spreadsheet, String> {
+pub fn safe_read_xlsx(path: &str, caller: &str) -> Result<Workbook, String> {
     let outcome = catch_unwind(AssertUnwindSafe(|| {
         umya_spreadsheet::reader::xlsx::read(Path::new(path))
     }));

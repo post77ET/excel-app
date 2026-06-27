@@ -1,21 +1,21 @@
 use crate::ui::types::UiRow;
-use umya_spreadsheet::{Spreadsheet, Worksheet};
+use umya_spreadsheet::{Workbook, Worksheet};
 
 const SHEET_NAME: &str = "TRANSLATION_WARNINGS";
 
 pub fn write_translation_warnings_sheet_into_book(
-    book: &mut Spreadsheet,
+    book: &mut Workbook,
     rows: &[UiRow],
 ) -> Result<(), String> {
-    if book.get_sheet_by_name(SHEET_NAME).is_some() {
+    if book.sheet_by_name(SHEET_NAME).is_ok() {
         let _ = book.remove_sheet_by_name(SHEET_NAME);
     }
 
     let _ = book.new_sheet(SHEET_NAME);
 
     let sheet = book
-        .get_sheet_by_name_mut(SHEET_NAME)
-        .ok_or_else(|| "TRANSLATION_WARNINGS create error".to_string())?;
+        .sheet_by_name_mut(SHEET_NAME)
+        .map_err(|_| "TRANSLATION_WARNINGS create error".to_string())?;
 
     write_headers(sheet);
     write_rows(sheet, rows);
@@ -38,7 +38,7 @@ fn write_headers(sheet: &mut Worksheet) {
 
     for (idx, header) in headers.iter().enumerate() {
         let addr = format!("{}1", col_to_letters((idx + 1) as u32));
-        sheet.get_cell_mut(addr.as_str()).set_value(*header);
+        sheet.cell_mut(addr.as_str()).set_value(*header);
     }
 }
 
@@ -57,14 +57,14 @@ fn write_rows(sheet: &mut Worksheet, rows: &[UiRow]) {
             continue;
         }
 
-        sheet.get_cell_mut(format!("A{}", out_row)).set_value(&row.sheet_name);
-        sheet.get_cell_mut(format!("B{}", out_row)).set_value(&row.anchor_address);
-        sheet.get_cell_mut(format!("C{}", out_row)).set_value(&row.cell_kind);
-        sheet.get_cell_mut(format!("D{}", out_row)).set_value(&row.original);
-        sheet.get_cell_mut(format!("E{}", out_row)).set_value(a1);
-        sheet.get_cell_mut(format!("F{}", out_row)).set_value(a2);
-        sheet.get_cell_mut(format!("G{}", out_row)).set_value(a3);
-        sheet.get_cell_mut(format!("H{}", out_row)).set_value(&row.note);
+        sheet.cell_mut(format!("A{}", out_row)).set_value(&row.sheet_name);
+        sheet.cell_mut(format!("B{}", out_row)).set_value(&row.anchor_address);
+        sheet.cell_mut(format!("C{}", out_row)).set_value(&row.cell_kind);
+        sheet.cell_mut(format!("D{}", out_row)).set_value(&row.original);
+        sheet.cell_mut(format!("E{}", out_row)).set_value(a1);
+        sheet.cell_mut(format!("F{}", out_row)).set_value(a2);
+        sheet.cell_mut(format!("G{}", out_row)).set_value(a3);
+        sheet.cell_mut(format!("H{}", out_row)).set_value(&row.note);
 
         out_row += 1;
     }
@@ -81,14 +81,14 @@ fn apply_basic_format(sheet: &mut Worksheet, max_row: u32) {
         ("G", 22.0),
         ("H", 42.0),
     ] {
-        sheet.get_column_dimension_mut(col).set_width(width);
+        sheet.column_dimension_mut(col).set_width(width);
     }
 
     for row in 1..=max_row {
         for col in ["A", "B", "C", "D", "E", "F", "G", "H"] {
             let addr = format!("{}{}", col, row);
-            let style = sheet.get_style_mut(addr.as_str());
-            style.get_alignment_mut().set_wrap_text(true);
+            let style = sheet.style_mut(addr.as_str());
+            style.alignment_mut().set_wrap_text(true);
         }
     }
 }

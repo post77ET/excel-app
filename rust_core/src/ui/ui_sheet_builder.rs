@@ -10,7 +10,7 @@ use umya_spreadsheet::structs::{
 };
 use umya_spreadsheet::structs::PatternValues;
 use umya_spreadsheet::structs::Style;
-use umya_spreadsheet::{Spreadsheet, Worksheet};
+use umya_spreadsheet::{Workbook, Worksheet};
 
 pub fn build_ui_row(logical_cell: &LogicalCell, bundle: &CandidateBundle) -> UiRow {
     let (cell_kind, writeback_mode, default_select, note) = match logical_cell.cell_kind {
@@ -124,21 +124,21 @@ pub fn build_candidate_headers(config: &TranslatorConfig, enabled_candidates: &[
 }
 
 pub fn write_ui_sheet_into_book(
-    book: &mut Spreadsheet,
+    book: &mut Workbook,
     rows: &[UiRow],
     config: &TranslatorConfig,
     enabled_candidates: &[u8],
 ) -> Result<(), String> {
     let sheet_name = "TRANSLATION_UI";
 
-    if book.get_sheet_by_name(sheet_name).is_some() {
+    if book.sheet_by_name(sheet_name).is_ok() {
         let _ = book.remove_sheet_by_name(sheet_name);
     }
 
     let _ = book.new_sheet(sheet_name);
     let sheet = book
-        .get_sheet_by_name_mut(sheet_name)
-        .ok_or_else(|| "TRANSLATION_UI create error".to_string())?;
+        .sheet_by_name_mut(sheet_name)
+        .map_err(|_| "TRANSLATION_UI create error".to_string())?;
 
     // enabled_candidates を rows から判定
     let has_c2 = rows.iter().any(|r| r.candidate2.is_some());
@@ -179,7 +179,7 @@ fn write_headers(sheet: &mut Worksheet, config: &TranslatorConfig, enabled: &[u8
     ];
     for (idx, header) in headers.iter().enumerate() {
         let addr = format!("{}1", col_to_letters((idx + 1) as u32));
-        sheet.get_cell_mut(addr.as_str()).set_value(*header);
+        sheet.cell_mut(addr.as_str()).set_value(*header);
     }
 }
 
@@ -187,41 +187,41 @@ fn write_rows(sheet: &mut Worksheet, rows: &[UiRow]) {
     for (idx, row_data) in rows.iter().enumerate() {
         let row = (idx + 2) as u32;
 
-        sheet.get_cell_mut(format!("A{}", row)).set_value(&row_data.sheet_name);
-        sheet.get_cell_mut(format!("B{}", row)).set_value(&row_data.anchor_address);
-        sheet.get_cell_mut(format!("C{}", row)).set_value(&row_data.cell_kind);
-        sheet.get_cell_mut(format!("D{}", row)).set_value(&row_data.original);
-        sheet.get_cell_mut(format!("E{}", row)).set_value(&row_data.original_writeback);
-        sheet.get_cell_mut(format!("F{}", row)).set_value(&row_data.writeback_mode);
+        sheet.cell_mut(format!("A{}", row)).set_value(&row_data.sheet_name);
+        sheet.cell_mut(format!("B{}", row)).set_value(&row_data.anchor_address);
+        sheet.cell_mut(format!("C{}", row)).set_value(&row_data.cell_kind);
+        sheet.cell_mut(format!("D{}", row)).set_value(&row_data.original);
+        sheet.cell_mut(format!("E{}", row)).set_value(&row_data.original_writeback);
+        sheet.cell_mut(format!("F{}", row)).set_value(&row_data.writeback_mode);
 
-        sheet.get_cell_mut(format!("G{}", row))
+        sheet.cell_mut(format!("G{}", row))
             .set_value(row_data.candidate1.clone().unwrap_or_default());
-        sheet.get_cell_mut(format!("H{}", row))
+        sheet.cell_mut(format!("H{}", row))
             .set_value(row_data.candidate2.clone().unwrap_or_default());
-        sheet.get_cell_mut(format!("I{}", row))
+        sheet.cell_mut(format!("I{}", row))
             .set_value(row_data.candidate3.clone().unwrap_or_default());
 
-        sheet.get_cell_mut(format!("J{}", row))
+        sheet.cell_mut(format!("J{}", row))
             .set_value_number(row_data.default_select as i32);
 
-        sheet.get_cell_mut(format!("K{}", row))
+        sheet.cell_mut(format!("K{}", row))
             .set_value(row_data.user_select.map(|v: u8| v.to_string()).unwrap_or_default());
 
-        sheet.get_cell_mut(format!("L{}", row))
+        sheet.cell_mut(format!("L{}", row))
             .set_value(if row_data.apply_flag { "Y" } else { "" });
 
-        sheet.get_cell_mut(format!("M{}", row)).set_value("");
+        sheet.cell_mut(format!("M{}", row)).set_value("");
 
-        sheet.get_cell_mut(format!("N{}", row))
+        sheet.cell_mut(format!("N{}", row))
             .set_value(row_data.alarms.candidate1_alarm.clone().unwrap_or_default());
-        sheet.get_cell_mut(format!("O{}", row))
+        sheet.cell_mut(format!("O{}", row))
             .set_value(row_data.alarms.candidate2_alarm.clone().unwrap_or_default());
-        sheet.get_cell_mut(format!("P{}", row))
+        sheet.cell_mut(format!("P{}", row))
             .set_value(row_data.alarms.candidate3_alarm.clone().unwrap_or_default());
 
-        sheet.get_cell_mut(format!("Q{}", row)).set_value(&row_data.note);
+        sheet.cell_mut(format!("Q{}", row)).set_value(&row_data.note);
 
-        sheet.get_cell_mut(format!("R{}", row))
+        sheet.cell_mut(format!("R{}", row))
             .set_value(if row_data.writeback_allowed { "1" } else { "0" });
 
         // CL-02: Preserve行でOriginalに日本語が含まれる場合はピンク背景を適用
@@ -230,7 +230,7 @@ fn write_rows(sheet: &mut Worksheet, rows: &[UiRow]) {
             let pink_style = pink_locked_style();
             for col in ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R"] {
                 let addr = format!("{col}{row}");
-                sheet.get_cell_mut(addr.as_str()).set_style(pink_style.clone());
+                sheet.cell_mut(addr.as_str()).set_style(pink_style.clone());
             }
         }
     }
@@ -272,7 +272,7 @@ fn apply_ui_input_validation(sheet: &mut Worksheet, max_row: u32, enabled_candid
         .set_allow_blank(true)
         .set_formula1(user_select_options);
     user_select
-        .get_sequence_of_references_mut()
+        .sequence_of_references_mut()
         .set_sqref(format!("K2:K{}", max_row));
     validations.add_data_validation_list(user_select);
 
@@ -282,7 +282,7 @@ fn apply_ui_input_validation(sheet: &mut Worksheet, max_row: u32, enabled_candid
         .set_allow_blank(true)
         .set_formula1("\"Y\"");
     apply_flag
-        .get_sequence_of_references_mut()
+        .sequence_of_references_mut()
         .set_sqref(format!("L2:L{}", max_row));
     validations.add_data_validation_list(apply_flag);
 
@@ -306,10 +306,10 @@ fn col_to_letters(mut col: u32) -> String {
 /// Preserve行かつOriginalに日本語(かな・カナ)が含まれる場合のロック済みピンクスタイル
 fn pink_locked_style() -> Style {
     let mut style = Style::default();
-    style.get_protection_mut().set_locked(true);
+    style.protection_mut().set_locked(true);
 
     let mut color = Color::default();
-    color.set_argb("FFFFC7CE"); // 薄いピンク (Excel標準の「悪い」セル色)
+    color.set_argb_str("FFFFC7CE"); // 薄いピンク (Excel標準の「悪い」セル色)
 
     let mut pattern = PatternFill::default();
     pattern.set_pattern_type(PatternValues::Solid);

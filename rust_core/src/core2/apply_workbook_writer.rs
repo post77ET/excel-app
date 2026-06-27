@@ -63,8 +63,8 @@ pub fn write_apply_workbook(
         }
 
         let sheet = book
-            .get_sheet_by_name_mut(&row.sheet_name)
-            .ok_or_else(|| format!("sheet not found: {}", row.sheet_name))?;
+            .sheet_by_name_mut(&row.sheet_name)
+            .map_err(|_| format!("sheet not found: {}", row.sheet_name))?;
 
         if row.writeback_mode == "Formula" {
             let formula_body = normalize_formula_body(&row.selected_text);
@@ -118,17 +118,17 @@ pub fn write_apply_workbook(
 
             let addr = row.anchor_address.as_str();
             let base_formula = sheet
-                .get_cell(addr)
-                .map(|c| c.get_formula().to_string())
+                .cell(addr)
+                .map(|c| c.formula().to_string())
                 .unwrap_or_default();
 
-            sheet.get_cell_mut(addr).set_formula(normalized.clone());
+            sheet.cell_mut(addr).set_formula(normalized.clone());
 
             // 条件3: set_formula 後に get_formula() で read-back 確認。
             // 数式として保持されていなければベース数式へ戻し、警告する。
             let readback = sheet
-                .get_cell(addr)
-                .map(|c| (c.is_formula(), c.get_formula().to_string()))
+                .cell(addr)
+                .map(|c| (c.is_formula(), c.formula().to_string()))
                 .unwrap_or((false, String::new()));
             if readback.0 && readback.1.trim() == normalized.trim() {
                 println!(
@@ -137,7 +137,7 @@ pub fn write_apply_workbook(
                 );
             } else {
                 if !base_formula.trim().is_empty() {
-                    sheet.get_cell_mut(addr).set_formula(base_formula.clone());
+                    sheet.cell_mut(addr).set_formula(base_formula.clone());
                 }
                 println!(
                     "[F3][FORMULA][readback_failed->keep_base] sheet={} addr={} US={} normalized={:?} readback={:?} base={:?}",
@@ -154,16 +154,16 @@ pub fn write_apply_workbook(
             }
         } else {
             sheet
-                .get_cell_mut(row.anchor_address.as_str())
+                .cell_mut(row.anchor_address.as_str())
                 .set_value_string(row.selected_text.clone());
         }
     }
 
-    if book.get_sheet_by_name(INTERNAL_SHEET_NAME).is_some() {
+    if book.sheet_by_name(INTERNAL_SHEET_NAME).is_ok() {
         let _ = book.remove_sheet_by_name(INTERNAL_SHEET_NAME);
     }
 
-    if book.get_sheet_by_name(SECURITY_INTERNAL_SHEET_NAME).is_some() {
+    if book.sheet_by_name(SECURITY_INTERNAL_SHEET_NAME).is_ok() {
         let _ = book.remove_sheet_by_name(SECURITY_INTERNAL_SHEET_NAME);
     }
 
@@ -202,13 +202,13 @@ pub fn write_apply_workbook(
 
     let mut protection_targets: Vec<(&str, Option<&str>)> = unlock_sheet_names
         .iter()
-        .filter(|name| book.get_sheet_by_name(name.as_str()).is_some())
+        .filter(|name| book.sheet_by_name(name.as_str()).is_ok())
         .map(|name| (name.as_str(), None))
         .collect();
 
     // TRANSLATION_UI は上で必ず注入済みなので常に保護対象に含める。
     protection_targets.push((UI_SHEET_NAME, None));
-    if book.get_sheet_by_name(WARNINGS_SHEET_NAME).is_some() {
+    if book.sheet_by_name(WARNINGS_SHEET_NAME).is_ok() {
         protection_targets.push((WARNINGS_SHEET_NAME, None));
     }
 
@@ -343,11 +343,11 @@ fn collect_target_sheet_names(rows: &[ApplyPayloadRow]) -> Vec<String> {
     names
 }
 
-fn collect_main_sheet_names_from_workbook(book: &umya_spreadsheet::Spreadsheet) -> Vec<String> {
+fn collect_main_sheet_names_from_workbook(book: &umya_spreadsheet::Workbook) -> Vec<String> {
     let mut names: Vec<String> = Vec::new();
 
-    for sheet in book.get_sheet_collection() {
-        let name = sheet.get_name().to_string();
+    for sheet in book.sheet_collection() {
+        let name = sheet.name().to_string();
 
         if name == UI_SHEET_NAME
             || name == WARNINGS_SHEET_NAME
@@ -370,7 +370,7 @@ fn collect_main_sheet_names_from_workbook(book: &umya_spreadsheet::Spreadsheet) 
 /// apply_warning を持つ行を TRANSLATION_WARNINGS シートに書き出す。
 /// 警告が1件もない場合はシートを作成しない。書き出した件数を返す。
 fn write_apply_warnings_sheet_into_book(
-    book: &mut umya_spreadsheet::Spreadsheet,
+    book: &mut umya_spreadsheet::Workbook,
     rows: &[ApplyPayloadRow],
     extra_warnings: &[(String, String, String)],
 ) -> Result<usize, String> {
@@ -383,47 +383,47 @@ fn write_apply_warnings_sheet_into_book(
         return Ok(0);
     }
 
-    if book.get_sheet_by_name(WARNINGS_SHEET_NAME).is_some() {
+    if book.sheet_by_name(WARNINGS_SHEET_NAME).is_ok() {
         let _ = book.remove_sheet_by_name(WARNINGS_SHEET_NAME);
     }
     let _ = book.new_sheet(WARNINGS_SHEET_NAME);
 
     let sheet = book
-        .get_sheet_by_name_mut(WARNINGS_SHEET_NAME)
-        .ok_or_else(|| "TRANSLATION_WARNINGS create error".to_string())?;
+        .sheet_by_name_mut(WARNINGS_SHEET_NAME)
+        .map_err(|_| "TRANSLATION_WARNINGS create error".to_string())?;
 
     let headers = ["Sheet", "Cell", "Source", "Warning"];
     for (idx, header) in headers.iter().enumerate() {
         let addr = format!("{}1", col_index_to_letters((idx + 1) as u32));
-        sheet.get_cell_mut(addr.as_str()).set_value(*header);
+        sheet.cell_mut(addr.as_str()).set_value(*header);
     }
 
     let mut out_row: u32 = 2;
     for r in &warned {
         let msg = r.apply_warning.clone().unwrap_or_default();
-        sheet.get_cell_mut(format!("A{}", out_row)).set_value(&r.sheet_name);
-        sheet.get_cell_mut(format!("B{}", out_row)).set_value(&r.anchor_address);
-        sheet.get_cell_mut(format!("C{}", out_row)).set_value(&r.selected_source);
-        sheet.get_cell_mut(format!("D{}", out_row)).set_value(msg);
+        sheet.cell_mut(format!("A{}", out_row)).set_value(&r.sheet_name);
+        sheet.cell_mut(format!("B{}", out_row)).set_value(&r.anchor_address);
+        sheet.cell_mut(format!("C{}", out_row)).set_value(&r.selected_source);
+        sheet.cell_mut(format!("D{}", out_row)).set_value(msg);
         out_row += 1;
     }
     for (sheet_name, addr, msg) in extra_warnings {
-        sheet.get_cell_mut(format!("A{}", out_row)).set_value(sheet_name);
-        sheet.get_cell_mut(format!("B{}", out_row)).set_value(addr);
-        sheet.get_cell_mut(format!("C{}", out_row)).set_value("formula-guard");
-        sheet.get_cell_mut(format!("D{}", out_row)).set_value(msg);
+        sheet.cell_mut(format!("A{}", out_row)).set_value(sheet_name);
+        sheet.cell_mut(format!("B{}", out_row)).set_value(addr);
+        sheet.cell_mut(format!("C{}", out_row)).set_value("formula-guard");
+        sheet.cell_mut(format!("D{}", out_row)).set_value(msg);
         out_row += 1;
     }
 
     for (col, width) in [("A", 18.0), ("B", 12.0), ("C", 16.0), ("D", 64.0)] {
-        sheet.get_column_dimension_mut(col).set_width(width);
+        sheet.column_dimension_mut(col).set_width(width);
     }
     for row in 1..out_row {
         for col in ["A", "B", "C", "D"] {
             let addr = format!("{}{}", col, row);
             sheet
-                .get_style_mut(addr.as_str())
-                .get_alignment_mut()
+                .style_mut(addr.as_str())
+                .alignment_mut()
                 .set_wrap_text(true);
         }
     }
