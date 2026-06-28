@@ -4,10 +4,10 @@ use crate::core2::shared_formula_apply_patch::{
     patch_apply_shared_formula_groups,
     SharedFormulaOverride,
 };
-use crate::security::internal_metadata::INTERNAL_SHEET_NAME;
+use crate::security::internal_metadata::{INTERNAL_SHEET_NAME, read_internal_from_ui_file};
 use crate::infra::config_loader::load_translator_config;
 use crate::ui::ui_apply_payload::ApplyPayloadRow;
-use crate::ui::ui_sheet_builder::write_ui_sheet_into_book;
+use crate::ui::ui_sheet_builder::write_ui_sheet_into_book_with_headers;
 use crate::ui::ui_sheet_reader::read_ui_rows;
 use crate::ui::ui_protection::{
     apply_apply_output_protection,
@@ -180,7 +180,36 @@ pub fn write_apply_workbook(
     // 注入を保存前に行い、保存を1回だけにすることで往復を排除する。
     // ---------------------------------------------------------------------
     // Apply出力のUIシートは再編集しない最終記録のため、ドロップダウンはフル(1,2,3)で出力する。
-    write_ui_sheet_into_book(&mut book, &ui_rows, &translator_config, &[1, 2, 3])
+    //
+    // C-2: ラベルは load_translator_config() から作り直さず、アップロードされた UI Excel の
+    // __ETB_INTERNAL に Generate が刻んだ candidateN_header（表示キャッシュ）を verbatim 使用する。
+    // これにより Generate と Apply のラベルが一致する（NG-2 解消）。
+    // __ETB_INTERNAL が無い/欠ける旧ファイルは従来どおり config から生成（legacy フォールバック）。
+    let header_override: Option<[String; 3]> = match read_internal_from_ui_file(ui_workbook_path) {
+        Some(rec) => {
+            let h1 = rec.candidate1.header.clone();
+            let h2 = rec.candidate2.header.clone();
+            let h3 = rec.candidate3.header.clone();
+            match (h1, h2, h3) {
+                (Some(h1), Some(h2), Some(h3)) => {
+                    println!(
+                        "[APPLY][LABEL] reuse persisted headers from __ETB_INTERNAL (provider truth: c1={:?} c2={:?} c3={:?})",
+                        rec.candidate1.provider, rec.candidate2.provider, rec.candidate3.provider
+                    );
+                    Some([h1, h2, h3])
+                }
+                _ => {
+                    println!("[APPLY][LEGACY] __ETB_INTERNAL header incomplete; rebuild labels from translator_config");
+                    None
+                }
+            }
+        }
+        None => {
+            println!("[APPLY][LEGACY] __ETB_INTERNAL missing; rebuild labels from translator_config");
+            None
+        }
+    };
+    write_ui_sheet_into_book_with_headers(&mut book, &ui_rows, &translator_config, &[1, 2, 3], header_override)
         .map_err(|e| format!("write_ui_sheet_into_book failed: {e}"))?;
     println!("[CL-01] TRANSLATION_UI sheet injected into apply book (single-write path)");
 

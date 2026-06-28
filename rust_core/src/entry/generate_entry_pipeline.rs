@@ -198,6 +198,11 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
     match old_target { Some(v) => std::env::set_var("ETB_TARGET_SHEET", v), None => std::env::remove_var("ETB_TARGET_SHEET") }
     match old_input { Some(v) => std::env::set_var("ETB_INPUT_PATH", v), None => std::env::remove_var("ETB_INPUT_PATH") }
 
+    let candidate_configs = [
+        job_plan.candidate_config(1),
+        job_plan.candidate_config(2),
+        job_plan.candidate_config(3),
+    ];
     write_generate_workbook(
         &replica_str,
         &rows,
@@ -205,6 +210,7 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
         &cfg,
         &security_report,
         &job_plan.enabled_candidates,
+        &candidate_configs,
     ).map_err(|e| EntryError::Internal(format!("generate workbook write failed: {e}")))?;
 
     println!("=== ENTRY generate-select end ===");

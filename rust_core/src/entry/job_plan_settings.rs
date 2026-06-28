@@ -47,6 +47,61 @@ impl JobCourseMode {
     }
 }
 
+// ============================================================
+// CandidateConfig（C-1 で導入）
+//
+// 候補ごとの「provider × method」を表す単一モデル。
+// 今後 analyzer 実行・estimate・ラベル・Apply は、候補設定を
+// 直接 candidateN_provider から読むのではなく、本 CandidateConfig
+// （JobPlanSettings::candidate_config 経由）を参照することで一本化する。
+//
+// 注意（二重管理の回避）:
+// CandidateConfig は JobPlanSettings の既存フィールドから「導出するビュー」であり、
+// データの second copy を持たない。method のみが新規データ。
+// ============================================================
+
+/// 翻訳方式。split=分割翻訳 / whole=文脈翻訳（セル全体）。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Method {
+    Split,
+    Whole,
+}
+
+impl Method {
+    pub fn as_label(&self) -> &'static str {
+        match self {
+            Method::Split => "split",
+            Method::Whole => "whole",
+        }
+    }
+
+    /// 候補番号ごとの既定方式（後方互換）: 1=split, 2=split, 3=whole。
+    pub fn default_for_index(index: u8) -> Method {
+        match index {
+            3 => Method::Whole,
+            _ => Method::Split,
+        }
+    }
+}
+
+/// 文字列 -> Method。未知/None は呼び出し側で default_for_index に委ねる。
+pub fn parse_method(s: &str) -> Option<Method> {
+    match s.trim().to_ascii_lowercase().as_str() {
+        "split" => Some(Method::Split),
+        "whole" | "context" | "whole_cell" | "wholecell" => Some(Method::Whole),
+        _ => None,
+    }
+}
+
+/// 候補1件分の確定設定（provider × method × enabled）。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CandidateConfig {
+    pub index: u8,
+    pub provider: Option<ProviderKind>,
+    pub method: Method,
+    pub enabled: bool,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct RawJobPlanSettings {
     pub mode: Option<String>,
@@ -55,6 +110,10 @@ pub struct RawJobPlanSettings {
     pub candidate1_provider: Option<String>,
     pub candidate2_provider: Option<String>,
     pub candidate3_provider: Option<String>,
+    // C-1: 候補ごとの翻訳方式（省略可・後方互換）。省略時は default_for_index で補完。
+    pub candidate1_method: Option<String>,
+    pub candidate2_method: Option<String>,
+    pub candidate3_method: Option<String>,
     pub default_candidate_priority: Option<Vec<u8>>,
     pub job_accept_threshold: Option<f64>,
     pub experience_range: Option<String>,
@@ -68,6 +127,10 @@ pub struct JobPlanSettings {
     pub candidate1_provider: Option<ProviderKind>,
     pub candidate2_provider: Option<ProviderKind>,
     pub candidate3_provider: Option<ProviderKind>,
+    // C-1: 候補ごとの翻訳方式。既定は 1=split,2=split,3=whole。
+    pub candidate1_method: Method,
+    pub candidate2_method: Method,
+    pub candidate3_method: Method,
     pub default_candidate_priority: Vec<u8>,
     pub job_accept_threshold: f64,
     pub experience_range: String,
@@ -82,6 +145,9 @@ impl Default for JobPlanSettings {
             candidate1_provider: Some(ProviderKind::Google),
             candidate2_provider: Some(ProviderKind::Amazon),
             candidate3_provider: Some(ProviderKind::DeepL),
+            candidate1_method: Method::default_for_index(1),
+            candidate2_method: Method::default_for_index(2),
+            candidate3_method: Method::default_for_index(3),
             default_candidate_priority: vec![1, 2, 3],
             job_accept_threshold: 0.80,
             experience_range: EXPERIENCE_RANGE_LABEL.to_string(),
@@ -92,6 +158,23 @@ impl Default for JobPlanSettings {
 impl JobPlanSettings {
     pub fn is_enabled(&self, candidate_no: u8) -> bool {
         self.enabled_candidates.contains(&candidate_no)
+    }
+
+    /// C-1: 候補番号 -> CandidateConfig（単一の参照点）。
+    /// provider/method/enabled を既存フィールドから導出（second copy を持たない）。
+    pub fn candidate_config(&self, index: u8) -> CandidateConfig {
+        let (provider, method) = match index {
+            1 => (self.candidate1_provider, self.candidate1_method),
+            2 => (self.candidate2_provider, self.candidate2_method),
+            3 => (self.candidate3_provider, self.candidate3_method),
+            _ => (None, Method::default_for_index(index)),
+        };
+        CandidateConfig {
+            index,
+            provider,
+            method,
+            enabled: self.is_enabled(index),
+        }
     }
 
     pub fn is_experience(&self) -> bool {
@@ -169,6 +252,18 @@ fn normalize_raw_plan(raw: RawJobPlanSettings) -> JobPlanSettings {
             .as_deref()
             .and_then(parse_provider)
             .or(default.candidate3_provider),
+        candidate1_method: raw.candidate1_method
+            .as_deref()
+            .and_then(parse_method)
+            .unwrap_or(Method::default_for_index(1)),
+        candidate2_method: raw.candidate2_method
+            .as_deref()
+            .and_then(parse_method)
+            .unwrap_or(Method::default_for_index(2)),
+        candidate3_method: raw.candidate3_method
+            .as_deref()
+            .and_then(parse_method)
+            .unwrap_or(Method::default_for_index(3)),
         default_candidate_priority: normalize_candidates(raw.default_candidate_priority.unwrap_or(default.default_candidate_priority)),
         job_accept_threshold: raw.job_accept_threshold.unwrap_or(default.job_accept_threshold),
         experience_range: raw.experience_range.unwrap_or(default.experience_range),

@@ -1,5 +1,6 @@
 
 use crate::infra::config_loader::TranslatorConfig;
+use crate::entry::job_plan_settings::CandidateConfig;
 use crate::security::internal_metadata::{write_internal_metadata_sheet_into_book, InternalMetadata};
 use crate::security::types::SecurityReport;
 use crate::ui::security_report_sheet::write_security_report_sheet_into_book;
@@ -25,6 +26,7 @@ pub fn write_generate_workbook(
     config: &TranslatorConfig,
     security_report: &SecurityReport,
     enabled_candidates: &[u8],
+    candidate_configs: &[CandidateConfig; 3],
 ) -> Result<(), String> {
     let mut book = crate::infra::xlsx_safe::safe_read_xlsx(source_path, "generate_workbook_writer")?;
 
@@ -35,7 +37,32 @@ pub fn write_generate_workbook(
     write_ui_sheet_into_book(&mut book, rows, config, enabled_candidates)?;
     write_security_report_sheet_into_book(&mut book, security_report)?;
 
-    let internal = InternalMetadata::from_rows(rows, config);
+    // C-2: provider/method を真実源として __ETB_INTERNAL に保存する。
+    // provider/method は CandidateConfig からのみ取得（C-3 引継ぎ方針）。
+    // 候補が無効（rows に候補列が無い）場合は header と整合させ "None"/"none"。
+    let has_c2 = rows.iter().any(|r| r.candidate2.is_some());
+    let has_c3 = rows.iter().any(|r| r.candidate3.is_some());
+    let provider_label = |cc: &CandidateConfig, enabled: bool| -> String {
+        if enabled {
+            cc.provider.map(|p| p.as_label().to_string()).unwrap_or_else(|| "None".to_string())
+        } else {
+            "None".to_string()
+        }
+    };
+    let method_label = |cc: &CandidateConfig, enabled: bool| -> String {
+        if enabled { cc.method.as_label().to_string() } else { "none".to_string() }
+    };
+    let providers = [
+        provider_label(&candidate_configs[0], true),
+        provider_label(&candidate_configs[1], has_c2),
+        provider_label(&candidate_configs[2], has_c3),
+    ];
+    let methods = [
+        method_label(&candidate_configs[0], true),
+        method_label(&candidate_configs[1], has_c2),
+        method_label(&candidate_configs[2], has_c3),
+    ];
+    let internal = InternalMetadata::from_rows(rows, config, &providers, &methods);
     write_internal_metadata_sheet_into_book(&mut book, &internal)?;
 
     write_translation_warnings_sheet_into_book(&mut book, rows)?;

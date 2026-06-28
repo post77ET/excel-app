@@ -14,15 +14,33 @@ pub struct InternalMetadata {
     pub app_id: String,
     pub version: String,
     pub ui_sheet_name: String,
+    // header は「表示キャッシュ」。Generate の出力ヘッダ文字列をそのまま保持する。
+    // Header is persisted to preserve exact Generate output (display cache).
+    // Future UI redesigns may regenerate headers from provider (provider is the truth source).
     pub candidate1_header: String,
     pub candidate2_header: String,
     pub candidate3_header: String,
+    // provider / method は「真実源（業務データ）」。内部値で保持し、ハッシュ対象外。
+    pub candidate1_provider: String,
+    pub candidate2_provider: String,
+    pub candidate3_provider: String,
+    pub candidate1_method: String,
+    pub candidate2_method: String,
+    pub candidate3_method: String,
     pub row_count: usize,
     pub immutable_hash: String,
 }
 
 impl InternalMetadata {
-    pub fn from_rows(rows: &[UiRow], config: &TranslatorConfig) -> Self {
+    /// providers / methods は候補1..3の内部値ラベル（真実源）。
+    /// 例 providers=["GOOGLE","AMAZON","None"], methods=["split","split","none"]。
+    /// header は従来どおり config から生成（表示キャッシュ。出力不変＝回帰なし）。
+    pub fn from_rows(
+        rows: &[UiRow],
+        config: &TranslatorConfig,
+        providers: &[String; 3],
+        methods: &[String; 3],
+    ) -> Self {
         let candidate1_header = format!("candidate1 = {}", config.candidate1_provider.as_label());
         let candidate2_header = if rows.iter().any(|r| r.candidate2.is_some()) {
             format!("candidate2 = {}", config.candidate2_provider.as_label())
@@ -44,6 +62,12 @@ impl InternalMetadata {
             candidate1_header,
             candidate2_header,
             candidate3_header,
+            candidate1_provider: providers[0].clone(),
+            candidate2_provider: providers[1].clone(),
+            candidate3_provider: providers[2].clone(),
+            candidate1_method: methods[0].clone(),
+            candidate2_method: methods[1].clone(),
+            candidate3_method: methods[2].clone(),
             row_count: rows.len(),
             immutable_hash,
         }
@@ -70,6 +94,13 @@ pub fn write_internal_metadata_sheet_into_book(
         ("candidate1_header", metadata.candidate1_header.as_str()),
         ("candidate2_header", metadata.candidate2_header.as_str()),
         ("candidate3_header", metadata.candidate3_header.as_str()),
+        // 真実源（業務データ）。ハッシュ非対象。表示は header、判断は provider/method。
+        ("candidate1_provider", metadata.candidate1_provider.as_str()),
+        ("candidate2_provider", metadata.candidate2_provider.as_str()),
+        ("candidate3_provider", metadata.candidate3_provider.as_str()),
+        ("candidate1_method", metadata.candidate1_method.as_str()),
+        ("candidate2_method", metadata.candidate2_method.as_str()),
+        ("candidate3_method", metadata.candidate3_method.as_str()),
         ("row_count", &metadata.row_count.to_string()),
         ("immutable_hash", metadata.immutable_hash.as_str()),
     ];
@@ -143,4 +174,75 @@ pub fn compute_immutable_hash(
     }
 
     format!("{:016x}", hasher.finish())
+}
+
+
+// ============================================================
+// C-2: __ETB_INTERNAL リーダ
+//
+// Apply は再注入時にラベルを作り直さず、Generate が保存した値を読み戻す。
+// provider/method は真実源、header は表示キャッシュ。
+// 旧ファイル（provider/method 欄なし）は呼び出し側で既定補完＋legacyログ。
+// ============================================================
+
+/// 候補1件分の復元結果。provider/method が無い旧ファイルでは None。
+#[derive(Debug, Clone, Default)]
+pub struct RecoveredCandidate {
+    pub header: Option<String>,
+    pub provider: Option<String>,
+    pub method: Option<String>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct RecoveredInternal {
+    pub candidate1: RecoveredCandidate,
+    pub candidate2: RecoveredCandidate,
+    pub candidate3: RecoveredCandidate,
+}
+
+/// UI Excel の __ETB_INTERNAL シートから candidateN_header/provider/method を読み取る。
+/// シートが無い等で読めない場合は None（呼び出し側で legacy フォールバック）。
+pub fn read_internal_from_ui_file(ui_workbook_path: &str) -> Option<RecoveredInternal> {
+    use calamine::{open_workbook_auto, Data, Reader};
+
+    let mut workbook = open_workbook_auto(ui_workbook_path).ok()?;
+    let range = workbook.worksheet_range(INTERNAL_SHEET_NAME).ok()?;
+
+    // A列=key, B列=value のマップ化（apply_guard と同方式）
+    let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    for row in range.rows() {
+        if row.len() < 2 {
+            continue;
+        }
+        let key = match &row[0] {
+            Data::String(s) => s.trim().to_string(),
+            _ => continue,
+        };
+        if key.is_empty() {
+            continue;
+        }
+        let value = match &row[1] {
+            Data::String(s) => s.to_string(),
+            Data::Int(i) => i.to_string(),
+            Data::Float(fl) => fl.to_string(),
+            Data::Bool(bl) => bl.to_string(),
+            _ => String::new(),
+        };
+        map.insert(key, value);
+    }
+
+    let pick = |k: &str| -> Option<String> {
+        map.get(k).map(|s| s.to_string()).filter(|s| !s.is_empty())
+    };
+    let cand = |n: u8| RecoveredCandidate {
+        header: pick(&format!("candidate{}_header", n)),
+        provider: pick(&format!("candidate{}_provider", n)),
+        method: pick(&format!("candidate{}_method", n)),
+    };
+
+    Some(RecoveredInternal {
+        candidate1: cand(1),
+        candidate2: cand(2),
+        candidate3: cand(3),
+    })
 }

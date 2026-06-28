@@ -129,6 +129,21 @@ pub fn write_ui_sheet_into_book(
     config: &TranslatorConfig,
     enabled_candidates: &[u8],
 ) -> Result<(), String> {
+    // 既定: ヘッダ上書きなし（Generate 経路。config からヘッダ生成）。
+    write_ui_sheet_into_book_with_headers(book, rows, config, enabled_candidates, None)
+}
+
+/// C-2: ヘッダ上書き対応版。
+/// header_override が Some の場合、候補ヘッダ(col7/8/9)を保存値で verbatim 出力する
+/// （Apply 経路。Generate が __ETB_INTERNAL に刻んだ表示キャッシュをそのまま再現）。
+/// None の場合は従来どおり config から生成する（Generate / legacy フォールバック）。
+pub fn write_ui_sheet_into_book_with_headers(
+    book: &mut Workbook,
+    rows: &[UiRow],
+    config: &TranslatorConfig,
+    enabled_candidates: &[u8],
+    header_override: Option<[String; 3]>,
+) -> Result<(), String> {
     let sheet_name = "TRANSLATION_UI";
 
     if book.sheet_by_name(sheet_name).is_ok() {
@@ -147,7 +162,7 @@ pub fn write_ui_sheet_into_book(
     if has_c2 { enabled.push(2); }
     if has_c3 { enabled.push(3); }
 
-    write_headers(sheet, config, &enabled);
+    write_headers(sheet, config, &enabled, header_override);
     write_rows(sheet, rows);
     apply_ui_format(sheet, rows.len() as u32 + 1, 17);
     apply_ui_input_validation(sheet, rows.len() as u32 + 1, enabled_candidates);
@@ -155,8 +170,13 @@ pub fn write_ui_sheet_into_book(
     Ok(())
 }
 
-fn write_headers(sheet: &mut Worksheet, config: &TranslatorConfig, enabled: &[u8]) {
-    let (candidate1_header, candidate2_header, candidate3_header) = build_candidate_headers(config, enabled);
+fn write_headers(sheet: &mut Worksheet, config: &TranslatorConfig, enabled: &[u8], header_override: Option<[String; 3]>) {
+    let (candidate1_header, candidate2_header, candidate3_header) = match header_override {
+        // Apply: 保存済みヘッダ(表示キャッシュ)を verbatim 使用。生成し直さない。
+        Some([h1, h2, h3]) => (h1, h2, h3),
+        // Generate / legacy: config から生成（生成点はここ1箇所）。
+        None => build_candidate_headers(config, enabled),
+    };
     let headers = [
         "Sheet",
         "Cell",
