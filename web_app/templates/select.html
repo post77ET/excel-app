@@ -104,34 +104,46 @@
 
       <div id="engine-c1" class="engine-row">
         <label>{% if lang == "zh" %}候选1{% else %}候補1{% endif %}</label>
-        <select id="sel-c1" onchange="checkDeepLWarning()">
+        <select id="sel-c1" onchange="onProviderChange()">
           <option value="google" selected>Google Translate</option>
           <option value="amazon">Amazon Translate</option>
           <option value="deepl">DeepL</option>
         </select>
+        <select id="sel-m1" onchange="checkDeepLWarning()" style="margin-left:8px;">
+          <option value="split" selected>{% if lang == "zh" %}分割翻译{% else %}分割翻訳{% endif %}</option>
+          <option value="whole">{% if lang == "zh" %}上下文翻译{% else %}文脈翻訳{% endif %}</option>
+        </select>
       </div>
       <div id="engine-c2" class="engine-row">
         <label>{% if lang == "zh" %}候选2{% else %}候補2{% endif %}</label>
-        <select id="sel-c2" onchange="checkDeepLWarning()">
+        <select id="sel-c2" onchange="onProviderChange()">
           <option value="google">Google Translate</option>
           <option value="amazon" selected>Amazon Translate</option>
           <option value="deepl">DeepL</option>
         </select>
+        <select id="sel-m2" onchange="checkDeepLWarning()" style="margin-left:8px;">
+          <option value="split" selected>{% if lang == "zh" %}分割翻译{% else %}分割翻訳{% endif %}</option>
+          <option value="whole">{% if lang == "zh" %}上下文翻译{% else %}文脈翻訳{% endif %}</option>
+        </select>
       </div>
       <div id="engine-c3" class="engine-row">
         <label>{% if lang == "zh" %}候选3{% else %}候補3{% endif %}</label>
-        <select id="sel-c3" onchange="checkDeepLWarning()">
+        <select id="sel-c3" onchange="onProviderChange()">
           <option value="google">Google Translate</option>
           <option value="amazon">Amazon Translate</option>
           <option value="deepl" selected>DeepL</option>
+        </select>
+        <select id="sel-m3" onchange="checkDeepLWarning()" style="margin-left:8px;">
+          <option value="split">{% if lang == "zh" %}分割翻译{% else %}分割翻訳{% endif %}</option>
+          <option value="whole" selected>{% if lang == "zh" %}上下文翻译{% else %}文脈翻訳{% endif %}</option>
         </select>
       </div>
 
       <div id="deepl-warn" class="warn">
         {% if lang == "zh" %}
-        ⚠️ 将DeepL设置为候选1或候选2时，对于包含日语字符串的公式单元格，可能会破坏公式结构（全角括号等）。建议仅将DeepL用于候选3。
+        ⚠️ DeepL 仅支持「上下文翻译」。选择 DeepL 时，翻译方式将自动设为上下文翻译（无法选择分割翻译）。
         {% else %}
-        ⚠️ DeepLを候補1または候補2に設定した場合、日本語文字列を含む数式セルで数式の構造が壊れる可能性があります（全角括弧への変換等）。DeepLは候補3での使用を推奨します。
+        ⚠️ DeepL は「文脈翻訳」のみ対応です。DeepL を選ぶと翻訳方式は自動的に文脈翻訳になります（分割翻訳は選べません）。
         {% endif %}
       </div>
       <br>
@@ -162,6 +174,9 @@
         <input type="hidden" id="f-c1" name="c1_provider" value="google">
         <input type="hidden" id="f-c2" name="c2_provider" value="amazon">
         <input type="hidden" id="f-c3" name="c3_provider" value="deepl">
+        <input type="hidden" id="f-m1" name="c1_method" value="split">
+        <input type="hidden" id="f-m2" name="c2_method" value="split">
+        <input type="hidden" id="f-m3" name="c3_method" value="whole">
         <button onclick="goStep(3)" type="button">{% if lang == "zh" %}返回{% else %}戻る{% endif %}</button>
         <button class="primary" type="submit">{% if lang == "zh" %}开始执行{% else %}Generate実行{% endif %}</button>
       </form>
@@ -201,10 +216,35 @@ function checkDeepLWarning() {
   var course = document.querySelector('input[name="course"]:checked').value;
   var c1 = document.getElementById('sel-c1').value;
   var c2 = document.getElementById('sel-c2').value;
+  var c3 = document.getElementById('sel-c3').value;
   var warn = false;
+  // DeepL を選んでいる候補があれば「DeepLは文脈翻訳のみ」を表示する。
   if (c1 === 'deepl') warn = true;
   if (course === 'full' && c2 === 'deepl') warn = true;
+  if (course !== 'c1only' && c3 === 'deepl') warn = true;
   document.getElementById('deepl-warn').style.display = warn ? 'block' : 'none';
+}
+
+// C-6: provider=DeepL の候補は split を選べないようにする（whole へ強制）。
+// 最終防衛は Rust の validate_candidate_method_provider（DeepL×split を拒否）。
+function applyDeepLMethodLock(provId, methId) {
+  var prov = document.getElementById(provId);
+  var meth = document.getElementById(methId);
+  if (!prov || !meth) return;
+  var splitOpt = meth.querySelector('option[value="split"]');
+  if (prov.value === 'deepl') {
+    meth.value = 'whole';
+    if (splitOpt) splitOpt.disabled = true;
+  } else {
+    if (splitOpt) splitOpt.disabled = false;
+  }
+}
+
+function onProviderChange() {
+  applyDeepLMethodLock('sel-c1', 'sel-m1');
+  applyDeepLMethodLock('sel-c2', 'sel-m2');
+  applyDeepLMethodLock('sel-c3', 'sel-m3');
+  checkDeepLWarning();
 }
 
 function updateConfirm() {
@@ -213,13 +253,19 @@ function updateConfirm() {
   var c1 = document.getElementById('sel-c1').value;
   var c2 = document.getElementById('sel-c2').value;
   var c3 = document.getElementById('sel-c3').value;
+  var m1 = document.getElementById('sel-m1').value;
+  var m2 = document.getElementById('sel-m2').value;
+  var m3 = document.getElementById('sel-m3').value;
 
   var courseLabel = { full: 'フルコース', c1c3: 'C1+C3コース', c1only: 'C1のみコース' };
   var engineLabel = { google: 'Google', amazon: 'Amazon', deepl: 'DeepL' };
+  var methodLabel = ('{{ "zh" if lang == "zh" else "ja" }}' === 'zh')
+    ? { split: '分割', whole: '上下文' }
+    : { split: '分割', whole: '文脈' };
 
-  var enginesText = '候補1: ' + engineLabel[c1];
-  if (course === 'full') enginesText += ' / 候補2: ' + engineLabel[c2];
-  if (course !== 'c1only') enginesText += ' / 候補3: ' + engineLabel[c3];
+  var enginesText = '候補1: ' + engineLabel[c1] + '/' + methodLabel[m1];
+  if (course === 'full') enginesText += ' / 候補2: ' + engineLabel[c2] + '/' + methodLabel[m2];
+  if (course !== 'c1only') enginesText += ' / 候補3: ' + engineLabel[c3] + '/' + methodLabel[m3];
 
   document.getElementById('conf-sheets').textContent = sheets;
   document.getElementById('conf-course').textContent = courseLabel[course];
@@ -236,12 +282,20 @@ function updateConfirm() {
   document.getElementById('f-c1').value = c1;
   document.getElementById('f-c2').value = c2;
   document.getElementById('f-c3').value = c3;
+  document.getElementById('f-m1').value = m1;
+  document.getElementById('f-m2').value = m2;
+  document.getElementById('f-m3').value = m3;
 }
 
 function submitGenerate() {
   document.getElementById('generate-progress-box').style.display = 'block';
   return true;
 }
+
+// C-6: 初期表示時にも DeepL×split 抑止を効かせる（既定 candidate3=DeepL/whole で split を無効化）。
+window.addEventListener('DOMContentLoaded', function() {
+  onProviderChange();
+});
 </script>
 </body>
 </html>

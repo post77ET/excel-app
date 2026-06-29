@@ -5,7 +5,7 @@ use crate::core1::analyzer::{estimate_candidate_usage, CandidateGenerationPlan};
 use crate::core1::translation_policy::decide_translation_policy;
 use crate::core2::source_workbook_reader::read_source_logical_cells;
 use crate::entry::entry_state::EntryError;
-use crate::entry::job_plan_settings::{load_job_plan_settings, EXPERIENCE_RANGE_LABEL};
+use crate::entry::job_plan_settings::{load_job_plan_settings, validate_candidate_method_provider, EXPERIENCE_RANGE_LABEL};
 use crate::entry::sheet_select_cli::{confirm, select_sheets};
 use crate::entry::workbook_sheet_inventory::load_sheet_inventory;
 use crate::infra::config_loader::load_translator_config;
@@ -32,6 +32,8 @@ pub fn run_estimate_select_pipeline(input_path: &str) -> Result<BillingEstimate,
 
     let inventory = load_sheet_inventory(input).map_err(|e| EntryError::Internal(format!("{:?}", e)))?;
     let job_plan = load_job_plan_settings();
+    // C-5: DeepL×split 等の不正組合せを明示エラーにする（補正しない）。
+    validate_candidate_method_provider(&job_plan).map_err(EntryError::Internal)?;
     let cfg = load_translator_config();
 
     // === Phase 1: ExecutionPlan を確定し direction / plan を resolve（恒等マッピング）===
@@ -69,6 +71,12 @@ pub fn run_estimate_select_pipeline(input_path: &str) -> Result<BillingEstimate,
         enabled_candidates: job_plan.enabled_candidates.clone(),
         default_candidate_priority: job_plan.default_candidate_priority.clone(),
         job_accept_threshold: job_plan.job_accept_threshold,
+        // C-3/C-4: method は CandidateConfig からのみ取得（候補番号 if 分岐を増やさない）。
+        methods: [
+            job_plan.candidate_config(1).method,
+            job_plan.candidate_config(2).method,
+            job_plan.candidate_config(3).method,
+        ],
     };
 
     let old_input = std::env::var("ETB_INPUT_PATH").ok();

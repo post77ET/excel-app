@@ -15,7 +15,7 @@ use crate::entry::workbook_sheet_inventory::load_sheet_inventory;
 use crate::infra::config_loader::load_translator_config;
 use crate::planning::ExecutionPlan;
 use crate::plan::CellScope;
-use crate::entry::job_plan_settings::{load_job_plan_settings, EXPERIENCE_RANGE_LABEL};
+use crate::entry::job_plan_settings::{load_job_plan_settings, validate_candidate_method_provider, EXPERIENCE_RANGE_LABEL};
 use crate::security::pipeline::{inspect_xlsx, print_report};
 use crate::security::types::SecurityResult;
 use crate::ui::types::UiRow;
@@ -46,6 +46,8 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
     }
     let inventory = load_sheet_inventory(&job_paths.replica_path).map_err(|e| EntryError::Internal(format!("{:?}", e)))?;
     let job_plan = load_job_plan_settings();
+    // C-5: DeepL×split 等の不正組合せを明示エラーにする（補正しない）。
+    validate_candidate_method_provider(&job_plan).map_err(EntryError::Internal)?;
 
     // === Phase 1: ExecutionPlan を確定し、direction / plan を resolve する ===
     // direction_id / billing_mode を正式な実行条件としてシステムへ流し込む。
@@ -114,6 +116,12 @@ pub fn run_generate_select_pipeline(input_path: &str) -> Result<GenerateSelectRe
         enabled_candidates: job_plan.enabled_candidates.clone(),
         default_candidate_priority: job_plan.default_candidate_priority.clone(),
         job_accept_threshold: job_plan.job_accept_threshold,
+        // C-3/C-4: method は CandidateConfig からのみ取得（候補番号 if 分岐を増やさない）。
+        methods: [
+            job_plan.candidate_config(1).method,
+            job_plan.candidate_config(2).method,
+            job_plan.candidate_config(3).method,
+        ],
     };
 
     let old_input = std::env::var("ETB_INPUT_PATH").ok();

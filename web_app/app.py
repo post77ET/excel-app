@@ -327,6 +327,11 @@ class WorkbookParseError(Exception):
     pass
 
 
+class InvalidCandidateComboError(Exception):
+    """provider×method の不正組合せ（DeepL×split 等）を Rust が拒否した場合の専用例外。"""
+    pass
+
+
 # Rust 側が返す安定キー。これを ja/zh の客向け文言に変換する（表示は Web の責務）。
 WORKBOOK_PARSE_FAILED_KEY = "WORKBOOK_PARSE_FAILED"
 WORKBOOK_PARSE_MESSAGES = {
@@ -341,6 +346,20 @@ WORKBOOK_PARSE_MESSAGES = {
         "【解决方法】\n"
         "请在 Excel 中打开目标文件，重新通过\"另存为\"保存为 .xlsx 格式后，再次上传。\n\n"
         "※ 如果完成上述操作后仍无法改善，可能是文件结构方面的原因导致暂不支持，敬请谅解。"
+    ),
+}
+
+
+# C-5: provider×method の不正組合せ（DeepL×split）の安定キーと客向け文言。
+INVALID_CANDIDATE_COMBO_KEY = "INVALID_CANDIDATE_METHOD_PROVIDER"
+INVALID_CANDIDATE_COMBO_MESSAGES = {
+    "ja": (
+        "選択された翻訳エンジンと翻訳方式の組合せに対応していません。\n\n"
+        "DeepL を使用する場合は「文脈翻訳」を選択してください。"
+    ),
+    "zh": (
+        "所选择的翻译引擎与翻译方式的组合暂不支持。\n\n"
+        "使用 DeepL 时，请选择\"上下文翻译\"。"
     ),
 }
 
@@ -370,6 +389,8 @@ def run_rust(args: list[str], extra_env: dict[str, str] | None = None) -> subpro
     if result.returncode != 0:
         if result.stderr and WORKBOOK_PARSE_FAILED_KEY in result.stderr:
             raise WorkbookParseError()
+        if result.stderr and INVALID_CANDIDATE_COMBO_KEY in result.stderr:
+            raise InvalidCandidateComboError()
         raise RuntimeError("Rust処理に失敗しました。Renderログの [RUST STDERR] を確認してください。")
     return result
 
@@ -381,9 +402,13 @@ def write_job_plan_config(
     c1_provider: str | None = None,
     c2_provider: str | None = None,
     c3_provider: str | None = None,
+    c1_method: str | None = None,
+    c2_method: str | None = None,
+    c3_method: str | None = None,
 ) -> Path:
     force_mock = os.environ.get("ETB_FORCE_MOCK_TRANSLATORS", "").strip().lower() in {"1", "true", "yes", "y"}
     valid_providers = {"google", "amazon", "deepl", "mock"}
+    valid_methods = {"split", "whole"}
 
     if force_mock:
         candidate1_provider = candidate2_provider = candidate3_provider = "mock"
@@ -391,6 +416,11 @@ def write_job_plan_config(
         candidate1_provider = c1_provider if c1_provider in valid_providers else os.environ.get("ETB_CANDIDATE1_PROVIDER", "google")
         candidate2_provider = c2_provider if c2_provider in valid_providers else os.environ.get("ETB_CANDIDATE2_PROVIDER", "amazon")
         candidate3_provider = c3_provider if c3_provider in valid_providers else os.environ.get("ETB_CANDIDATE3_PROVIDER", "deepl")
+
+    # C-6: 候補ごとの翻訳方式。未指定/不正は既定（1=split,2=split,3=whole）。
+    candidate1_method = c1_method if c1_method in valid_methods else "split"
+    candidate2_method = c2_method if c2_method in valid_methods else "split"
+    candidate3_method = c3_method if c3_method in valid_methods else "whole"
 
     # コースに応じてenabled_candidatesを決定
     if course == "c1only":
@@ -407,6 +437,9 @@ def write_job_plan_config(
         "candidate1_provider": candidate1_provider,
         "candidate2_provider": candidate2_provider,
         "candidate3_provider": candidate3_provider,
+        "candidate1_method": candidate1_method,
+        "candidate2_method": candidate2_method,
+        "candidate3_method": candidate3_method,
         "default_candidate_priority": [1, 2, 3],
         "job_accept_threshold": 0.8,
         "experience_range": "A1:D5",
@@ -604,7 +637,14 @@ def generate():
         c1_provider = request.form.get("c1_provider", None)
         c2_provider = request.form.get("c2_provider", None)
         c3_provider = request.form.get("c3_provider", None)
-        plan_path = write_job_plan_config(job_id, mode, course, c1_provider, c2_provider, c3_provider)
+        c1_method = request.form.get("c1_method", None)
+        c2_method = request.form.get("c2_method", None)
+        c3_method = request.form.get("c3_method", None)
+        plan_path = write_job_plan_config(
+            job_id, mode, course,
+            c1_provider, c2_provider, c3_provider,
+            c1_method, c2_method, c3_method,
+        )
         # Phase 1: ExecutionPlan の実行条件を Rust へ明示的に渡す。
         # direction_id は Web の方向選択（ja2zh / zh2ja）から受け取り検証済みの値を渡す。billing_mode は既存 mode から導出（experience->free / paid->paid_standard）。
         # これらは Rust 側 ExecutionPlan::from_runtime が env として受け取り resolve に流す。
@@ -673,6 +713,9 @@ def _generate_worker(job_id: str, original_path: str, output_path: Path, extra_e
             if isinstance(exc, WorkbookParseError):
                 lang = job.get("lang", "ja")
                 msg = WORKBOOK_PARSE_MESSAGES.get(lang, WORKBOOK_PARSE_MESSAGES["ja"])
+            elif isinstance(exc, InvalidCandidateComboError):
+                lang = job.get("lang", "ja")
+                msg = INVALID_CANDIDATE_COMBO_MESSAGES.get(lang, INVALID_CANDIDATE_COMBO_MESSAGES["ja"])
             else:
                 msg = str(exc)
             job.update({"status": "error", "message": msg})

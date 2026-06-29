@@ -12,16 +12,22 @@ use std::path::Path;
 // selection. The Web UI may create the json file, but Rust must still
 // validate and execute it.
 //
-// Candidate1/2/3 are translation METHODS.
-// Google/Amazon/DeepL are PROVIDERS.
+// Candidate1/2/3 are candidate SLOTS.
+// Each candidate slot has a PROVIDER and a METHOD.
+//   PROVIDER: Google / Amazon / DeepL
+//   METHOD  : split (segment translation) / whole (whole-cell context)
+// The current default remains:
+//   candidate1 = Google / split
+//   candidate2 = Amazon / split
+//   candidate3 = DeepL  / whole
 //
 // Do NOT fake candidate columns. If candidate1 fails, candidate2 must
 // never be copied into candidate1. Only DefaultSelect may fallback to
 // another successful candidate.
 //
-// DeepL must not be assigned to Candidate1 or Candidate2 because those
-// methods use split translation. DeepL is intended for Candidate3
-// whole-cell context translation.
+// Provider x method combination is validated per slot (see C-5).
+// DeepL is only valid with the whole method (DeepL x split is rejected,
+// not silently substituted).
 //
 // Experience course is NOT a separate generate/apply system.
 // It is the normal production flow with only the translation support
@@ -285,15 +291,9 @@ fn normalize_candidates(values: Vec<u8>) -> Vec<u8> {
 }
 
 fn validate_and_repair_plan(plan: &mut JobPlanSettings) {
-    if plan.is_enabled(1) && matches!(plan.candidate1_provider, Some(ProviderKind::DeepL)) {
-        println!("[JOB_PLAN][WARN] Candidate1 cannot use DeepL. Fallback to Google.");
-        plan.candidate1_provider = Some(ProviderKind::Google);
-    }
-
-    if plan.is_enabled(2) && matches!(plan.candidate2_provider, Some(ProviderKind::DeepL)) {
-        println!("[JOB_PLAN][WARN] Candidate2 cannot use DeepL. Fallback to Amazon.");
-        plan.candidate2_provider = Some(ProviderKind::Amazon);
-    }
+    // C-5: candidate1/2 の DeepL 無言差し替えは撤廃。
+    // provider×method の不正組合せ（DeepL×split）は補正せず、
+    // validate_candidate_method_provider() で明示エラーにする。
 
     if plan.is_enabled(3) && plan.candidate3_provider.is_none() {
         plan.candidate3_provider = Some(ProviderKind::DeepL);
@@ -314,6 +314,25 @@ fn validate_and_repair_plan(plan: &mut JobPlanSettings) {
     }
 
     plan.default_candidate_priority = plan.normalized_priority();
+}
+
+/// C-5: provider×method の不正組合せを検証する（補正しない）。
+/// ルール: DeepL は whole のみ許可。Google/Amazon は split/whole 両方可。
+/// 違反時は安定キー INVALID_CANDIDATE_METHOD_PROVIDER を含む Err を返す。
+/// このキーは app.py が検出し error.html に表示する（今後変更しない安定キー）。
+pub fn validate_candidate_method_provider(plan: &JobPlanSettings) -> Result<(), String> {
+    for index in 1u8..=3 {
+        let cc = plan.candidate_config(index);
+        if !cc.enabled {
+            continue;
+        }
+        if matches!(cc.provider, Some(ProviderKind::DeepL)) && cc.method == Method::Split {
+            return Err(format!(
+                "INVALID_CANDIDATE_METHOD_PROVIDER: candidate{index} uses DeepL with split; DeepL requires whole"
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn parse_mode(value: &str) -> JobCourseMode {

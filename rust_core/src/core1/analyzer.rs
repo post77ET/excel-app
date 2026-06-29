@@ -10,6 +10,7 @@ use crate::core2::formula_text::{
 use crate::core2::structure_types::LogicalCell;
 use crate::core2::structure_types::LogicalCellKind;
 use crate::direction::DirectionProfile;
+use crate::entry::job_plan_settings::Method;
 use crate::infra::app_error::AppError;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -39,6 +40,9 @@ pub struct CandidateGenerationPlan {
     pub enabled_candidates: Vec<u8>,
     pub default_candidate_priority: Vec<u8>,
     pub job_accept_threshold: f64,
+    // C-3/C-4: 候補ごとの翻訳方式（split/whole）。CandidateConfig.method 由来。
+    // 既定は 1=split, 2=split, 3=whole（従来挙動）。
+    pub methods: [Method; 3],
 }
 
 impl Default for CandidateGenerationPlan {
@@ -47,6 +51,11 @@ impl Default for CandidateGenerationPlan {
             enabled_candidates: vec![1, 2, 3],
             default_candidate_priority: vec![1, 2, 3],
             job_accept_threshold: 0.80,
+            methods: [
+                Method::default_for_index(1),
+                Method::default_for_index(2),
+                Method::default_for_index(3),
+            ],
         }
     }
 }
@@ -54,6 +63,16 @@ impl Default for CandidateGenerationPlan {
 impl CandidateGenerationPlan {
     fn is_enabled(&self, candidate_no: u8) -> bool {
         self.enabled_candidates.contains(&candidate_no)
+    }
+
+    /// C-3/C-4: 候補番号 -> 翻訳方式（CandidateConfig.method 由来）。
+    fn method(&self, candidate_no: u8) -> Method {
+        match candidate_no {
+            1 => self.methods[0],
+            2 => self.methods[1],
+            3 => self.methods[2],
+            _ => Method::default_for_index(candidate_no),
+        }
     }
 
     fn priority(&self) -> Vec<u8> {
@@ -121,42 +140,43 @@ pub fn estimate_candidate_usage(
 
         out.translatable_cells += 1;
 
-        if candidate_plan.is_enabled(1) {
+        // C-4: 候補ごとに method で見積り方式を選ぶ（Generate の実行方式と一致させる）。
+        // split → estimate_segment_requests / whole → estimate_whole_requests。
+        for candidate_no in 1u8..=3 {
+            if !candidate_plan.is_enabled(candidate_no) {
+                continue;
+            }
             out.candidate_units += 1;
-            let (requests, chars) = estimate_segment_requests(&logical_cell.source_text, direction);
-            out.candidate1_requests += requests;
-            out.candidate1_chars += chars;
-        }
-
-        if candidate_plan.is_enabled(2) {
-            out.candidate_units += 1;
-            let (requests, chars) = estimate_segment_requests(&logical_cell.source_text, direction);
-            out.candidate2_requests += requests;
-            out.candidate2_chars += chars;
-        }
-
-        if candidate_plan.is_enabled(3) {
-            out.candidate_units += 1;
-            // F-2 整合: candidate3 は実処理と一致させる。
-            // - 数式セル: 引用符内リテラルのみ翻訳 → リテラル数=request, リテラル文字数合計=chars。
-            //             リテラル無し数式は翻訳機を呼ばない → request=0, chars=0。
-            // - 非数式セル: 従来どおり全文1リクエスト=全文字数。
-            if is_formula_cell(logical_cell) {
-                let (_template, literals) = extract_quoted_literals(&logical_cell.source_text);
-                // リテラル無し数式は翻訳機を呼ばない → request=0 / chars=0。
-                if !literals.is_empty() {
-                    out.candidate3_requests += literals.len();
-                    out.candidate3_chars +=
-                        literals.iter().map(|l| l.chars().count()).sum::<usize>();
-                }
-            } else {
-                out.candidate3_requests += 1;
-                out.candidate3_chars += logical_cell.source_text.chars().count();
+            let (requests, chars) = match candidate_plan.method(candidate_no) {
+                Method::Split => estimate_segment_requests(&logical_cell.source_text, direction),
+                Method::Whole => estimate_whole_requests(logical_cell),
+            };
+            match candidate_no {
+                1 => { out.candidate1_requests += requests; out.candidate1_chars += chars; }
+                2 => { out.candidate2_requests += requests; out.candidate2_chars += chars; }
+                3 => { out.candidate3_requests += requests; out.candidate3_chars += chars; }
+                _ => {}
             }
         }
     }
 
     Ok(out)
+}
+
+/// C-4: 文脈（whole）方式の見積り。candidate3 で固定だった数え方をヘルパ化。
+/// F-2 整合: 数式セルは引用符内リテラルのみ（無しは 0/0）、非数式は全文1リクエスト。
+fn estimate_whole_requests(logical_cell: &LogicalCell) -> (usize, usize) {
+    if is_formula_cell(logical_cell) {
+        let (_template, literals) = extract_quoted_literals(&logical_cell.source_text);
+        if literals.is_empty() {
+            (0, 0)
+        } else {
+            let chars = literals.iter().map(|l| l.chars().count()).sum::<usize>();
+            (literals.len(), chars)
+        }
+    } else {
+        (1, logical_cell.source_text.chars().count())
+    }
 }
 
 fn estimate_segment_requests(text: &str, direction: &dyn DirectionProfile) -> (usize, usize) {
@@ -242,9 +262,11 @@ pub fn build_candidate_bundles_batch(
     let (candidate1_results, candidate2_results, candidate3_results) =
         std::thread::scope(|s| {
             let h1 = if candidate_plan.is_enabled(1) {
-                Some(s.spawn(|| {
-                    Some(translate_segments_for_cells(
+                let m1 = candidate_plan.method(1);
+                Some(s.spawn(move || {
+                    Some(run_candidate_by_method(
                         "candidate1",
+                        m1,
                         logical_cells,
                         policies,
                         adapter1,
@@ -261,9 +283,11 @@ pub fn build_candidate_bundles_batch(
             };
 
             let h2 = if candidate_plan.is_enabled(2) {
-                Some(s.spawn(|| {
-                    Some(translate_segments_for_cells(
+                let m2 = candidate_plan.method(2);
+                Some(s.spawn(move || {
+                    Some(run_candidate_by_method(
                         "candidate2",
+                        m2,
                         logical_cells,
                         policies,
                         adapter2,
@@ -280,9 +304,11 @@ pub fn build_candidate_bundles_batch(
             };
 
             let h3 = if candidate_plan.is_enabled(3) {
-                Some(s.spawn(|| {
-                    Some(translate_whole_for_cells(
+                let m3 = candidate_plan.method(3);
+                Some(s.spawn(move || {
+                    Some(run_candidate_by_method(
                         "candidate3",
+                        m3,
                         logical_cells,
                         policies,
                         adapter3,
@@ -290,6 +316,7 @@ pub fn build_candidate_bundles_batch(
                         safe_max_chars,
                         from_lang,
                         to_lang,
+                        direction,
                     ))
                 }))
             } else {
@@ -424,6 +451,39 @@ fn decide_fallback_default_select(
     }
 
     DefaultSelect::Original
+}
+
+/// C-3: 候補の翻訳方式（split/whole）に応じて実処理関数をディスパッチする。
+/// split=分割（direction を使う）/ whole=文脈（direction 不要）。
+/// 戻り型は両関数とも Vec<Result<String, String>> で共通。
+fn run_candidate_by_method(
+    label: &str,
+    method: Method,
+    logical_cells: &[LogicalCell],
+    policies: &[TranslationPolicyDecision],
+    adapter: &dyn TranslatorAdapter,
+    batch_max_items: usize,
+    batch_max_chars: usize,
+    from_lang: Lang,
+    to_lang: Lang,
+    direction: &dyn DirectionProfile,
+) -> Vec<Result<String, String>> {
+    match method {
+        Method::Split => {
+            println!("[ANALYZER][{label}] method=split");
+            translate_segments_for_cells(
+                label, logical_cells, policies, adapter,
+                batch_max_items, batch_max_chars, from_lang, to_lang, direction,
+            )
+        }
+        Method::Whole => {
+            println!("[ANALYZER][{label}] method=whole");
+            translate_whole_for_cells(
+                label, logical_cells, policies, adapter,
+                batch_max_items, batch_max_chars, from_lang, to_lang,
+            )
+        }
+    }
 }
 
 fn translate_segments_for_cells(
