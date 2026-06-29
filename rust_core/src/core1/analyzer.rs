@@ -19,6 +19,7 @@ use std::io::Write;
 struct SegmentRequestPlan {
     segment_idx: usize,
     text: String,
+    token_idx: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -32,6 +33,7 @@ struct SegmentCellPlan {
 struct WholeRequestPlan {
     cell_idx: usize,
     text: String,
+    token_idx: usize,
 }
 
 
@@ -512,22 +514,32 @@ fn translate_segments_for_cells(
 
         let segments = split_preserving_structure(&logical_cell.source_text);
         let mut request_positions = Vec::new();
+        let mut cell_token_error = false;
 
         for (segment_idx, seg) in segments.iter().enumerate() {
             if should_translate_segment(seg.target, &seg.text, direction) {
+                // 衝突しない退避トークン表を選ぶ。全滅なら誤復元防止のため中断（エラー）。
+                let token_idx = match select_token_table(&seg.text) {
+                    Some(i) => i,
+                    None => {
+                        println!("[SPLIT][{label}][TOKEN_COLLISION_ABORT] cell_idx={cell_idx} segment_idx={segment_idx}");
+                        cell_token_error = true;
+                        break;
+                    }
+                };
                 request_positions.push(request_plans.len());
-                // \n/全角スペースをPrivate Use Areaトークンで保護（翻訳エンジンが変換しないよう）
-                let protected_text = seg.text
-                    .replace('\n', "\u{E001}NL\u{E002}")
-                    .replace('\u{3000}', "\u{E001}FS\u{E002}");
+                let protected_text = protect_with(&seg.text, token_idx);
                 request_plans.push(SegmentRequestPlan {
                     segment_idx,
                     text: protected_text,
+                    token_idx,
                 });
             }
         }
 
-        if request_positions.is_empty() {
+        if cell_token_error {
+            results[cell_idx] = Err("SPECIAL_TOKEN_COLLISION".to_string());
+        } else if request_positions.is_empty() {
             results[cell_idx] = Ok(logical_cell.source_text.clone());
         } else {
             cell_plans[cell_idx] = Some(SegmentCellPlan {
@@ -645,10 +657,8 @@ fn translate_segments_for_cells(
 
                 match &translated_texts[req_pos] {
                     Some(text) => {
-                        // トークンを元の改行・全角スペースに復元
-                        let restored = text
-                            .replace("\u{E001}NL\u{E002}", "\n")
-                            .replace("\u{E001}FS\u{E002}", "\u{3000}");
+                        // トークンを元の改行・全角スペースに復元（退避時と同一テーブル）
+                        let restored = restore_with(text, request_plans[req_pos].token_idx);
                         rebuilt.push_str(&restored);
                     }
                     None => {
@@ -663,7 +673,7 @@ fn translate_segments_for_cells(
 
         results[cell_idx] = match cell_error {
             Some(err) => Err(err),
-            None => Ok(rebuilt),
+            None => Ok(normalize_punctuation_for_target(&rebuilt, to_lang)),
         };
 
         if let Err(err) = &results[cell_idx] {
@@ -684,15 +694,77 @@ fn translate_segments_for_cells(
 // No.1 fix: candidate3（whole 経路）でも改行・全角スペースを保護する。
 // candidate1/2（segments 経路, analyzer.rs 内）と同一の PUA トークンを使用し、
 // MT エンジンが「\n + 全角スペース」を「\n\n」に変換して改行倍増・U+3000消失する不具合を防ぐ。
-fn protect_structure_for_whole(text: &str) -> String {
-    text.replace('\n', "\u{E001}NL\u{E002}")
-        .replace('\u{3000}', "\u{E001}FS\u{E002}")
+// ============================================================
+// 特殊文字（改行・全角スペース）保護の共通処理（QA-2026-017 要求3）
+//
+// 翻訳エンジンに本文を渡すと改行や全角スペースが変形・消失する。
+// 固有トークンへ退避し翻訳後に復元する。Google/Amazon/DeepL 共通。
+//
+// 旧実装は私用領域文字 U+E001/E002 で囲んでいたが、Google/Amazon は
+// これを翻訳時に削除し中身の "NL"/"FS" だけ残す不具合があった（whole経路20/20件）。
+// SPECIAL_CHAR_TOKENS は既定（第一候補）のトークン定義。
+// TOKEN_TABLES は衝突回避のための候補テーブル群。
+// 本文と衝突した場合は TOKEN_TABLES の次候補へ切り替える。
+// 全候補と衝突した場合は、誤復元によるデータ破壊を防ぐため処理を中断する。
+// 将来の特殊文字追加は TokenTable の対応表へ1行追加するだけで全エンジンに反映。
+// ============================================================
+
+/// 退避トークン表。条件:
+/// - Google/Amazon/DeepL が削除・翻訳しない
+/// - 本文と衝突しない
+/// - 復元で一意判定できる
+/// SPECIAL_CHAR_TOKENS は既定テーブル。TOKEN_TABLES は衝突回避用の候補群。
+type TokenTable = &'static [(char, &'static str)];
+const SPECIAL_CHAR_TOKENS: TokenTable = &[
+    ('\n', "\u{27E6}NL\u{27E7}"),
+    ('\u{3000}', "\u{27E6}FS\u{27E7}"),
+];
+const TOKEN_TABLES: &[TokenTable] = &[
+    SPECIAL_CHAR_TOKENS,
+    &[('\n', "\u{2983}NL\u{2984}"), ('\u{3000}', "\u{2983}FS\u{2984}")],
+    &[('\n', "\u{301A}NL\u{301B}"), ('\u{3000}', "\u{301A}FS\u{301B}")],
+];
+
+/// 本文に当該テーブルのトークンが含まれるか（衝突）。
+fn table_collides(text: &str, table: TokenTable) -> bool {
+    table.iter().any(|(_, tok)| text.contains(tok))
 }
 
-fn restore_structure_for_whole(text: &str) -> String {
-    text.replace("\u{E001}NL\u{E002}", "\n")
-        .replace("\u{E001}FS\u{E002}", "\u{3000}")
+/// 本文と衝突しないテーブルを選ぶ。全テーブル衝突なら None（誤復元防止のため呼び出し側で中断）。
+fn select_token_table(text: &str) -> Option<usize> {
+    TOKEN_TABLES.iter().position(|t| !table_collides(text, t))
 }
+
+/// 指定テーブルで退避。
+fn protect_with(text: &str, idx: usize) -> String {
+    let mut out = text.to_string();
+    for (ch, tok) in TOKEN_TABLES[idx] {
+        out = out.replace(*ch, tok);
+    }
+    out
+}
+
+/// 指定テーブルで復元。
+fn restore_with(text: &str, idx: usize) -> String {
+    let mut out = text.to_string();
+    for (ch, tok) in TOKEN_TABLES[idx] {
+        out = out.replace(tok, &ch.to_string());
+    }
+    out
+}
+
+/// QA-017要求5: 中→日(to_lang=Ja)の記号正規化（後処理）。
+/// 中国語の全角コンマ「，」は日本語では「、」が自然。to_lang=Ja のときのみ適用。
+/// 日→中(ja2zh)には適用しない。
+fn normalize_punctuation_for_target(text: &str, to_lang: Lang) -> String {
+    if to_lang == Lang::Ja {
+        text.replace('\u{FF0C}', "\u{3001}") // ， -> 、
+    } else {
+        text.to_string()
+    }
+}
+
+
 
 fn translate_whole_for_cells(
     label: &str,
@@ -721,10 +793,20 @@ fn translate_whole_for_cells(
             continue;
         }
 
+        // 衝突しない退避トークン表を選ぶ。全滅なら誤復元防止のため中断（エラー）。
+        let token_idx = match select_token_table(&logical_cell.source_text) {
+            Some(i) => i,
+            None => {
+                println!("[WHOLE][{label}][TOKEN_COLLISION_ABORT] cell_idx={cell_idx}");
+                results[cell_idx] = Err("SPECIAL_TOKEN_COLLISION".to_string());
+                continue;
+            }
+        };
+
         request_plans.push(WholeRequestPlan {
             cell_idx,
-            // 送信前に改行・全角スペースを退避（候補1/2 と同じ保護）
-            text: protect_structure_for_whole(&logical_cell.source_text),
+            text: protect_with(&logical_cell.source_text, token_idx),
+            token_idx,
         });
     }
 
@@ -796,8 +878,26 @@ fn translate_whole_for_cells(
                 }
 
                 for (plan, trans) in request_plans[start..end].iter().zip(translations.into_iter()) {
-                    // 受信後に退避していた改行・全角スペースを復元
-                    results[plan.cell_idx] = Ok(restore_structure_for_whole(&trans.translated_text));
+                    // 受信後に退避していた改行・全角スペースを復元（共通処理）
+                    let restored = normalize_punctuation_for_target(
+                        &restore_with(&trans.translated_text, plan.token_idx),
+                        to_lang,
+                    );
+                    // 復元検査: 原文と復元後の改行数が一致するか（要求3の安全網）。
+                    // 不一致＝トークンがエンジンに壊されて復元漏れの可能性 → ログで回帰検知。
+                    let src_nl = logical_cells[plan.cell_idx].source_text.matches('\n').count();
+                    let out_nl = restored.matches('\n').count();
+                    if src_nl != out_nl {
+                        println!(
+                            "[WHOLE][NL_RESTORE_MISMATCH] candidate={} engine={} cell_idx={} src_newlines={} restored_newlines={}",
+                            label,
+                            adapter.provider_kind().as_label(),
+                            plan.cell_idx,
+                            src_nl,
+                            out_nl
+                        );
+                    }
+                    results[plan.cell_idx] = Ok(restored);
                 }
             }
             Err(e) => {
@@ -905,6 +1005,9 @@ fn translate_formula_literals(
         .map(|(i, lit)| WholeRequestPlan {
             cell_idx: i,
             text: lit.clone(),
+            // F-2 formula literal path does not use special-char restoration here;
+            // keep a valid default token table index for the shared request plan shape.
+            token_idx: 0,
         })
         .collect();
 

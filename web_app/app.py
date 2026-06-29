@@ -405,6 +405,7 @@ def write_job_plan_config(
     c1_method: str | None = None,
     c2_method: str | None = None,
     c3_method: str | None = None,
+    direction: str = "ja2zh",
 ) -> Path:
     force_mock = os.environ.get("ETB_FORCE_MOCK_TRANSLATORS", "").strip().lower() in {"1", "true", "yes", "y"}
     valid_providers = {"google", "amazon", "deepl", "mock"}
@@ -417,10 +418,16 @@ def write_job_plan_config(
         candidate2_provider = c2_provider if c2_provider in valid_providers else os.environ.get("ETB_CANDIDATE2_PROVIDER", "amazon")
         candidate3_provider = c3_provider if c3_provider in valid_providers else os.environ.get("ETB_CANDIDATE3_PROVIDER", "deepl")
 
-    # C-6: 候補ごとの翻訳方式。未指定/不正は既定（1=split,2=split,3=whole）。
-    candidate1_method = c1_method if c1_method in valid_methods else "split"
-    candidate2_method = c2_method if c2_method in valid_methods else "split"
-    candidate3_method = c3_method if c3_method in valid_methods else "whole"
+    # C-6 / QA-017要求1: 候補ごとの翻訳方式。未指定/不正は既定補完。
+    # 中→日(zh2ja)は分割で誤訳が多いため、未指定時の既定を whole とする。
+    # 日→中(ja2zh)の既定は従来どおり 1=split,2=split,3=whole。
+    if direction == "zh2ja":
+        default_methods = {"c1": "whole", "c2": "whole", "c3": "whole"}
+    else:
+        default_methods = {"c1": "split", "c2": "split", "c3": "whole"}
+    candidate1_method = c1_method if c1_method in valid_methods else default_methods["c1"]
+    candidate2_method = c2_method if c2_method in valid_methods else default_methods["c2"]
+    candidate3_method = c3_method if c3_method in valid_methods else default_methods["c3"]
 
     # コースに応じてenabled_candidatesを決定
     if course == "c1only":
@@ -644,6 +651,7 @@ def generate():
             job_id, mode, course,
             c1_provider, c2_provider, c3_provider,
             c1_method, c2_method, c3_method,
+            direction,
         )
         # Phase 1: ExecutionPlan の実行条件を Rust へ明示的に渡す。
         # direction_id は Web の方向選択（ja2zh / zh2ja）から受け取り検証済みの値を渡す。billing_mode は既存 mode から導出（experience->free / paid->paid_standard）。
