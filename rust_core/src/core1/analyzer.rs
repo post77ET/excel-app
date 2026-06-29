@@ -701,19 +701,17 @@ fn translate_segments_for_cells(
 // 固有トークンへ退避し翻訳後に復元する。Google/Amazon/DeepL 共通。
 //
 // 旧実装は私用領域文字 U+E001/E002 で囲んでいたが、Google/Amazon は
-// これを翻訳時に削除し中身の "NL"/"FS" だけ残す不具合があった（whole経路20/20件）。
-// SPECIAL_CHAR_TOKENS は既定（第一候補）のトークン定義。
-// TOKEN_TABLES は衝突回避のための候補テーブル群。
-// 本文と衝突した場合は TOKEN_TABLES の次候補へ切り替える。
-// 全候補と衝突した場合は、誤復元によるデータ破壊を防ぐため処理を中断する。
-// 将来の特殊文字追加は TokenTable の対応表へ1行追加するだけで全エンジンに反映。
+// これを翻訳時に削除し中身の "NL"/"FS" だけ残す不具合があった（whole経路）。
+// そこで数学用山括弧 U+27E6/U+27E7 等で囲む固有トークンに変更。
+// 素の "NL" 単独は本文と衝突するため必ず囲み付きにする。
+// 特殊文字の追加は対応表（TokenTable）に1行足すだけで全エンジンに反映。
 // ============================================================
 
-/// 退避トークン表。条件:
+/// 退避トークン表（候補）。条件:
 /// - Google/Amazon/DeepL が削除・翻訳しない
 /// - 本文と衝突しない
 /// - 復元で一意判定できる
-/// SPECIAL_CHAR_TOKENS は既定テーブル。TOKEN_TABLES は衝突回避用の候補群。
+/// 実装時に3エンジンで実証し最終決定する。TABLE[0] を既定の単一真実源とする。
 type TokenTable = &'static [(char, &'static str)];
 const SPECIAL_CHAR_TOKENS: TokenTable = &[
     ('\n', "\u{27E6}NL\u{27E7}"),
@@ -762,6 +760,50 @@ fn normalize_punctuation_for_target(text: &str, to_lang: Lang) -> String {
     } else {
         text.to_string()
     }
+}
+
+/// QA-017要求3: NL救済復元。トークン完全一致復元に失敗した場合のみ働く。
+/// 適用条件（全て満たす場合のみ）:
+///   1. 原文に改行がある（src_nl > 0）
+///   2. 原文に "NL" を含まない（本文中NLとの誤判定防止）
+///   3. 復元後の改行数が原文より不足（restored_nl < src_nl）
+/// 処理: 訳文中の "NL"（前後・間の空白数に依存しない "N␣*L"）を改行へ置換する。
+fn rescue_restore_nl(restored: &str, source_text: &str) -> String {
+    let src_nl = source_text.matches('\n').count();
+    let cur_nl = restored.matches('\n').count();
+    let source_has_nl = source_text.contains("NL");
+    if src_nl == 0 || source_has_nl || cur_nl >= src_nl {
+        return restored.to_string();
+    }
+    // "N" + 空白0個以上 + "L" を改行へ。前後空白も1個ずつ吸収（依存はしない）。
+    let mut out = String::with_capacity(restored.len());
+    let chars: Vec<char> = restored.chars().collect();
+    let mut i = 0;
+    while i < chars.len() {
+        if chars[i] == 'N' {
+            let mut j = i + 1;
+            while j < chars.len() && (chars[j] == ' ' || chars[j] == '\u{3000}') {
+                j += 1;
+            }
+            if j < chars.len() && chars[j] == 'L' {
+                // 直前に積んだ末尾空白を1つ落とす
+                while out.ends_with(' ') || out.ends_with('\u{3000}') {
+                    out.pop();
+                }
+                out.push('\n');
+                let mut k = j + 1;
+                // 直後の空白を1つだけ吸収
+                if k < chars.len() && (chars[k] == ' ' || chars[k] == '\u{3000}') {
+                    k += 1;
+                }
+                i = k;
+                continue;
+            }
+        }
+        out.push(chars[i]);
+        i += 1;
+    }
+    out
 }
 
 
@@ -879,13 +921,16 @@ fn translate_whole_for_cells(
 
                 for (plan, trans) in request_plans[start..end].iter().zip(translations.into_iter()) {
                     // 受信後に退避していた改行・全角スペースを復元（共通処理）
-                    let restored = normalize_punctuation_for_target(
+                    let mut restored = normalize_punctuation_for_target(
                         &restore_with(&trans.translated_text, plan.token_idx),
                         to_lang,
                     );
-                    // 復元検査: 原文と復元後の改行数が一致するか（要求3の安全網）。
-                    // 不一致＝トークンがエンジンに壊されて復元漏れの可能性 → ログで回帰検知。
                     let src_nl = logical_cells[plan.cell_idx].source_text.matches('\n').count();
+                    // 完全一致復元で改行が不足した場合のみ NL救済復元を試みる。
+                    if restored.matches('\n').count() < src_nl {
+                        restored = rescue_restore_nl(&restored, &logical_cells[plan.cell_idx].source_text);
+                    }
+                    // 救済後も改行数が一致しない場合のみ MISMATCH を記録。
                     let out_nl = restored.matches('\n').count();
                     if src_nl != out_nl {
                         println!(
@@ -1005,8 +1050,8 @@ fn translate_formula_literals(
         .map(|(i, lit)| WholeRequestPlan {
             cell_idx: i,
             text: lit.clone(),
-            // F-2 formula literal path does not use special-char restoration here;
-            // keep a valid default token table index for the shared request plan shape.
+            // この経路（数式リテラル）はトークン退避をしないため token_idx は未使用。
+            // 構造体整合のため既定 0 を入れる。
             token_idx: 0,
         })
         .collect();
