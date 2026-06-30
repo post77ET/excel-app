@@ -121,7 +121,9 @@ fn hide_sheet(sheet: &mut Worksheet) {
 }
 
 fn normalize_hash_text(v: &str) -> String {
-    v.replace("\r\n", "\n")
+    // 改行表現の差異（生成時の in-memory と Apply時の calamine 読み戻し）を吸収する。
+    // \r\n / 単独 \r をすべて \n に正規化し、複数行候補での hash 不一致を防ぐ。
+    v.replace("\r\n", "\n").replace('\r', "\n")
 }
 
 fn hash_text(value: &str, hasher: &mut DefaultHasher) {

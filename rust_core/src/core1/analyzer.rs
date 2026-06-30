@@ -33,9 +33,7 @@ struct SegmentCellPlan {
 struct WholeRequestPlan {
     cell_idx: usize,
     text: String,
-    // 行構造引用方式の復元検査用。通常whole経路では原文行数、
-    // 数式リテラル経路では未使用のため 1 を入れる。
-    source_line_count: usize,
+    token_idx: usize,
 }
 
 
@@ -764,50 +762,57 @@ fn normalize_punctuation_for_target(text: &str, to_lang: Lang) -> String {
     }
 }
 
-/// 行構造引用方式（whole経路）: 各行を 「☣...☣」 で囲み1リクエストにまとめる。
-/// 改行文字そのものは翻訳機へ渡さず、行の区別だけを保持して文脈翻訳へ渡す。
-const LINE_MARK_OPEN: &str = "\u{300C}\u{2623}";  // 「☣
-const LINE_MARK_CLOSE: &str = "\u{2623}\u{300D}"; // ☣」
+/// QA-017要求3: NL救済復元。トークン完全一致復元に失敗した場合のみ働く。
+/// 適用条件（全て満たす場合のみ）:
+///   1. 原文に改行がある（src_nl > 0）
+///   2. 原文に "NL" を含まない（本文中NLとの誤判定防止）
+///   3. 復元後の改行数が原文より不足（restored_nl < src_nl）
+/// 処理: 訳文中の "NL"（前後・間の空白数に依存しない "N␣*L"）を改行へ置換する。
+/// 残留トークン囲み記号を除去する。エンジンが囲み（⟦⟧/⦃⦄/〚〛）だけ残した場合の保険。
+fn strip_residual_token_brackets(text: &str) -> String {
+    text.chars()
+        .filter(|c| !matches!(*c,
+            '\u{27E6}' | '\u{27E7}' | '\u{2983}' | '\u{2984}' | '\u{301A}' | '\u{301B}'))
+        .collect()
+}
 
-fn protect_lines_for_whole(text: &str) -> String {
-    let mut out = String::with_capacity(text.len() + 8);
-    for line in text.split('\n') {
-        out.push_str(LINE_MARK_OPEN);
-        out.push_str(line);
-        out.push_str(LINE_MARK_CLOSE);
+fn rescue_restore_nl(restored: &str, source_text: &str) -> String {
+    let src_nl = source_text.matches('\n').count();
+    let cur_nl = restored.matches('\n').count();
+    let source_has_nl = source_text.contains("NL");
+    if src_nl == 0 || source_has_nl || cur_nl >= src_nl {
+        return restored.to_string();
+    }
+    // "N" + 空白0個以上 + "L" を改行へ。前後空白も1個ずつ吸収（依存はしない）。
+    let mut out = String::with_capacity(restored.len());
+    let chars: Vec<char> = restored.chars().collect();
+    let mut i = 0;
+    while i < chars.len() {
+        if chars[i] == 'N' {
+            let mut j = i + 1;
+            while j < chars.len() && (chars[j] == ' ' || chars[j] == '\u{3000}') {
+                j += 1;
+            }
+            if j < chars.len() && chars[j] == 'L' {
+                // 直前に積んだ末尾空白を1つ落とす
+                while out.ends_with(' ') || out.ends_with('\u{3000}') {
+                    out.pop();
+                }
+                out.push('\n');
+                let mut k = j + 1;
+                // 直後の空白を1つだけ吸収
+                if k < chars.len() && (chars[k] == ' ' || chars[k] == '\u{3000}') {
+                    k += 1;
+                }
+                i = k;
+                continue;
+            }
+        }
+        out.push(chars[i]);
+        i += 1;
     }
     out
 }
-
-/// 翻訳結果から 「☣...☣」 単位を順に抽出し、中身を改行で連結して復元する。
-/// 抽出数が原文行数と一致した場合のみ採用する。
-/// 一致しない場合は部分抽出を採用せず、呼び出し側でフォールバックする。
-fn restore_lines_for_whole(text: &str, expected_lines: usize) -> Option<String> {
-    let mut lines: Vec<&str> = Vec::new();
-    let mut rest = text;
-    while let Some(o) = rest.find(LINE_MARK_OPEN) {
-        let after_open = &rest[o + LINE_MARK_OPEN.len()..];
-        if let Some(c) = after_open.find(LINE_MARK_CLOSE) {
-            lines.push(&after_open[..c]);
-            rest = &after_open[c + LINE_MARK_CLOSE.len()..];
-        } else {
-            break;
-        }
-    }
-
-    if lines.len() == expected_lines {
-        Some(lines.join("\n"))
-    } else {
-        None
-    }
-}
-
-/// 行構造引用方式の復元に失敗した場合の最低限フォールバック。
-/// 部分抽出による行欠落を避け、翻訳結果をなるべくそのまま残す。
-fn fallback_strip_line_marks(text: &str) -> String {
-    text.replace(LINE_MARK_OPEN, "").replace(LINE_MARK_CLOSE, "")
-}
-
 
 
 
@@ -838,11 +843,20 @@ fn translate_whole_for_cells(
             continue;
         }
 
-        // 行構造引用方式: 各行を 「☣...☣」 で囲み1リクエストにまとめる（whole=文脈翻訳は維持）。
+        // 衝突しない退避トークン表を選ぶ。全滅なら誤復元防止のため中断（エラー）。
+        let token_idx = match select_token_table(&logical_cell.source_text) {
+            Some(i) => i,
+            None => {
+                println!("[WHOLE][{label}][TOKEN_COLLISION_ABORT] cell_idx={cell_idx}");
+                results[cell_idx] = Err("SPECIAL_TOKEN_COLLISION".to_string());
+                continue;
+            }
+        };
+
         request_plans.push(WholeRequestPlan {
             cell_idx,
-            text: protect_lines_for_whole(&logical_cell.source_text),
-            source_line_count: logical_cell.source_text.split('\n').count(),
+            text: protect_with(&logical_cell.source_text, token_idx),
+            token_idx,
         });
     }
 
@@ -914,14 +928,29 @@ fn translate_whole_for_cells(
                 }
 
                 for (plan, trans) in request_plans[start..end].iter().zip(translations.into_iter()) {
-                    // 行構造引用方式の復元: 「☣...☣」 単位を順に抽出し改行連結。
-                    // 抽出数が原文行数と一致しない場合は、部分抽出を採用せずフォールバックする。
-                    let restored_text = restore_lines_for_whole(&trans.translated_text, plan.source_line_count)
-                        .unwrap_or_else(|| fallback_strip_line_marks(&trans.translated_text));
-                    let restored = normalize_punctuation_for_target(
-                        &restored_text,
-                        to_lang,
-                    );
+                    // 受信後に退避していた改行・全角スペースを復元
+                    let mut restored = restore_with(&trans.translated_text, plan.token_idx);
+                    let src_nl = logical_cells[plan.cell_idx].source_text.matches('\n').count();
+                    // 完全一致復元で改行が不足した場合のみ NL救済復元を試みる。
+                    if restored.matches('\n').count() < src_nl {
+                        restored = rescue_restore_nl(&restored, &logical_cells[plan.cell_idx].source_text);
+                    }
+                    // エンジンが囲み記号だけ残した場合に備え、残留トークン囲み記号を除去する。
+                    restored = strip_residual_token_brackets(&restored);
+                    // 記号正規化（中→日 の ，→、）。
+                    restored = normalize_punctuation_for_target(&restored, to_lang);
+                    // 救済後も改行数が一致しない場合のみ MISMATCH を記録。
+                    let out_nl = restored.matches('\n').count();
+                    if src_nl != out_nl {
+                        println!(
+                            "[WHOLE][NL_RESTORE_MISMATCH] candidate={} engine={} cell_idx={} src_newlines={} restored_newlines={}",
+                            label,
+                            adapter.provider_kind().as_label(),
+                            plan.cell_idx,
+                            src_nl,
+                            out_nl
+                        );
+                    }
                     results[plan.cell_idx] = Ok(restored);
                 }
             }
@@ -1030,7 +1059,9 @@ fn translate_formula_literals(
         .map(|(i, lit)| WholeRequestPlan {
             cell_idx: i,
             text: lit.clone(),
-            source_line_count: 1,
+            // この経路（数式リテラル）はトークン退避をしないため token_idx は未使用。
+            // 構造体整合のため既定 0 を入れる。
+            token_idx: 0,
         })
         .collect();
 
