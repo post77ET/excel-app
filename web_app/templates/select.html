@@ -123,13 +123,13 @@
       <div id="engine-c1" class="engine-row">
         <label>{% if lang == "zh" %}候选1{% else %}候補1{% endif %}</label>
         <select id="sel-c1" onchange="onProviderChange()">
-          <option value="google" selected>Google Translate</option>
+          <option value="google">Google Translate</option>
           <option value="amazon">Amazon Translate</option>
-          <option value="deepl">DeepL</option>
+          <option value="deepl" selected>DeepL</option>
         </select>
         <select id="sel-m1" onchange="checkDeepLWarning()" style="margin-left:8px;">
-          <option value="split" selected>{% if lang == "zh" %}分割翻译{% else %}分割翻訳{% endif %}</option>
-          <option value="whole">{% if lang == "zh" %}上下文翻译{% else %}文脈翻訳{% endif %}</option>
+          <option value="split">{% if lang == "zh" %}分割翻译{% else %}分割翻訳{% endif %}</option>
+          <option value="whole" selected>{% if lang == "zh" %}上下文翻译{% else %}文脈翻訳{% endif %}</option>
         </select>
       </div>
       <div id="engine-c2" class="engine-row">
@@ -147,9 +147,9 @@
       <div id="engine-c3" class="engine-row">
         <label>{% if lang == "zh" %}候选3{% else %}候補3{% endif %}</label>
         <select id="sel-c3" onchange="onProviderChange()">
-          <option value="google">Google Translate</option>
+          <option value="google" selected>Google Translate</option>
           <option value="amazon">Amazon Translate</option>
-          <option value="deepl" selected>DeepL</option>
+          <option value="deepl">DeepL</option>
         </select>
         <select id="sel-m3" onchange="checkDeepLWarning()" style="margin-left:8px;">
           <option value="split">{% if lang == "zh" %}分割翻译{% else %}分割翻訳{% endif %}</option>
@@ -189,10 +189,10 @@
         <input type="hidden" id="f-direction" name="direction" value="ja2zh">
         <input type="hidden" id="f-sheets" name="sheets" value="">
         <input type="hidden" id="f-course" name="course" value="full">
-        <input type="hidden" id="f-c1" name="c1_provider" value="google">
+        <input type="hidden" id="f-c1" name="c1_provider" value="deepl">
         <input type="hidden" id="f-c2" name="c2_provider" value="amazon">
-        <input type="hidden" id="f-c3" name="c3_provider" value="deepl">
-        <input type="hidden" id="f-m1" name="c1_method" value="split">
+        <input type="hidden" id="f-c3" name="c3_provider" value="google">
+        <input type="hidden" id="f-m1" name="c1_method" value="whole">
         <input type="hidden" id="f-m2" name="c2_method" value="split">
         <input type="hidden" id="f-m3" name="c3_method" value="whole">
         <button onclick="goStep(3)" type="button">{% if lang == "zh" %}返回{% else %}戻る{% endif %}</button>
