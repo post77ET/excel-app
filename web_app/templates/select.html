@@ -2,7 +2,7 @@
 <html lang="{{ 'zh' if lang == 'zh' else 'ja' }}">
 <head>
   <meta charset="utf-8">
-  <title>{% if lang == "zh" %}翻译设置{% else %}翻訳設定{% endif %}</title>
+  <title>{% if lang == "zh" %}翻译（Generate）设置{% else %}翻訳（Generate）設定{% endif %}</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; line-height: 1.8; background: #f7faff; color: #10213f; }
     .container { max-width: 980px; margin: 40px auto; padding: 32px; background: white; border-radius: 18px; box-shadow: 0 6px 24px rgba(0,0,0,0.08); }
@@ -35,7 +35,7 @@
 </head>
 <body>
 <div class="container">
-  <h1>{% if lang == "zh" %}翻译设置{% else %}翻訳設定{% endif %}</h1>
+  <h1>{% if lang == "zh" %}翻译（Generate）设置{% else %}翻訳（Generate）設定{% endif %}</h1>
 
   <!-- STEP 1: シート選択 -->
   <div id="step1" class="step active">
@@ -196,7 +196,7 @@
         <input type="hidden" id="f-m2" name="c2_method" value="split">
         <input type="hidden" id="f-m3" name="c3_method" value="whole">
         <button onclick="goStep(3)" type="button">{% if lang == "zh" %}返回{% else %}戻る{% endif %}</button>
-        <button class="primary" type="submit">{% if lang == "zh" %}开始执行{% else %}Generate実行{% endif %}</button>
+        <button class="primary" type="submit">{% if lang == "zh" %}执行翻译（Generate）{% else %}翻訳（Generate）を実行{% endif %}</button>
       </form>
       <div id="generate-progress-box" class="progress-box">
         <strong>{% if lang == "zh" %}正在生成翻译确认用Excel。请稍候。{% else %}翻訳結果確認用Excelを生成中です。しばらくお待ちください。{% endif %}</strong>

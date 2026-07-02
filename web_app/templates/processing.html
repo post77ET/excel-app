@@ -69,23 +69,23 @@ body { font-family: Arial, sans-serif; margin:0; line-height:1.8; background:#f7
           <li>用 Excel 打开下载的 UI 文件。</li>
           <li>仅编辑 <strong>K 列（UserSelect）</strong> 与 <strong>L 列（Apply＝Y/空）</strong>，需要时在 <strong>M 列（Candidate4）</strong> 输入自定义译文。其他单元格已被保护，无法编辑。</li>
           <li>保存文件（保持 .xlsx 格式）。</li>
-          <li>点击上方「前往 Apply 画面」，上传刚保存的 UI 文件。</li>
-          <li>Apply 完成后即可下载已应用译文的成品文件。</li>
+          <li>点击上方「前往反映（Apply）画面」，上传刚保存的 UI 文件。</li>
+          <li>反映（Apply）完成后即可下载已应用译文的成品文件。</li>
         </ol>
       {% else %}
         <ol style="margin:10px 0 0 18px; padding:0;">
           <li>ダウンロードしたUIファイルを Excel で開きます。</li>
           <li><strong>K列（UserSelect）</strong>と<strong>L列（Apply＝Y/空欄）</strong>だけを編集します。独自訳を入れる場合は<strong>M列（Candidate4）</strong>に入力します。その他のセルは保護されており編集できません。</li>
           <li>ファイルを保存します（.xlsx のまま）。</li>
-          <li>上の「Apply画面へ進む」から、保存したUIファイルをアップロードします。</li>
-          <li>Apply完了後、訳文が反映された成果物ファイルをダウンロードできます。</li>
+          <li>上の「反映（Apply）画面へ進む」から、保存したUIファイルをアップロードします。</li>
+          <li>反映（Apply）完了後、訳文が反映された成果物ファイルをダウンロードできます。</li>
         </ol>
       {% endif %}
       </div>
     </details>
 
     <p style="margin-top:18px;">
-      <a class="btn" style="background:#1f9d57;" href="/engine?lang={{ lang }}">{% if lang == "zh" %}前往 Apply 画面 →{% else %}Apply画面へ進む →{% endif %}</a>
+      <a class="btn" style="background:#1f9d57;" href="/engine?lang={{ lang }}">{% if lang == "zh" %}前往反映（Apply）画面 →{% else %}反映（Apply）画面へ進む →{% endif %}</a>
     </p>
 
     <p style="margin-top:16px;">

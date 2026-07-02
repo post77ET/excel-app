@@ -86,18 +86,18 @@ function setLangJa() {
   rememberLang("ja");
   applyLang({
     "main-title": "Excel翻訳作業支援",
-    "upload-title": "1. アップロード・コース選択",
+    "upload-title": "1. 翻訳（Generate）：アップロード・コース選択",
     "course-exp": "体験コース",
     "course-exp-note": "選択シートの A1:D5 の範囲で確認します。",
     "course-std": "標準コース",
     "course-std-note": "選択シートを通常処理します。",
     "original-book": "原本Excel（.xlsx）",
-    "upload-button": "アップロードしてシート選択へ",
-    "reflect-title": "2. 編集内容の反映処理",
+    "upload-button": "翻訳（Generate）設定へ進む",
+    "reflect-title": "2. 反映（Apply）：編集内容の反映",
     "edited-book": "編集済みExcelブック（.xlsx）",
     "reflect-note1": "注意：ファイル名は変更しないでください。ファイル名を変更すると、Generate時に保存した原本クローンと照合できず、Applyできません。",
     "reflect-note2": "原本Excelの再アップロードは不要です。Generate時のサーバ保存原本を自動使用します。",
-    "reflect-button": "編集内容の反映処理",
+    "reflect-button": "反映（Apply）を実行",
     "guide-button": "編集方法をもう一度確認する",
     "guide-title": "編集内容の反映処理までの流れ",
     "guide-step1": "ダウンロードしたExcelブックを開きます。",
@@ -127,18 +127,18 @@ function setLangZh() {
   rememberLang("zh");
   applyLang({
     "main-title": "Excel翻译作业支持",
-    "upload-title": "1. 上传・选择处理范围",
+    "upload-title": "1. 翻译（Generate）：上传・选择范围",
     "course-exp": "体验模式",
     "course-exp-note": "仅处理所选工作表的 A1:D5 范围。",
     "course-std": "标准模式",
     "course-std-note": "对所选工作表进行标准处理。",
     "original-book": "原始Excel工作簿（.xlsx）",
-    "upload-button": "上传并进入工作表选择",
-    "reflect-title": "2. 编辑内容反映处理",
+    "upload-button": "前往翻译（Generate）设置",
+    "reflect-title": "2. 反映（Apply）：反映编辑内容",
     "edited-book": "已编辑的Excel工作簿（.xlsx）",
     "reflect-note1": "注意：请不要更改文件名。更改文件名后，系统可能无法与生成时保存的原始副本匹配，导致无法反映编辑内容。",
     "reflect-note2": "不需要重新上传原始Excel。系统会自动使用生成时保存的原始副本。",
-    "reflect-button": "编辑内容反映处理",
+    "reflect-button": "执行反映（Apply）",
     "guide-button": "再次查看编辑方法",
     "guide-title": "编辑内容反映处理流程",
     "guide-step1": "打开下载的Excel工作簿。",
@@ -202,7 +202,7 @@ box-shadow:0 6px 24px rgba(0,0,0,0.08);
   <h1 id="main-title">Excel翻訳作業支援</h1>
 
   <div class="box">
-    <h2 id="upload-title">1. アップロード・コース選択</h2>
+    <h2 id="upload-title">1. 翻訳（Generate）：アップロード・コース選択</h2>
     <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="return showProgress('upload-progress-message', 'upload-progress-box');">
       <input type="hidden" name="lang" id="lang-upload" value="ja">
       <label><input type="radio" name="mode" value="experience" checked> <span id="course-exp">体験コース</span></label>
@@ -213,7 +213,7 @@ box-shadow:0 6px 24px rgba(0,0,0,0.08);
       <input id="original-file-input" type="file" name="file" accept=".xlsx" required style="display:none;" onchange="updateFileName('original-file-input','original-file-status')">
       <button type="button" id="original-file-button" onclick="chooseFile('original-file-input')">ファイルを選択</button>
       <span id="original-file-status">ファイルが選択されていません</span><br>
-      <button type="submit" id="upload-button">アップロードしてシート選択へ</button>
+      <button type="submit" id="upload-button">翻訳（Generate）設定へ進む</button>
     </form>
     <div id="upload-progress-box" class="progress-box">
       <strong id="upload-progress-message">原本Excelを確認中です。しばらくお待ちください。</strong>
@@ -222,7 +222,7 @@ box-shadow:0 6px 24px rgba(0,0,0,0.08);
   </div>
 
   <div class="box">
-    <h2 id="reflect-title">2. 編集内容の反映処理</h2>
+    <h2 id="reflect-title">2. 反映（Apply）：編集内容の反映</h2>
     <form action="/apply" method="post" enctype="multipart/form-data" onsubmit="return showProgress('apply-progress-message', 'apply-progress-box');">
       <input type="hidden" name="lang" id="lang-apply" value="ja">
       <div id="edited-book">編集済みExcelブック（.xlsx）</div>
@@ -231,7 +231,7 @@ box-shadow:0 6px 24px rgba(0,0,0,0.08);
       <span id="ui-file-status">ファイルが選択されていません</span><br>
       <div class="note" id="reflect-note1">注意：ファイル名は変更しないでください。ファイル名を変更すると、Generate時に保存した原本クローンと照合できず、Applyできません。</div>
       <div class="note" id="reflect-note2">原本Excelの再アップロードは不要です。Generate時のサーバ保存原本を自動使用します。</div>
-      <button type="submit" id="reflect-button">編集内容の反映処理</button>
+      <button type="submit" id="reflect-button">反映（Apply）を実行</button>
     </form>
 
     <p style="margin-top:16px;">

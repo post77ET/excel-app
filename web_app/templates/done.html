@@ -34,7 +34,7 @@ border-radius:18px;
 box-shadow:0 6px 24px rgba(0,0,0,0.08);
 ">
 
-<h1>{% if lang == "zh" %}翻译处理完成{% else %}{{ "翻译处理完成" if lang == "zh" else "翻訳処理完了" }}{% endif %}</h1>
+<h1>{% if lang == "zh" %}翻译（Generate）完成{% else %}翻訳（Generate）完了{% endif %}</h1>
 
 <div class="box">
   {% if lang == "zh" %}
@@ -96,10 +96,13 @@ box-shadow:0 6px 24px rgba(0,0,0,0.08);
       </ul>
       <p>编辑后，请不要更改文件名，直接保存。</p>
       <hr>
-      <h2>编辑内容反映处理</h2>
-      <p>返回执行画面，上传已编辑的Excel工作簿。</p>
+      <h2>反映（Apply）</h2>
+      <p>前往「反映（Apply）」画面，上传已编辑的Excel工作簿。</p>
       <p style="margin-top:24px;">
-      <a href="/engine?lang={{ lang }}" class="download-button">返回执行画面</a>
+      <a href="/engine?lang={{ lang }}" class="download-button">前往反映（Apply）画面</a>
+      </p>
+      <p style="margin-top:12px;">
+      <a href="/?lang={{ lang }}">返回首页</a>
       </p>
     {% else %}
       <ul>
@@ -118,12 +121,13 @@ box-shadow:0 6px 24px rgba(0,0,0,0.08);
       </ul>
       <p>編集後は、ファイル名を変更せず保存してください。</p>
       <hr>
-      <h2>編集内容の反映処理</h2>
-      <p>実行画面へ戻り、編集済みExcelブックをアップロードしてください。</p>
+      <h2>反映（Apply）</h2>
+      <p>「反映（Apply）」画面へ進み、編集済みExcelブックをアップロードしてください。</p>
       <p style="margin-top:24px;">
-      <a href="/engine?lang={{ lang }}" class="download-button">
-      {{ "返回执行画面" if lang == "zh" else "実行画面へ戻る" }}
-      </a>
+      <a href="/engine?lang={{ lang }}" class="download-button">反映（Apply）画面へ進む</a>
+      </p>
+      <p style="margin-top:12px;">
+      <a href="/?lang={{ lang }}">ホームに戻る</a>
       </p>
     {% endif %}
   </div>
