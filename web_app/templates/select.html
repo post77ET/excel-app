@@ -45,6 +45,8 @@
         <strong>{% if lang == "zh" %}翻译方向{% else %}翻訳方向{% endif %}</strong><br>
         <label><input type="radio" name="direction" value="ja2zh" checked onchange="onDirectionChange()"> {% if lang == "zh" %}日语 → 中文{% else %}日本語 → 中国語{% endif %}</label>
         <label style="margin-left:14px;"><input type="radio" name="direction" value="zh2ja" onchange="onDirectionChange()"> {% if lang == "zh" %}中文 → 日语{% else %}中国語 → 日本語{% endif %}</label>
+        <label style="margin-left:14px;"><input type="radio" name="direction" value="ja2vi" onchange="onDirectionChange()"> {% if lang == "zh" %}日语 → 越南语{% else %}日本語 → ベトナム語{% endif %}</label>
+        <label style="margin-left:14px;"><input type="radio" name="direction" value="vi2ja" onchange="onDirectionChange()"> {% if lang == "zh" %}越南语 → 日语{% else %}ベトナム語 → 日本語{% endif %}</label>
       </div>
       {% if mode == "experience" %}
         <p class="note">{% if lang == "zh" %}体验模式：仅处理1个工作表的 <strong>A1:D5</strong> 范围{% else %}体験コース：1シートの <strong>A1:D5</strong> の範囲で処理{% endif %}</p>
@@ -109,14 +111,16 @@
         ・<strong>分割翻译</strong>：把单元格内容分段后逐段翻译。速度快但会丢失上下文，短词易误译。<br>
         例（中→日）：「第2工厂 3楼」分割时会变成「いいえ。2工場 3建物」，上下文翻译则为「第2工場 3階」。<br>
         ⚠️ 中文→日语 使用分割翻译时，任何引擎都容易出现误译，<strong>建议使用上下文翻译</strong>。<br>
-        ※ DeepL 仅支持上下文翻译。
+        ※ DeepL 仅支持上下文翻译。<br>
+        ⚠️ Google 翻译无法保留单元格内的换行（换行可能被删除，多行会合并为一行）。如需保留换行，请选择 Amazon 或 DeepL。
         {% else %}
         <strong>翻訳方式について</strong><br>
         ・<strong>文脈翻訳</strong>：セル全体をまとめて翻訳エンジンに渡す方式。前後関係を踏まえるため誤訳が少ない。<br>
         ・<strong>分割翻訳</strong>：セル内を区切って部分ごとに翻訳する方式。速いが文脈を失い、短い語が誤訳されやすい。<br>
         例（中→日）：「第2工厂 3楼」→ 分割では「いいえ。2工場 3建物」と崩れ、文脈では「第2工場 3階」と正しく訳されます。<br>
         ⚠️ 中国語→日本語で分割翻訳を行うと、どの翻訳機でも誤訳が多発する傾向があります。<strong>文脈翻訳の使用を推奨します。</strong><br>
-        ※ DeepL は文脈翻訳のみ対応です。
+        ※ DeepL は文脈翻訳のみ対応です。<br>
+        ⚠️ Google 翻訳は、セル内の改行を保持できません（改行が削除され、1行にまとまる場合があります）。改行を維持したい場合は Amazon または DeepL をお選びください。
         {% endif %}
       </div>
 
@@ -291,8 +295,8 @@ function updateConfirm() {
 
   var direction = document.querySelector('input[name="direction"]:checked').value;
   var directionLabel = ('{{ "zh" if lang == "zh" else "ja" }}' === 'zh')
-    ? { ja2zh: '日语 → 中文', zh2ja: '中文 → 日语' }
-    : { ja2zh: '日本語 → 中国語', zh2ja: '中国語 → 日本語' };
+    ? { ja2zh: '日语 → 中文', zh2ja: '中文 → 日语', ja2vi: '日语 → 越南语', vi2ja: '越南语 → 日语' }
+    : { ja2zh: '日本語 → 中国語', zh2ja: '中国語 → 日本語', ja2vi: '日本語 → ベトナム語', vi2ja: 'ベトナム語 → 日本語' };
   document.getElementById('conf-direction').textContent = directionLabel[direction];
   document.getElementById('f-direction').value = direction;
   document.getElementById('f-sheets').value = sheets;
@@ -314,8 +318,9 @@ function submitGenerate() {
 function onDirectionChange() {
   var direction = document.querySelector('input[name="direction"]:checked').value;
   // QA-017要求1: 中→日は分割で誤訳が多いため、既定の翻訳方式を文脈(whole)に寄せる。
+  // ja2vi/vi2ja も split/whole の品質差が未検証のため、同様に whole 寄せとする（7-4）。
   // DeepL候補は元々whole。利用者が個別に分割へ戻すことは可能（最終防衛はRust）。
-  if (direction === 'zh2ja') {
+  if (direction === 'zh2ja' || direction === 'ja2vi' || direction === 'vi2ja') {
     ['sel-m1','sel-m2','sel-m3'].forEach(function(id){
       var el = document.getElementById(id);
       if (el && el.value === 'split') {

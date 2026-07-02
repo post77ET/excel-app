@@ -421,7 +421,9 @@ def write_job_plan_config(
     # C-6 / QA-017要求1: 候補ごとの翻訳方式。未指定/不正は既定補完。
     # 中→日(zh2ja)は分割で誤訳が多いため、未指定時の既定を whole とする。
     # 日→中(ja2zh)の既定は従来どおり 1=split,2=split,3=whole。
-    if direction == "zh2ja":
+    # ja2vi/vi2ja: split/whole の品質差が未検証のため、zh2ja に倣い既定を whole とする
+    # （QAで実測後に見直す。無言 fallback ではなく明示的な既定値として扱う）。
+    if direction in ("zh2ja", "ja2vi", "vi2ja"):
         default_methods = {"c1": "whole", "c2": "whole", "c3": "whole"}
     else:
         default_methods = {"c1": "split", "c2": "split", "c3": "whole"}
@@ -628,7 +630,7 @@ def generate():
         lang = request.form.get("lang", "ja")
         # Phase 4B: 翻訳方向（表示言語 lang とは別物）。許可値以外は黙ってja2zhに落とさずエラー。
         direction = request.form.get("direction", "ja2zh")
-        if direction not in ("ja2zh", "zh2ja"):
+        if direction not in ("ja2zh", "zh2ja", "ja2vi", "vi2ja"):
             raise ValueError(f"不正な翻訳方向です: {direction!r}")
         sheet_names = workbook_sheet_names(original_path)
         selected_token, selected_label = parse_selected_sheets(request.form.get("sheets", ""), sheet_names, mode)

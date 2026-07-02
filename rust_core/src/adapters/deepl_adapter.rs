@@ -50,6 +50,7 @@ impl DeepLAdapter {
             "ZH" => Some(Lang::Zh),
             "EN" => Some(Lang::En),
             "DE" => Some(Lang::De),
+            "VI" => Some(Lang::Vi),
             _ => None,
         }
     }

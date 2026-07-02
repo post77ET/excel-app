@@ -6,6 +6,7 @@ pub enum Lang {
     Zh,
     En,
     De,
+    Vi,
     Auto,
 }
 
@@ -16,6 +17,8 @@ impl Lang {
             Lang::Zh => Some("ZH"),
             Lang::En => Some("EN"),
             Lang::De => Some("DE"),
+            // DeepL は 2025-06 の言語拡張でベトナム語（VI）に対応済み（確認済み）。
+            Lang::Vi => Some("VI"),
             Lang::Auto => None,
         }
     }

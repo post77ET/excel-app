@@ -83,6 +83,7 @@ impl GoogleAdapter {
             "ZH" | "ZH-CN" | "ZH-HANS" => Some(Lang::Zh),
             "EN" => Some(Lang::En),
             "DE" => Some(Lang::De),
+            "VI" => Some(Lang::Vi),
             _ => None,
         }
     }
@@ -128,6 +129,7 @@ impl GoogleAdapter {
             Lang::Zh => Ok("zh-CN"),
             Lang::En => Ok("en"),
             Lang::De => Ok("de"),
+            Lang::Vi => Ok("vi"),
 
             Lang::Auto => Err(AdapterError::new(
                 ProviderKind::Google,

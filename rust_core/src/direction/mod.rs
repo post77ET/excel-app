@@ -14,6 +14,8 @@ use crate::adapters::types::Lang;
 
 pub mod ja_zh;
 pub mod zh_ja;  // 正式ID "zh2ja"（別表記 zh_ja/zhja も resolve で受理）
+pub mod ja_vi;  // 正式ID "ja2vi"（別表記 ja_vi/javi も resolve で受理）
+pub mod vi_ja;  // 正式ID "vi2ja"（別表記 vi_ja/vija も resolve で受理）
 
 pub trait DirectionProfile: Send + Sync {
     /// 正規化済みの方向ID（例: "ja2zh"）
@@ -55,13 +57,27 @@ pub fn resolve(direction_id: &str) -> Result<Box<dyn DirectionProfile>, String> 
             );
             Ok(Box::new(zh_ja::ZhJaProfile))
         }
+        "ja2vi" | "ja_vi" | "javi" => {
+            println!(
+                "[DIRECTION][resolve] direction_id=\"{}\" -> profile=ja2vi",
+                direction_id
+            );
+            Ok(Box::new(ja_vi::JaViProfile))
+        }
+        "vi2ja" | "vi_ja" | "vija" => {
+            println!(
+                "[DIRECTION][resolve] direction_id=\"{}\" -> profile=vi2ja",
+                direction_id
+            );
+            Ok(Box::new(vi_ja::ViJaProfile))
+        }
         other => {
             println!(
                 "[DIRECTION][resolve][ERROR] unknown direction_id=\"{}\"",
                 other
             );
             Err(format!(
-                "unknown direction_id=\"{}\" (サポートする方向: ja2zh, zh2ja)",
+                "unknown direction_id=\"{}\" (サポートする方向: ja2zh, zh2ja, ja2vi, vi2ja)",
                 other
             ))
         }

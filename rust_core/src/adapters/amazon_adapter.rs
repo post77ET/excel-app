@@ -27,6 +27,7 @@ impl AmazonAdapter {
             Lang::Zh => Ok("zh"),
             Lang::En => Ok("en"),
             Lang::De => Ok("de"),
+            Lang::Vi => Ok("vi"),
             Lang::Auto => Err(AdapterError::new(
                 ProviderKind::Amazon,
                 AdapterErrorKind::InvalidConfig,
