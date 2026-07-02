@@ -119,8 +119,10 @@ function setLangJa() {
     "original-file-button": "ファイルを選択",
     "original-file-status": "ファイルが選択されていません",
     "ui-file-button": "ファイルを選択",
-    "ui-file-status": "ファイルが選択されていません"
+    "ui-file-status": "ファイルが選択されていません",
+    "home-link": "ホームに戻る"
   });
+  var hl = document.getElementById("home-link"); if (hl) hl.href = "/?lang=ja";
 }
 
 function setLangZh() {
@@ -160,8 +162,10 @@ function setLangZh() {
     "original-file-button": "选择文件",
     "original-file-status": "尚未选择文件",
     "ui-file-button": "选择文件",
-    "ui-file-status": "尚未选择文件"
+    "ui-file-status": "尚未选择文件",
+    "home-link": "返回首页"
   });
+  var hl = document.getElementById("home-link"); if (hl) hl.href = "/?lang=zh";
 }
 
 window.addEventListener("DOMContentLoaded", function() {
@@ -197,6 +201,7 @@ box-shadow:0 6px 24px rgba(0,0,0,0.08);
   <div style="margin-bottom:16px;">
     <button type="button" onclick="setLangJa()">日本語</button>
     <button type="button" onclick="setLangZh()">中文</button>
+    <a id="home-link" href="/?lang=ja" style="margin-left:12px;">ホームに戻る</a>
   </div>
 
   <h1 id="main-title">Excel翻訳作業支援</h1>
