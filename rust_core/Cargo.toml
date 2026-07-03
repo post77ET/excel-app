@@ -18,3 +18,11 @@ reqwest = { version = "0.12", features = ["blocking", "json"] }
 
 aws-config = "1"
 aws-sdk-translate = "1"
+
+# ETB PATCH (2026-07-03): umya-spreadsheet 3.0.0 本体に、印刷設定(用紙サイズ/向き等)を
+# 持つがEmbedded印刷バイナリを持たないシートで、legacyDrawing(コメント用VML図形)等の
+# 関連付けID(r:id)が1つズレてExcelが図形/コメントを削除してしまうバグがあるため、
+# rust_core/vendor/umya-spreadsheet に1行修正版を取り込んで差し替えている。
+# 元に戻す場合は、この[patch]セクションを削除するだけでよい（crates.io版に戻る）。
+[patch.crates-io]
+umya-spreadsheet = { path = "vendor/umya-spreadsheet" }
