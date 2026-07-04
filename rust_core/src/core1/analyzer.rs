@@ -673,7 +673,18 @@ fn translate_segments_for_cells(
 
         results[cell_idx] = match cell_error {
             Some(err) => Err(err),
-            None => Ok(normalize_punctuation_for_target(&rebuilt, to_lang)),
+            None => {
+                let normalized = normalize_punctuation_for_target(&rebuilt, to_lang);
+                match detect_token_leak(&logical_cells[cell_idx].source_text, &normalized) {
+                    Some(leak_msg) => {
+                        println!(
+                            "[SPLIT][{label}][TOKEN_LEAK] cell_idx={cell_idx} {leak_msg}"
+                        );
+                        Err(leak_msg)
+                    }
+                    None => Ok(normalized),
+                }
+            }
         };
 
         if let Err(err) = &results[cell_idx] {
@@ -691,18 +702,22 @@ fn translate_segments_for_cells(
     results
 }
 
-// No.1 fix: candidate3（whole 経路）でも改行・全角スペースを保護する。
+// No.1 fix: candidate3（whole 経路）でも改行を保護する。
 // candidate1/2（segments 経路, analyzer.rs 内）と同一の PUA トークンを使用し、
-// MT エンジンが「\n + 全角スペース」を「\n\n」に変換して改行倍増・U+3000消失する不具合を防ぐ。
+// MT エンジンが改行を変形・消失させる不具合を防ぐ。
 // ============================================================
-// 特殊文字（改行・全角スペース）保護の共通処理（QA-2026-017 要求3）
+// 特殊文字（改行）保護の共通処理（QA-2026-017 要求3）
 //
-// 翻訳エンジンに本文を渡すと改行や全角スペースが変形・消失する。
+// 翻訳エンジンに本文を渡すと改行が変形・消失する。
 // 固有トークンへ退避し翻訳後に復元する。Google/Amazon/DeepL 共通。
 //
 // 旧実装は私用領域文字 U+E001/E002 で囲んでいたが、Google/Amazon は
 // これを翻訳時に削除し中身の "NL"/"FS" だけ残す不具合があった（whole経路）。
-// そこで数学用山括弧 U+27E6/U+27E7 等で囲む固有トークンに変更。
+// そこで数学用山括弧 U+27E6/U+27E7 等で囲む固有トークンに変更したが、
+// QA-2026-020で同種の漏れ（囲み記号だけ剥がされ中身が残る）が再発することを確認。
+// 仕様変更(2026-07-03)：全角スペースは保護対象から除外し（正確な個数・全半角の
+// 区別に翻訳先言語では意味がないため）、改行のみを保護対象とした上で、
+// 復元漏れは detect_token_leak() で検知しフォールバックする方針に変更。
 // 素の "NL" 単独は本文と衝突するため必ず囲み付きにする。
 // 特殊文字の追加は対応表（TokenTable）に1行足すだけで全エンジンに反映。
 // ============================================================
@@ -713,14 +728,18 @@ fn translate_segments_for_cells(
 /// - 復元で一意判定できる
 /// 実装時に3エンジンで実証し最終決定する。TABLE[0] を既定の単一真実源とする。
 type TokenTable = &'static [(char, &'static str)];
+// 仕様変更(2026-07-03): 全角スペース(U+3000)は保護対象から除外した。
+// 理由：スペースの正確な個数・全角半角は翻訳先言語では意味を持たず、保護する
+// 価値がない一方、保護記号(⟦⦃〚)が翻訳エンジンに破損させられ「FS」という
+// ガベージが混入する不具合の原因になっていた（QA-2026-020）。
+// 改行(\n)は箇条書き等の構造として意味を持つため、引き続き保護・復元する。
 const SPECIAL_CHAR_TOKENS: TokenTable = &[
     ('\n', "\u{27E6}NL\u{27E7}"),
-    ('\u{3000}', "\u{27E6}FS\u{27E7}"),
 ];
 const TOKEN_TABLES: &[TokenTable] = &[
     SPECIAL_CHAR_TOKENS,
-    &[('\n', "\u{2983}NL\u{2984}"), ('\u{3000}', "\u{2983}FS\u{2984}")],
-    &[('\n', "\u{301A}NL\u{301B}"), ('\u{3000}', "\u{301A}FS\u{301B}")],
+    &[('\n', "\u{2983}NL\u{2984}")],
+    &[('\n', "\u{301A}NL\u{301B}")],
 ];
 
 /// 本文に当該テーブルのトークンが含まれるか（衝突）。
@@ -733,9 +752,34 @@ fn select_token_table(text: &str) -> Option<usize> {
     TOKEN_TABLES.iter().position(|t| !table_collides(text, t))
 }
 
+/// 保護トークン漏れ検知（QA-2026-020 / 仕様書対応）。
+/// 「囲み記号(⟦⦃〚等)だけ翻訳エンジンに剥がされ、中身のNLが生テキストとして
+/// 残る」という既知の破損パターンを、原文と復元後テキストの \n の
+/// 個数比較で検知する。正規表現でNL等の文字列パターンを推測するより、
+/// 実際に復元できた個数を直接数える方が、大文字小文字ゆれ（NL/nL等）や
+/// 綴りゆれに影響されず確実。個数が原文に満たなければ復元漏れと断定できる。
+/// （全角スペースは仕様変更により保護対象外のため判定しない）
+fn detect_token_leak(source_text: &str, restored_text: &str) -> Option<String> {
+    let src_nl = source_text.matches('\n').count();
+    let out_nl = restored_text.matches('\n').count();
+
+    if out_nl < src_nl {
+        Some(format!(
+            "保護トークン復元漏れの疑い（改行 {}/{} 件のみ復元）。翻訳エンジンが保護記号を破損させた可能性があります。",
+            out_nl, src_nl
+        ))
+    } else {
+        None
+    }
+}
+
+
 /// 指定テーブルで退避。
+/// 全角スペース(U+3000)は保護せず、送信前に半角スペース1個へ正規化する
+/// （個数・全角半角の区別は翻訳先言語では意味を持たないため。仕様変更2026-07-03）。
+/// これにより U+3000 という文字自体を翻訳エンジンへ送らない。
 fn protect_with(text: &str, idx: usize) -> String {
-    let mut out = text.to_string();
+    let mut out = text.replace('\u{3000}', " ");
     for (ch, tok) in TOKEN_TABLES[idx] {
         out = out.replace(*ch, tok);
     }
@@ -951,7 +995,21 @@ fn translate_whole_for_cells(
                             out_nl
                         );
                     }
-                    results[plan.cell_idx] = Ok(restored);
+                    match detect_token_leak(&logical_cells[plan.cell_idx].source_text, &restored) {
+                        Some(leak_msg) => {
+                            println!(
+                                "[WHOLE][{}][TOKEN_LEAK] engine={} cell_idx={} {}",
+                                label,
+                                adapter.provider_kind().as_label(),
+                                plan.cell_idx,
+                                leak_msg
+                            );
+                            results[plan.cell_idx] = Err(leak_msg);
+                        }
+                        None => {
+                            results[plan.cell_idx] = Ok(restored);
+                        }
+                    }
                 }
             }
             Err(e) => {
