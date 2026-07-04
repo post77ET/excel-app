@@ -10,6 +10,8 @@
     h2 { font-size: 18px; margin-top: 0; }
     input, button { font-size: 16px; margin: 8px 0; }
     button { padding: 8px 16px; }
+    button.generate-action { background:#2d74da; color:white; border:1px solid #2d74da; border-radius:6px; }
+    button.apply-action { background:#1f9d57; color:white; border:1px solid #1f9d57; border-radius:6px; }
     .note { color: #555; font-size: 14px; }
   </style>
 
@@ -218,7 +220,7 @@ box-shadow:0 6px 24px rgba(0,0,0,0.08);
       <input id="original-file-input" type="file" name="file" accept=".xlsx" required style="display:none;" onchange="updateFileName('original-file-input','original-file-status')">
       <button type="button" id="original-file-button" onclick="chooseFile('original-file-input')">ファイルを選択</button>
       <span id="original-file-status">ファイルが選択されていません</span><br>
-      <button type="submit" id="upload-button">翻訳（Generate）設定へ進む</button>
+      <button type="submit" id="upload-button" class="generate-action">翻訳（Generate）設定へ進む</button>
     </form>
     <div id="upload-progress-box" class="progress-box">
       <strong id="upload-progress-message">原本Excelを確認中です。しばらくお待ちください。</strong>
@@ -236,7 +238,7 @@ box-shadow:0 6px 24px rgba(0,0,0,0.08);
       <span id="ui-file-status">ファイルが選択されていません</span><br>
       <div class="note" id="reflect-note1">注意：ファイル名は変更しないでください。ファイル名を変更すると、Generate時に保存した原本クローンと照合できず、Applyできません。</div>
       <div class="note" id="reflect-note2">原本Excelの再アップロードは不要です。Generate時のサーバ保存原本を自動使用します。</div>
-      <button type="submit" id="reflect-button">反映（Apply）を実行</button>
+      <button type="submit" id="reflect-button" class="apply-action">反映（Apply）を実行</button>
     </form>
 
     <p style="margin-top:16px;">

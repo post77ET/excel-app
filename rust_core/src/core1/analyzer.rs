@@ -512,7 +512,7 @@ fn translate_segments_for_cells(
             continue;
         }
 
-        let segments = split_preserving_structure(&logical_cell.source_text);
+        let segments = split_preserving_structure(&normalize_fullwidth_space(&logical_cell.source_text));
         let mut request_positions = Vec::new();
         let mut cell_token_error = false;
 
@@ -774,12 +774,23 @@ fn detect_token_leak(source_text: &str, restored_text: &str) -> Option<String> {
 }
 
 
+/// 全角スペース(U+3000)を半角スペースへ正規化する（QA-2026-024対応）。
+/// split方式は日本語部分と非日本語部分（スペース等）を先に分割してから
+/// 翻訳対象部分だけprotect_with()を通すため、非翻訳セグメントに含まれる
+/// 全角スペースはprotect_with()を経由せず素通りしてしまう。これを防ぐため、
+/// セグメント分割より前に、セル全体（翻訳対象・対象外を問わず）に対して
+/// 本関数を適用する。whole方式はprotect_with()内の変換のみで従来通り足りるが、
+/// 二重適用しても副作用はないため一本化している。
+fn normalize_fullwidth_space(text: &str) -> String {
+    text.replace('\u{3000}', " ")
+}
+
 /// 指定テーブルで退避。
 /// 全角スペース(U+3000)は保護せず、送信前に半角スペース1個へ正規化する
 /// （個数・全角半角の区別は翻訳先言語では意味を持たないため。仕様変更2026-07-03）。
 /// これにより U+3000 という文字自体を翻訳エンジンへ送らない。
 fn protect_with(text: &str, idx: usize) -> String {
-    let mut out = text.replace('\u{3000}', " ");
+    let mut out = normalize_fullwidth_space(text);
     for (ch, tok) in TOKEN_TABLES[idx] {
         out = out.replace(*ch, tok);
     }
@@ -1077,6 +1088,8 @@ fn translate_formula_literals(
 
     let mut cell_tpls: Vec<CellTpl> = Vec::new();
     let mut flat_literals: Vec<String> = Vec::new();
+    // 各リテラルごとに使用する保護テーブル（衝突があれば None ＝保護なしで送る）。
+    let mut flat_literal_token_idx: Vec<Option<usize>> = Vec::new();
 
     for (cell_idx, logical_cell) in logical_cells.iter().enumerate() {
         if !policies[cell_idx].translate_candidates {
@@ -1096,6 +1109,7 @@ fn translate_formula_literals(
         let lit_start = flat_literals.len();
         let lit_count = lits.len();
         for lit in lits {
+            flat_literal_token_idx.push(select_token_table(&lit));
             flat_literals.push(lit);
         }
         cell_tpls.push(CellTpl {
@@ -1111,15 +1125,21 @@ fn translate_formula_literals(
     }
 
     // リテラルを平坦な翻訳キューに（WholeRequestPlan.cell_idx は平坦インデックスとして使う）
+    // 全てのテーブルで衝突した場合（flat_literal_token_idx[i]==None）は token_idx=usize::MAX
+    // を「保護なしでそのまま送る」の目印として使う（select_token_table の全表衝突は極めて稀）。
     let lit_plans: Vec<WholeRequestPlan> = flat_literals
         .iter()
         .enumerate()
-        .map(|(i, lit)| WholeRequestPlan {
-            cell_idx: i,
-            text: lit.clone(),
-            // この経路（数式リテラル）はトークン退避をしないため token_idx は未使用。
-            // 構造体整合のため既定 0 を入れる。
-            token_idx: 0,
+        .map(|(i, lit)| {
+            let idx = flat_literal_token_idx[i];
+            WholeRequestPlan {
+                cell_idx: i,
+                text: match idx {
+                    Some(idx) => protect_with(lit, idx),
+                    None => lit.clone(),
+                },
+                token_idx: idx.unwrap_or(usize::MAX),
+            }
         })
         .collect();
 
@@ -1149,7 +1169,25 @@ fn translate_formula_literals(
                     continue;
                 }
                 for (plan, trans) in lit_plans[start..end].iter().zip(translations.into_iter()) {
-                    translated_literals[plan.cell_idx] = Some(trans.translated_text);
+                    if plan.token_idx == usize::MAX {
+                        // 全テーブル衝突のため無保護で送ったリテラル。復元処理は不要。
+                        translated_literals[plan.cell_idx] = Some(trans.translated_text);
+                        continue;
+                    }
+                    let restored = restore_with(&trans.translated_text, plan.token_idx);
+                    let original_lit = &flat_literals[plan.cell_idx];
+                    match detect_token_leak(original_lit, &restored) {
+                        Some(leak_msg) => {
+                            println!(
+                                "[FORMULA_LIT][{label}][TOKEN_LEAK] lit_idx={} {leak_msg}",
+                                plan.cell_idx
+                            );
+                            // 検知時は他候補と同様、未翻訳（原文リテラル）へフォールバック。
+                        }
+                        None => {
+                            translated_literals[plan.cell_idx] = Some(restored);
+                        }
+                    }
                 }
             }
             Err(_e) => {
