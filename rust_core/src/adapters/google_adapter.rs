@@ -91,7 +91,7 @@ impl GoogleAdapter {
     fn map_http_error(status_code: u16, body: &str) -> AdapterErrorKind {
         match status_code {
             400 | 404 => AdapterErrorKind::InvalidConfig,
-            401 | 403 => AdapterErrorKind::Auth,
+            401 => AdapterErrorKind::Auth,
             408 => AdapterErrorKind::Timeout,
             429 => AdapterErrorKind::RateLimit,
             500..=599 => AdapterErrorKind::Server,
@@ -99,17 +99,23 @@ impl GoogleAdapter {
             _ => {
                 let body_upper = body.to_uppercase();
 
-                if body_upper.contains("AUTH")
+                // 403はGoogle APIの場合、本当の権限エラーだけでなく
+                // "User Rate Limit Exceeded"（レート制限超過）でも返ってくる。
+                // 403を無条件でAuthに倒すと、本文にRATE/TOO MANYと書かれていても
+                // 見逃してリトライされなくなるため、本文の内容を先に見て判定する。
+                if body_upper.contains("RATE")
+                    || body_upper.contains("TOO MANY")
+                {
+                    AdapterErrorKind::RateLimit
+                } else if status_code == 403 {
+                    AdapterErrorKind::Auth
+                } else if body_upper.contains("AUTH")
                     || body_upper.contains("API KEY")
                     || body_upper.contains("API_KEY")
                     || body_upper.contains("CREDENTIAL")
                     || body_upper.contains("PERMISSION")
                 {
                     AdapterErrorKind::Auth
-                } else if body_upper.contains("RATE")
-                    || body_upper.contains("TOO MANY")
-                {
-                    AdapterErrorKind::RateLimit
                 } else if body_upper.contains("TIMEOUT")
                     || body_upper.contains("TIMED OUT")
                 {

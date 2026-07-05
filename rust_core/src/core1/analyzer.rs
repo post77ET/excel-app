@@ -1,6 +1,7 @@
 use crate::adapters::translator_trait::TranslatorAdapter;
 use crate::adapters::types::{AdapterErrorKind, Lang, TranslateRequest, TranslateResponse};
 use crate::adapters::types::AdapterError;
+use crate::core1::text_structure_analyzer::analyze_text_structure;
 use crate::core1::translation_policy::TranslationPolicyDecision;
 use crate::core1::types::{CandidateAlarms, CandidateBundle, DefaultSelect, Segment};
 use crate::core2::formula_text::{
@@ -709,7 +710,9 @@ fn translate_segments_for_cells(
             Some(err) => Err(err),
             None => {
                 let normalized = normalize_punctuation_for_target(&rebuilt, to_lang);
-                match detect_token_leak(&logical_cells[cell_idx].source_text, &normalized) {
+                let leak_or_untranslated = detect_token_leak(&logical_cells[cell_idx].source_text, &normalized)
+                    .or_else(|| detect_untranslated(&logical_cells[cell_idx].source_text, &normalized));
+                match leak_or_untranslated {
                     Some(leak_msg) => {
                         println!(
                             "[SPLIT][{label}][TOKEN_LEAK] cell_idx={cell_idx} {leak_msg}"
@@ -802,6 +805,26 @@ fn detect_token_leak(source_text: &str, restored_text: &str) -> Option<String> {
             "保護トークン復元漏れの疑い（改行 {}/{} 件のみ復元）。翻訳エンジンが保護記号を破損させた可能性があります。",
             out_nl, src_nl
         ))
+    } else {
+        None
+    }
+}
+
+/// 翻訳完全失敗の検知（QA-2026-026対応）。
+/// 翻訳エンジンがエラーを返さず、原文と完全に同一の文字列をそのまま
+/// 返してくる場合がある（例：GOOGLE(whole)が数式セルの翻訳に失敗し、
+/// 未翻訳の原文をそのまま候補として返した事例）。
+/// 原文が翻訳対象の条件（漢字1文字以上/かな3文字以上）を満たすにも関わらず
+/// 訳文が原文と一字一句同一であれば、翻訳失敗とみなして候補を不採用にする。
+/// これにより、他の失敗パターン（トークン漏れ等）と同様に「非表示」で統一し、
+/// 「原文がそのまま候補欄に表示される」という一貫性のない挙動を無くす。
+fn detect_untranslated(source_text: &str, output_text: &str) -> Option<String> {
+    if source_text != output_text {
+        return None;
+    }
+    let s = analyze_text_structure(source_text);
+    if s.kanji_count >= 1 || s.kana_kana_count >= 3 {
+        Some("翻訳失敗の疑い（訳文が原文と完全に同一）。翻訳エンジンが翻訳せず原文をそのまま返した可能性があります。".to_string())
     } else {
         None
     }
@@ -1040,7 +1063,9 @@ fn translate_whole_for_cells(
                             out_nl
                         );
                     }
-                    match detect_token_leak(&logical_cells[plan.cell_idx].source_text, &restored) {
+                    let leak_or_untranslated = detect_token_leak(&logical_cells[plan.cell_idx].source_text, &restored)
+                        .or_else(|| detect_untranslated(&logical_cells[plan.cell_idx].source_text, &restored));
+                    match leak_or_untranslated {
                         Some(leak_msg) => {
                             println!(
                                 "[WHOLE][{}][TOKEN_LEAK] engine={} cell_idx={} {}",
@@ -1210,7 +1235,9 @@ fn translate_formula_literals(
                     }
                     let restored = restore_with(&trans.translated_text, plan.token_idx);
                     let original_lit = &flat_literals[plan.cell_idx];
-                    match detect_token_leak(original_lit, &restored) {
+                    let leak_or_untranslated = detect_token_leak(original_lit, &restored)
+                        .or_else(|| detect_untranslated(original_lit, &restored));
+                    match leak_or_untranslated {
                         Some(leak_msg) => {
                             println!(
                                 "[FORMULA_LIT][{label}][TOKEN_LEAK] lit_idx={} {leak_msg}",
