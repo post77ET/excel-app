@@ -4,8 +4,14 @@
 <meta charset="utf-8">
 <title>{% if lang == "zh" %}翻译处理完成{% else %}{{ "翻译处理完成" if lang == "zh" else "翻訳処理完了" }}{% endif %}</title>
 <style>
+:root{
+  --navy-950:#0a1322; --navy-900:#101f36;
+  --gold:#c9a558;
+  --serif:Georgia,"Hiragino Mincho ProN","Yu Mincho","Songti SC","Noto Serif SC",serif;
+}
 body { font-family: Arial, sans-serif; margin: 32px; line-height: 1.7; }
-.box { border: 1px solid #ccc; border-radius: 8px; padding: 20px; margin: 0 0 24px; max-width: 980px; }
+.box { border: 1px solid #dbe6f7; border-radius: 8px; padding: 20px; margin: 0 0 24px; max-width: 1520px; }
+h1{ font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid var(--gold); display:inline-block; padding-bottom:10px; }
 .download-button { display:inline-block; padding:14px 24px; background:#2d74da; color:white; text-decoration:none; border-radius:8px; font-size:20px; font-weight:bold; }
 .apply-button { display:inline-block; padding:14px 24px; background:#1f9d57; color:white; text-decoration:none; border-radius:8px; font-size:20px; font-weight:bold; }
 .help-box { display:none; margin-top:24px; border:1px solid #bbb; padding:20px; background:#fafafa; }
@@ -22,17 +28,17 @@ function showGuide() {
 font-family:Arial,sans-serif;
 margin:0;
 line-height:1.8;
-background:#f7faff;
+background:radial-gradient(1200px 480px at 50% -180px,#e7f0ff 0%,rgba(231,240,255,0) 70%), #f5f8ff;
 color:#10213f;
 ">
 
 <div style="
-max-width:980px;
+max-width:1520px;
 margin:40px auto;
-padding:32px;
+padding:36px 40px;
 background:white;
 border-radius:18px;
-box-shadow:0 6px 24px rgba(0,0,0,0.08);
+box-shadow:0 14px 40px rgba(8,40,90,.12);
 ">
 
 <h1>{% if lang == "zh" %}翻译（Generate）完成{% else %}翻訳（Generate）完了{% endif %}</h1>

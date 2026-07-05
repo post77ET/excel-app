@@ -7,12 +7,19 @@
 <!-- JS無効時のフォールバック: 8秒ごとに結果ページを再読込してポーリングする -->
 <noscript><meta http-equiv="refresh" content="8;url={{ result_url }}"></noscript>
 <style>
-body { font-family: Arial, sans-serif; margin:0; line-height:1.8; background:#f7faff; color:#10213f; }
-.card { max-width:980px; margin:40px auto; padding:32px; background:white; border-radius:18px; box-shadow:0 6px 24px rgba(0,0,0,0.08); }
+:root{
+  --navy-950:#0a1322; --navy-900:#101f36;
+  --gold:#c9a558; --gold-soft:#e6d3a0;
+  --serif:Georgia,"Hiragino Mincho ProN","Yu Mincho","Songti SC","Noto Serif SC",serif;
+}
+body { font-family: Arial, sans-serif; margin:0; line-height:1.8; color:#10213f;
+  background: radial-gradient(1200px 480px at 50% -180px,#e7f0ff 0%,rgba(231,240,255,0) 70%), #f5f8ff; }
+.card { max-width:1520px; margin:40px auto; padding:36px 40px; background:white; border-radius:18px; box-shadow:0 14px 40px rgba(8,40,90,.12); }
+h1 { font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid var(--gold); display:inline-block; padding-bottom:10px; }
 .jobid { display:inline-block; padding:8px 14px; background:#eef3ff; border:1px solid #c7d6f5; border-radius:8px; font-family:monospace; font-size:18px; font-weight:bold; letter-spacing:0.5px; }
 .spinner { width:48px; height:48px; margin:24px 0; border:6px solid #dfe7f7; border-top-color:#2d74da; border-radius:50%; animation:spin 1s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
-.note { border:1px solid #d7b65a; background:#fffdf3; padding:18px 20px; border-radius:12px; margin-top:24px; font-size:15px; }
+.note { border:1px solid var(--gold); background:#fffdf3; padding:18px 20px; border-radius:12px; margin-top:24px; font-size:15px; }
 .btn { display:inline-block; padding:14px 24px; background:#2d74da; color:white; text-decoration:none; border-radius:8px; font-size:18px; font-weight:bold; }
 .btn.secondary { background:#5c6b85; }
 .err { border:2px solid #d33; background:#fff7f7; padding:18px 20px; border-radius:12px; margin-top:24px; white-space:pre-wrap; }

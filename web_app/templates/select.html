@@ -4,11 +4,17 @@
   <meta charset="utf-8">
   <title>{% if lang == "zh" %}翻译（Generate）设置{% else %}翻訳（Generate）設定{% endif %}</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; line-height: 1.8; background: #f7faff; color: #10213f; }
-    .container { max-width: 980px; margin: 40px auto; padding: 32px; background: white; border-radius: 18px; box-shadow: 0 6px 24px rgba(0,0,0,0.08); }
-    h1 { margin-top: 0; }
-    h2 { margin: 0 0 12px; font-size: 17px; }
-    .box { border: 1px solid #ccc; border-radius: 8px; padding: 20px; margin: 0 0 24px; }
+    :root{
+      --navy-950:#0a1322; --navy-900:#101f36;
+      --gold:#c9a558; --gold-soft:#e6d3a0;
+      --serif:Georgia,"Hiragino Mincho ProN","Yu Mincho","Songti SC","Noto Serif SC",serif;
+    }
+    body { font-family: Arial, sans-serif; margin: 0; line-height: 1.8; color: #10213f;
+      background: radial-gradient(1200px 480px at 50% -180px,#e7f0ff 0%,rgba(231,240,255,0) 70%), #f5f8ff; }
+    .container { max-width: 1520px; margin: 40px auto; padding: 36px 40px; background: white; border-radius: 18px; box-shadow: 0 14px 40px rgba(8,40,90,.12); }
+    h1 { margin-top: 0; font-family: var(--serif); color: var(--navy-900); border-bottom: 2px solid var(--gold); display: inline-block; padding-bottom: 10px; }
+    h2 { margin: 0 0 12px; font-size: 17px; font-family: var(--serif); color: var(--navy-900); }
+    .box { border: 1px solid #dbe6f7; border-radius: 8px; padding: 20px; margin: 0 0 24px; }
     .step { display: none; }
     .step.active { display: block; }
     .note { color: #555; font-size: 14px; }
@@ -26,8 +32,8 @@
     .engine-row label { width: 100px; font-size: 14px; }
     .engine-row select { font-size: 14px; padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; }
     .course-opt { display: flex; flex-direction: column; gap: 10px; }
-    .course-opt label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
-    .course-opt label:hover { background: #f0f4ff; }
+    .course-opt label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 10px; border: 1px solid #ddd; border-radius: 8px; transition:.15s; }
+    .course-opt label:hover { background: #fbf6ea; border-color: var(--gold); }
     .course-opt input[type=radio] { margin-top: 3px; }
     .course-desc { font-size: 13px; color: #555; }
     ol { line-height: 2; font-size: 16px; }

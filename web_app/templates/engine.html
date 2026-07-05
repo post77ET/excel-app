@@ -4,10 +4,16 @@
   <meta charset="utf-8">
   <title>{% if lang == "zh" %}Excel翻译作业支持{% else %}Excel翻訳作業支援{% endif %}</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 32px; line-height: 1.6; }
-    .box { border: 1px solid #ccc; border-radius: 8px; padding: 20px; margin: 0 0 24px; max-width: 820px; }
-    h1 { font-size: 24px; }
-    h2 { font-size: 18px; margin-top: 0; }
+    :root{
+      --navy-950:#0a1322; --navy-900:#101f36;
+      --gold:#c9a558;
+      --serif:Georgia,"Hiragino Mincho ProN","Yu Mincho","Songti SC","Noto Serif SC",serif;
+    }
+    body { font-family: Arial, sans-serif; margin: 32px; line-height: 1.6;
+      background: radial-gradient(1200px 480px at 50% -180px,#e7f0ff 0%,rgba(231,240,255,0) 70%), #f5f8ff; color:#10213f; }
+    .box { border: 1px solid #dbe6f7; border-radius: 8px; padding: 20px; margin: 0 0 24px; max-width: 1520px; background:white; }
+    h1 { font-size: 26px; font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid var(--gold); display:inline-block; padding-bottom:8px; }
+    h2 { font-size: 18px; margin-top: 0; font-family:var(--serif); color:var(--navy-900); }
     input, button { font-size: 16px; margin: 8px 0; }
     button { padding: 8px 16px; }
     button.generate-action { background:#2d74da; color:white; border:1px solid #2d74da; border-radius:6px; }
@@ -192,7 +198,7 @@ color:#10213f;
 ">
 
 <div style="
-max-width:980px;
+max-width:1520px;
 margin:40px auto;
 padding:32px;
 background:white;
@@ -282,7 +288,7 @@ background:#eef5ff;
 border:1px solid #c9daf8;
 border-radius:16px;
 text-align:center;
-max-width:760px;
+max-width:1520px;
 margin-left:auto;
 margin-right:auto;
 box-shadow:0 4px 18px rgba(0,0,0,0.08);
