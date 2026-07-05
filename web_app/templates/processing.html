@@ -12,15 +12,19 @@
   --gold:#c9a558; --gold-soft:#e6d3a0;
   --serif:Georgia,"Hiragino Mincho ProN","Yu Mincho","Songti SC","Noto Serif SC",serif;
 }
-body { font-family: Arial, sans-serif; margin:0; line-height:1.8; color:#10213f;
+body { font-family: Arial, sans-serif; margin:0; line-height:1.8; color:#10213f; font-size:17px;
   background: radial-gradient(1200px 480px at 50% -180px,#e7f0ff 0%,rgba(231,240,255,0) 70%), #f5f8ff; }
-.card { max-width:1520px; margin:40px auto; padding:36px 40px; background:white; border-radius:18px; box-shadow:0 14px 40px rgba(8,40,90,.12); }
-h1 { font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid var(--gold); display:inline-block; padding-bottom:10px; }
-.jobid { display:inline-block; padding:8px 14px; background:#eef3ff; border:1px solid #c7d6f5; border-radius:8px; font-family:monospace; font-size:18px; font-weight:bold; letter-spacing:0.5px; }
-.spinner { width:48px; height:48px; margin:24px 0; border:6px solid #dfe7f7; border-top-color:#2d74da; border-radius:50%; animation:spin 1s linear infinite; }
+.card { max-width:1520px; margin:40px auto; padding:40px 44px; background:white; border-radius:18px; box-shadow:0 14px 40px rgba(8,40,90,.12); }
+h1 { font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid var(--gold); display:inline-block; padding-bottom:10px; font-size:28px; }
+.layout{ display:grid; grid-template-columns:1.1fr .9fr; gap:32px; margin-top:24px; align-items:start; }
+@media(max-width:900px){ .layout{ grid-template-columns:1fr; } }
+.side-panel{ background:#fafcff; border:1px solid #dbe6f7; border-radius:14px; padding:24px; }
+.side-panel h3{ font-family:var(--serif); color:var(--navy-900); margin-top:0; font-size:18px; }
+.jobid { display:inline-block; padding:10px 16px; background:#eef3ff; border:1px solid #c7d6f5; border-radius:8px; font-family:monospace; font-size:19px; font-weight:bold; letter-spacing:0.5px; }
+.spinner { width:52px; height:52px; margin:24px 0; border:6px solid #dfe7f7; border-top-color:#2d74da; border-radius:50%; animation:spin 1s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
-.note { border:1px solid var(--gold); background:#fffdf3; padding:18px 20px; border-radius:12px; margin-top:24px; font-size:15px; }
-.btn { display:inline-block; padding:14px 24px; background:#2d74da; color:white; text-decoration:none; border-radius:8px; font-size:18px; font-weight:bold; }
+.note { border:1px solid var(--gold); background:#fffdf3; padding:20px 22px; border-radius:12px; margin-top:24px; font-size:15.5px; }
+.btn { display:inline-block; padding:15px 26px; background:#2d74da; color:white; text-decoration:none; border-radius:8px; font-size:18px; font-weight:bold; }
 .btn.secondary { background:#5c6b85; }
 .err { border:2px solid #d33; background:#fff7f7; padding:18px 20px; border-radius:12px; margin-top:24px; white-space:pre-wrap; }
 .hidden { display:none; }
@@ -29,6 +33,9 @@ h1 { font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid va
 <body>
 <div class="card">
   <h1 id="page-title">{% if lang == "zh" %}正在翻译处理…{% else %}翻訳処理中です…{% endif %}</h1>
+
+  <div class="layout">
+  <div class="col-main">
 
   <div id="working">
     <div class="spinner"></div>
@@ -55,8 +62,21 @@ h1 { font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid va
     </p>
   </div>
 
-  <div id="done-box" class="hidden">
-    <p style="margin-top:24px;">
+  <div id="error-box" class="hidden">
+    <div class="err" id="error-msg"></div>
+  </div>
+  </div>
+
+  <div class="col-side">
+  <div class="side-panel" id="waiting-panel">
+    <h3>{% if lang == "zh" %}接下来会怎样{% else %}このあとの流れ{% endif %}</h3>
+    <p class="note-inline" style="font-size:15px; color:#5b6b82;">
+      {% if lang == "zh" %}翻译完成后，这里会显示下载按钮和「前往Apply画面」的按钮。{% else %}翻訳が完了すると、ここにダウンロードボタンと「Apply画面へ進む」ボタンが表示されます。{% endif %}
+    </p>
+  </div>
+
+  <div id="done-box" class="hidden side-panel">
+    <p>
       {% if lang == "zh" %}处理完成！请点击下方按钮下载结果。{% else %}処理が完了しました。下のボタンから結果をダウンロードしてください。{% endif %}
     </p>
     <p style="margin-top:16px;">
@@ -99,9 +119,7 @@ h1 { font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid va
       <a class="btn secondary" href="/?lang={{ lang }}">{% if lang == "zh" %}返回首页{% else %}ホームに戻る{% endif %}</a>
     </p>
   </div>
-
-  <div id="error-box" class="hidden">
-    <div class="err" id="error-msg"></div>
+  </div>
   </div>
 </div>
 
@@ -122,6 +140,7 @@ h1 { font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid va
         if (!data || !data.status) { setTimeout(poll, pollMs); return; }
         if (data.status === "done" && data.download_url) {
           hide("working");
+          hide("waiting-panel");
           var t = document.getElementById("page-title");
           if (t) { t.textContent = (lang === "zh") ? "翻译已完成" : "翻訳が完了しました"; }
           var dl = document.getElementById("dl");
@@ -131,6 +150,7 @@ h1 { font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid va
           // ユーザーが「結果をダウンロード」ボタンを押して取得する。
         } else if (data.status === "error") {
           hide("working");
+          hide("waiting-panel");
           var te = document.getElementById("page-title");
           if (te) { te.textContent = (lang === "zh") ? "处理出错" : "エラーが発生しました"; }
           document.getElementById("error-msg").textContent = data.message || "エラーが発生しました。";

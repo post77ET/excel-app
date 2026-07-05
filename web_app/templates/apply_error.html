@@ -19,14 +19,18 @@ background:white;
 border-radius:18px;
 box-shadow:0 14px 40px rgba(8,40,90,.12);
 ">
+  <div style="text-align:center; margin-bottom:8px;">
+    <div style="font-size:44px; line-height:1;">⚠️</div>
+  </div>
   <h1 style="
 font-family:Georgia,'Hiragino Mincho ProN','Yu Mincho','Songti SC','Noto Serif SC',serif;
-font-size:32px;
-margin-bottom:24px;
+font-size:30px;
+margin:8px auto 24px;
 padding-bottom:10px;
 border-bottom:2px solid #b00020;
-display:inline-block;
+display:table;
 color:#b00020;
+text-align:center;
 ">
 Applyエラー / Apply Error / 反映处理错误
 </h1>
@@ -34,9 +38,9 @@ Applyエラー / Apply Error / 反映处理错误
   <div style="
 border:2px solid #e0b4b4;
 background:#fff5f5;
-padding:20px;
-margin:20px 0;
-border-radius:8px;
+padding:22px 24px;
+margin:20px 0 28px;
+border-radius:12px;
 font-size:17px;
 ">
     <p><strong>日本語：</strong>編集内容の反映処理ができませんでした。</p>
@@ -44,33 +48,33 @@ font-size:17px;
     <p><strong>中文：</strong>无法执行编辑内容反映处理。</p>
   </div>
 
-  <h2>原因 / Reason / 原因</h2>
-
-  <div style="border:1px solid #ccc; padding:12px; background:#fafafa;">
-  {% if lang == "zh" %}
-    文件名不一致、文件损坏、或Apply对象错误。
-  {% else %}
-    ファイル名不一致、ファイル破損、またはApply対象ファイル誤りの可能性があります。
-  {% endif %}
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start;">
+    <div>
+      <h2 style="font-family:Georgia,serif; color:#101f36; font-size:19px;">原因 / Reason / 原因</h2>
+      <div style="border:1px solid #dbe6f7; border-radius:10px; padding:18px; background:#fafcff; font-size:15.5px;">
+      {% if lang == "zh" %}
+        文件名不一致、文件损坏、或Apply对象错误。
+      {% else %}
+        ファイル名不一致、ファイル破損、またはApply対象ファイル誤りの可能性があります。
+      {% endif %}
+      </div>
+    </div>
+    <div>
+      <h2 style="font-family:Georgia,serif; color:#101f36; font-size:19px;">確認してください / Please check / 请确认</h2>
+      <ol style="line-height:1.9; font-size:15.5px; margin:0; padding-left:20px;">
+        <li>ファイル名を変更していないか確認してください。 / Please check that the file name has not been changed. / 请确认文件名没有被更改。</li>
+        <li>ファイル名末尾に「(1)」「(2)」が付いている場合は、元のファイル名に戻してください。 / If “(1)” or “(2)” was added, restore the original file name. / 如果文件名末尾带有“(1)”或“(2)”，请恢复为原始文件名。</li>
+        <li>分からない場合は、最初からGenerateをやり直してください。 / If unclear, run Generate again from the beginning. / 如果不清楚，请从Generate重新开始。</li>
+      </ol>
+    </div>
   </div>
 
-  <h2>確認してください / Please check / 请确认</h2>
-  <ol style="
-line-height:2;
-font-size:16px;
-margin-top:20px;
-">
-    <li>ファイル名を変更していないか確認してください。 / Please check that the file name has not been changed. / 请确认文件名没有被更改。</li>
-    <li>ファイル名末尾に「(1)」「(2)」が付いている場合は、元のファイル名に戻してください。 / If “(1)” or “(2)” was added, restore the original file name. / 如果文件名末尾带有“(1)”或“(2)”，请恢复为原始文件名。</li>
-    <li>分からない場合は、最初からGenerateをやり直してください。 / If unclear, run Generate again from the beginning. / 如果不清楚，请从Generate重新开始。</li>
-  </ol>
-
-  <p>
-    <a href="/engine?lang=ja">反映（Apply）画面へ戻る</a> /
-    <a href="/engine?lang=zh">前往反映（Apply）画面</a><br><br>
-    <a href="/?lang=ja">ホームページトップへ戻る</a> /
-    <a href="/?lang=zh">返回首页</a>
-  </p>
+  <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:32px;">
+    <a href="/engine?lang=ja" style="display:inline-block; padding:12px 22px; border-radius:8px; background:#eef3fb; color:#101f36; font-weight:700; text-decoration:none; border:1px solid #c7d6f5;">反映（Apply）画面へ戻る</a>
+    <a href="/engine?lang=zh" style="display:inline-block; padding:12px 22px; border-radius:8px; background:#eef3fb; color:#101f36; font-weight:700; text-decoration:none; border:1px solid #c7d6f5;">前往反映（Apply）画面</a>
+    <a href="/?lang=ja" style="display:inline-block; padding:12px 22px; border-radius:8px; background:#101f36; color:#e6d3a0; font-weight:700; text-decoration:none;">ホームページトップへ戻る</a>
+    <a href="/?lang=zh" style="display:inline-block; padding:12px 22px; border-radius:8px; background:#101f36; color:#e6d3a0; font-weight:700; text-decoration:none;">返回首页</a>
+  </div>
 </div>
 </body>
 </html>

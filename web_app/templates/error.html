@@ -17,20 +17,26 @@ background:white;
 border-radius:18px;
 box-shadow:0 14px 40px rgba(8,40,90,.12);
 ">
+  <div style="text-align:center; margin-bottom:8px;">
+    <div style="font-size:44px; line-height:1;">⚠️</div>
+  </div>
   <h1 style="
 font-family:Georgia,'Hiragino Mincho ProN','Yu Mincho','Songti SC','Noto Serif SC',serif;
+font-size:30px;
 padding-bottom:10px;
+margin:8px auto 24px;
 border-bottom:2px solid #b00020;
-display:inline-block;
+display:table;
 color:#b00020;
+text-align:center;
 ">処理エラー / Processing Error / 处理错误</h1>
 
   <div style="
 border:2px solid #e0b4b4;
 background:#fff5f5;
-padding:20px;
-margin:20px 0;
-border-radius:8px;
+padding:22px 24px;
+margin:20px 0 28px;
+border-radius:12px;
 font-size:17px;
 ">
     <p><strong>日本語：</strong>処理中にエラーが発生しました。</p>
@@ -38,13 +44,13 @@ font-size:17px;
     <p><strong>中文：</strong>处理过程中发生错误。</p>
   </div>
 
-  <h2>エラー内容 / Error / 错误内容</h2>
-  <pre style="white-space:pre-wrap; border:1px solid #ccc; padding:12px;">{{ message }}</pre>
+  <h2 style="font-family:Georgia,serif; color:#101f36; font-size:19px;">エラー内容 / Error / 错误内容</h2>
+  <pre style="white-space:pre-wrap; border:1px solid #dbe6f7; border-radius:10px; padding:16px; background:#fafcff; font-size:14.5px;">{{ message }}</pre>
 
-  <p>
-    <a href="/?lang=ja">トップへ戻る</a> /
-    <a href="/?lang=zh">返回首页</a>
-  </p>
+  <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:28px;">
+    <a href="/?lang=ja" style="display:inline-block; padding:12px 22px; border-radius:8px; background:#101f36; color:#e6d3a0; font-weight:700; text-decoration:none;">トップへ戻る</a>
+    <a href="/?lang=zh" style="display:inline-block; padding:12px 22px; border-radius:8px; background:#101f36; color:#e6d3a0; font-weight:700; text-decoration:none;">返回首页</a>
+  </div>
 </div>
 </body>
 </html>

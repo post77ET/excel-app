@@ -36,25 +36,24 @@ color:#101f36;
 </h1>
 
   {% if lang == "zh" %}
-    <p style="font-size:20px; margin-top:18px;">
-已生成反映编辑内容后的Excel工作簿。
-</p>
-
-    <div style="
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; margin-top:18px;">
+    <div>
+      <p style="font-size:19px;">已生成反映编辑内容后的Excel工作簿。</p>
+      <div style="
 border:2px solid #d33;
 padding:22px;
-margin-top:28px;
+margin-top:20px;
 border-radius:12px;
 line-height:2;
-font-size:16px;
+font-size:15.5px;
 background:#fffdf7;
 box-shadow:0 4px 16px rgba(0,0,0,0.08);
 ">
-      生成后的Excel工作簿已设置工作表保护。<br>
-      如需编辑，请先解除工作表保护。
+        生成后的Excel工作簿已设置工作表保护。<br>
+        如需编辑，请先解除工作表保护。
+      </div>
     </div>
-
-    <p style="margin-top:20px;">
+    <div style="background:#fafcff; border:1px solid #dbe6f7; border-radius:14px; padding:28px; text-align:center;">
       <a href="{{ download_url }}" style="
 display:inline-block;
 background:#1f9d57;
@@ -64,37 +63,36 @@ border-radius:12px;
 text-decoration:none;
 font-size:20px;
 font-weight:bold;
-box-shadow:0 4px 14px rgba(0,0,0,0.12);
+box-shadow:0 8px 22px rgba(31,157,87,.28);
 ">
 下载反映处理后的Excel工作簿
 </a>
-    </p>
-
-    <div style="margin-top:24px; line-height:2;">
-<a href="/engine?lang={{ lang }}" style="font-size:20px; font-weight:bold;">前往反映（Apply）画面</a><br>
+      <div style="margin-top:24px; line-height:2;">
+<a href="/engine?lang={{ lang }}" style="font-size:17px; font-weight:bold;">前往反映（Apply）画面</a><br>
 <a href="/?lang={{ lang }}">返回首页</a>
 </div>
+    </div>
+    </div>
 
   {% else %}
-    <p style="font-size:20px; margin-top:18px;">
-編集内容を反映したExcelブックを生成しました。
-</p>
-
-    <div style="
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; margin-top:18px;">
+    <div>
+      <p style="font-size:19px;">編集内容を反映したExcelブックを生成しました。</p>
+      <div style="
 border:2px solid #d33;
 padding:22px;
-margin-top:28px;
+margin-top:20px;
 border-radius:12px;
 line-height:2;
-font-size:16px;
+font-size:15.5px;
 background:#fffdf7;
 box-shadow:0 4px 16px rgba(0,0,0,0.08);
 ">
-      反映処理後のExcelブックはシート保護がかかっています。<br>
-      編集される場合は、シート保護の解除を行ってください。
+        反映処理後のExcelブックはシート保護がかかっています。<br>
+        編集される場合は、シート保護の解除を行ってください。
+      </div>
     </div>
-
-    <p style="margin-top:20px;">
+    <div style="background:#fafcff; border:1px solid #dbe6f7; border-radius:14px; padding:28px; text-align:center;">
       <a href="{{ download_url }}" style="
 display:inline-block;
 background:#1f9d57;
@@ -104,16 +102,16 @@ border-radius:12px;
 text-decoration:none;
 font-size:20px;
 font-weight:bold;
-box-shadow:0 4px 14px rgba(0,0,0,0.12);
+box-shadow:0 8px 22px rgba(31,157,87,.28);
 ">
 反映処理後のExcelブックをダウンロード
 </a>
-    </p>
-
-    <div style="margin-top:24px; line-height:2;">
-<a href="/engine?lang={{ lang }}" style="font-size:20px; font-weight:bold;">反映（Apply）画面へ戻る</a><br>
+      <div style="margin-top:24px; line-height:2;">
+<a href="/engine?lang={{ lang }}" style="font-size:17px; font-weight:bold;">反映（Apply）画面へ戻る</a><br>
 <a href="/?lang={{ lang }}">ホームに戻る</a>
 </div>
+    </div>
+    </div>
   {% endif %}
 </div>
 </body>

@@ -9,13 +9,16 @@
   --gold:#c9a558;
   --serif:Georgia,"Hiragino Mincho ProN","Yu Mincho","Songti SC","Noto Serif SC",serif;
 }
-body { font-family: Arial, sans-serif; margin: 32px; line-height: 1.7; }
-.box { border: 1px solid #dbe6f7; border-radius: 8px; padding: 20px; margin: 0 0 24px; max-width: 1520px; }
-h1{ font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid var(--gold); display:inline-block; padding-bottom:10px; }
-.download-button { display:inline-block; padding:14px 24px; background:#2d74da; color:white; text-decoration:none; border-radius:8px; font-size:20px; font-weight:bold; }
-.apply-button { display:inline-block; padding:14px 24px; background:#1f9d57; color:white; text-decoration:none; border-radius:8px; font-size:20px; font-weight:bold; }
-.help-box { display:none; margin-top:24px; border:1px solid #bbb; padding:20px; background:#fafafa; }
+body { font-family: Arial, sans-serif; margin: 32px; line-height: 1.7; font-size:17px; }
+.box { border: 1px solid #dbe6f7; border-radius: 12px; padding: 28px; margin: 0 0 24px; max-width: 1520px; }
+h1{ font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid var(--gold); display:inline-block; padding-bottom:10px; font-size:28px; }
+h2{ font-family:var(--serif); color:var(--navy-900); font-size:19px; }
+.download-button { display:inline-block; padding:16px 28px; background:#2d74da; color:white; text-decoration:none; border-radius:8px; font-size:20px; font-weight:bold; }
+.apply-button { display:inline-block; padding:16px 28px; background:#1f9d57; color:white; text-decoration:none; border-radius:8px; font-size:20px; font-weight:bold; }
+.help-box { display:none; margin-top:0; border:1px solid #dbe6f7; padding:24px; background:#fafcff; border-radius:12px; }
 img { max-width:100%; border:1px solid #ccc; margin-top:8px; }
+.layout{ display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
+@media(max-width:900px){ .layout{ grid-template-columns:1fr; } }
 </style>
 <script>
 function showGuide() {
@@ -44,6 +47,8 @@ box-shadow:0 14px 40px rgba(8,40,90,.12);
 <h1>{% if lang == "zh" %}翻译（Generate）完成{% else %}翻訳（Generate）完了{% endif %}</h1>
 
 <div class="box">
+  <div class="layout">
+  <div class="col-main">
   {% if lang == "zh" %}
     <p><strong>翻译处理已完成的Excel工作簿。</strong></p>
     <p>可在 <strong>TRANSLATION_UI</strong> 工作表中确认・修改翻译结果。</p>
@@ -61,7 +66,9 @@ box-shadow:0 14px 40px rgba(8,40,90,.12);
       {% endif %}
     </a>
   </p>
+  </div>
 
+  <div class="col-side">
   <div id="guide-box" class="help-box">
     <h2>{% if lang == "zh" %}下一步操作{% else %}{{ "下一步操作" if lang == "zh" else "次の作業" }}{% endif %}</h2>
 
@@ -137,6 +144,8 @@ box-shadow:0 14px 40px rgba(8,40,90,.12);
       <a href="/?lang={{ lang }}">ホームに戻る</a>
       </p>
     {% endif %}
+  </div>
+  </div>
   </div>
 </div>
 </div>
