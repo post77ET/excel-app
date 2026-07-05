@@ -63,7 +63,7 @@ pub struct TranslateResponse {
     pub raw_meta: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AdapterErrorKind {
     Timeout,
     Empty,

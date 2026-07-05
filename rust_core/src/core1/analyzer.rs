@@ -1,5 +1,6 @@
 use crate::adapters::translator_trait::TranslatorAdapter;
-use crate::adapters::types::{Lang, TranslateRequest};
+use crate::adapters::types::{AdapterErrorKind, Lang, TranslateRequest, TranslateResponse};
+use crate::adapters::types::AdapterError;
 use crate::core1::translation_policy::TranslationPolicyDecision;
 use crate::core1::types::{CandidateAlarms, CandidateBundle, DefaultSelect, Segment};
 use crate::core2::formula_text::{
@@ -14,6 +15,39 @@ use crate::entry::job_plan_settings::Method;
 use crate::infra::app_error::AppError;
 use std::fs::OpenOptions;
 use std::io::Write;
+
+/// 翻訳エンジンAPIがレート制限（HTTP 429等）を返した場合に、指数バックオフで
+/// 再試行する共通ラッパー。QA-2026報告（Google APIの"User Rate Limit Exceeded"
+/// により候補生成が丸ごと失敗していた事象）を受けて追加。
+/// レート制限以外のエラー（認証・タイムアウト等）は即座に返し、再試行しない
+/// （無限に待たされる・無関係なエラーまで隠す事態を避けるため）。
+fn translate_batch_with_retry(
+    adapter: &dyn TranslatorAdapter,
+    requests: &[TranslateRequest],
+) -> Result<Vec<TranslateResponse>, AdapterError> {
+    const MAX_RETRIES: u32 = 4;
+    const BASE_DELAY_MS: u64 = 1500;
+
+    let mut attempt: u32 = 0;
+    loop {
+        match adapter.translate_batch(requests) {
+            Ok(resp) => return Ok(resp),
+            Err(err) if err.error_kind == AdapterErrorKind::RateLimit && attempt < MAX_RETRIES => {
+                let delay_ms = BASE_DELAY_MS * (1u64 << attempt);
+                println!(
+                    "[RETRY][RATE_LIMIT] provider={} attempt={} delay_ms={} message={}",
+                    adapter.provider_kind().as_label(),
+                    attempt + 1,
+                    delay_ms,
+                    err.message
+                );
+                std::thread::sleep(std::time::Duration::from_millis(delay_ms));
+                attempt += 1;
+            }
+            Err(err) => return Err(err),
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 struct SegmentRequestPlan {
@@ -594,7 +628,7 @@ fn translate_segments_for_cells(
             char_count
         );
 
-        match adapter.translate_batch(&requests) {
+        match translate_batch_with_retry(adapter, &requests) {
             Ok(translations) => {
                 if translations.len() != requests.len() {
                     let msg = format!(
@@ -968,7 +1002,7 @@ fn translate_whole_for_cells(
             char_count
         );
 
-        match adapter.translate_batch(&requests) {
+        match translate_batch_with_retry(adapter, &requests) {
             Ok(translations) => {
                 if translations.len() != requests.len() {
                     let msg = format!(
@@ -1162,7 +1196,7 @@ fn translate_formula_literals(
             })
             .collect();
 
-        match adapter.translate_batch(&requests) {
+        match translate_batch_with_retry(adapter, &requests) {
             Ok(translations) => {
                 if translations.len() != requests.len() {
                     // 数不一致のバッチは未翻訳のまま（原文リテラルを維持）

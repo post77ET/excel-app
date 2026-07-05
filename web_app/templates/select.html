@@ -22,7 +22,7 @@
     .masthead-home:hover{ color:var(--gold-soft); }
     .body-pad{ padding:36px 44px 44px; }
     h1 { margin:0; font-family: var(--serif); color: #fff; font-size:30px; font-weight:700; }
-    .step-track{ display:flex; gap:24px; overflow-x:auto; padding-bottom:8px; scroll-behavior:smooth; }
+    .step-track{ display:flex; gap:24px; overflow-x:auto; padding-top:22px; padding-bottom:8px; padding-right:min(760px, 88vw); scroll-behavior:smooth; }
     .step { display: none; flex:0 0 auto; width:min(760px, 88vw); }
     .step.active { display: block; }
     ol { line-height: 2; font-size: 16px; }
@@ -134,7 +134,9 @@
     }
     .receipt::before{ top:-7px; }
     .receipt::after{ bottom:-7px; transform:rotate(180deg); }
-    .receipt-row{ display:flex; justify-content:space-between; gap:20px; padding:10px 0; border-bottom:1px dotted #dbe6f7; font-size:15.5px; }
+    .receipt-row{ display:flex; justify-content:space-between; gap:16px; padding:10px 0; border-bottom:1px dotted #dbe6f7; font-size:15.5px; }
+    .receipt-row .k{ flex:0 0 auto; }
+    .receipt-row .v{ flex:1 1 auto; min-width:0; word-break:break-word; overflow-wrap:anywhere; }
     .receipt-row:last-child{ border-bottom:none; }
     .receipt-row .k{ color:#5b6b82; }
     .receipt-row .v{ font-weight:700; color:var(--navy-900); text-align:right; }
