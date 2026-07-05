@@ -35,6 +35,10 @@ h1 { font-family:var(--serif); color:#fff; margin:0; font-size:28px; font-weight
 <body>
 <div class="hall">
   <div class="hall-masthead">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+    <span style="font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:#e6d3a0; opacity:.85;">EX-TR-MULTI</span>
+    <a href="/?lang={{ lang }}" style="color:#cfd8ec; font-size:13.5px; text-decoration:none; border-bottom:1px solid rgba(201,165,88,.5); padding-bottom:2px;">{% if lang == "zh" %}返回首页{% else %}ホームに戻る{% endif %}</a>
+  </div>
   <h1 id="page-title">{% if lang == "zh" %}正在翻译处理…{% else %}翻訳処理中です…{% endif %}</h1>
   </div>
   <div class="hall-body">
@@ -126,6 +130,7 @@ h1 { font-family:var(--serif); color:#fff; margin:0; font-size:28px; font-weight
   </div>
   </div>
   </div>
+</div>
 </div>
 
 <script>

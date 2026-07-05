@@ -16,10 +16,14 @@
       padding:28px 44px 24px; background:linear-gradient(160deg,var(--navy-900),var(--navy-950));
       border-bottom:3px solid var(--gold);
     }
-    .masthead-eyebrow{ font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:#9c7a2e; color:var(--gold-soft); opacity:.85; margin:0 0 6px; }
+    .masthead-eyebrow{ font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-soft); opacity:.85; margin:0; }
+    .masthead-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+    .masthead-home{ color:#cfd8ec; font-size:13.5px; text-decoration:none; border-bottom:1px solid rgba(201,165,88,.5); padding-bottom:2px; }
+    .masthead-home:hover{ color:var(--gold-soft); }
     .body-pad{ padding:36px 44px 44px; }
     h1 { margin:0; font-family: var(--serif); color: #fff; font-size:30px; font-weight:700; }
-    .step { display: none; }
+    .step-track{ display:flex; gap:24px; overflow-x:auto; padding-bottom:8px; scroll-behavior:smooth; }
+    .step { display: none; flex:0 0 auto; width:min(760px, 88vw); }
     .step.active { display: block; }
     ol { line-height: 2; font-size: 16px; }
 
@@ -161,7 +165,10 @@
 <body>
 <div class="container">
   <div class="masthead">
-    <div class="masthead-eyebrow">EX-TR-MULTI</div>
+    <div class="masthead-top">
+      <div class="masthead-eyebrow">EX-TR-MULTI</div>
+      <a class="masthead-home" href="/?lang={{ lang }}">{% if lang == "zh" %}返回首页{% else %}ホームに戻る{% endif %}</a>
+    </div>
     <h1>{% if lang == "zh" %}翻译（Generate）设置{% else %}翻訳（Generate）設定{% endif %}</h1>
   </div>
   <div class="body-pad">
@@ -173,6 +180,7 @@
     <div class="dot" data-step="4"><span class="n">④</span>{% if lang == "zh" %}确认・执行{% else %}確認・実行{% endif %}</div>
   </div>
 
+  <div class="step-track" id="step-track">
   <!-- STEP 1: シート選択 -->
   <div id="step1" class="step active">
     <div class="stage-panel" data-step-no="STEP 1">
@@ -369,6 +377,7 @@
       </div>
     </div>
   </div>
+  </div>
 
   <a class="home-return" href="/?lang={{ lang }}">{% if lang == "zh" %}返回首页{% else %}トップへ戻る{% endif %}</a>
   </div>
@@ -378,17 +387,21 @@
 var currentStep = 1;
 
 function goStep(n) {
-  document.getElementById('step' + currentStep).classList.remove('active');
-  if (n === 3) updateEngineVisibility();
-  if (n === 4) updateConfirm();
-  document.getElementById('step' + n).classList.add('active');
   currentStep = n;
+  for (var i = 1; i <= 4; i++) {
+    var el = document.getElementById('step' + i);
+    if (i <= n) { el.classList.add('active'); } else { el.classList.remove('active'); }
+  }
+  if (n >= 3) updateEngineVisibility();
+  if (n >= 4) updateConfirm();
   document.querySelectorAll('#step-indicator .dot').forEach(function(d) {
     var s = parseInt(d.getAttribute('data-step'), 10);
     d.classList.remove('active', 'done');
     if (s === n) d.classList.add('active');
     else if (s < n) d.classList.add('done');
   });
+  var target = document.getElementById('step' + n);
+  if (target) target.scrollIntoView({behavior:'smooth', block:'nearest', inline:'start'});
 }
 
 function updateCourse() {
