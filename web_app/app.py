@@ -546,10 +546,21 @@ def robots_txt():
 @app.get("/sitemap.xml")
 def sitemap_xml():
     base = "https://excel-app-t3dn.onrender.com"
+    langs = ["ja", "zh", "vi", "en"]
+    alt_links = "".join(
+        f'      <xhtml:link rel="alternate" hreflang="{l if l != "zh" else "zh-CN"}" href="{base}/?lang={l}"/>\n'
+        for l in langs
+    )
+    lang_urls = "".join(
+        f'  <url>\n    <loc>{base}/?lang={l}</loc>\n{alt_links}'
+        f'    <changefreq>weekly</changefreq><priority>1.0</priority>\n  </url>\n'
+        for l in langs
+    )
     body = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        f'  <url><loc>{base}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        'xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
+        f'{lang_urls}'
         f'  <url><loc>{base}/engine</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n'
         '</urlset>\n'
     )

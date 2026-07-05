@@ -1,16 +1,68 @@
 <!doctype html>
-<html lang="{{ 'zh-CN' if lang == 'zh' else 'ja' }}">
+{% set seo = {
+  'ja': {
+    'title': 'Excel翻訳ツール | 日本語→中国語 | 書式保持対応',
+    'desc': 'Excelの書式・数式・結合セルを保持したまま日本語→中国語翻訳ができるExcel翻訳ツール',
+    'ogtitle': 'Excel翻訳作業支援ツール',
+    'ogdesc': 'Excelの構造をそのまま保持して、日本語を中国語に翻訳。',
+    'locale': 'ja_JP',
+    'html': 'ja'
+  },
+  'zh': {
+    'title': 'Excel翻译工具 | 日语→中文 | 保留格式',
+    'desc': '保留Excel格式、公式、合并单元格，实现日语→中文翻译的Excel翻译工具',
+    'ogtitle': 'Excel翻译作业支持工具',
+    'ogdesc': '保持Excel结构不变，将日语翻译为中文。',
+    'locale': 'zh_CN',
+    'html': 'zh-CN'
+  },
+  'vi': {
+    'title': 'Công cụ dịch Excel | Nhật→Trung | Giữ nguyên định dạng',
+    'desc': 'Công cụ dịch Excel từ tiếng Nhật sang tiếng Trung, giữ nguyên định dạng, công thức và ô đã gộp',
+    'ogtitle': 'Công cụ hỗ trợ dịch Excel',
+    'ogdesc': 'Dịch tiếng Nhật sang tiếng Trung trong khi vẫn giữ nguyên cấu trúc Excel.',
+    'locale': 'vi_VN',
+    'html': 'vi'
+  },
+  'en': {
+    'title': 'Excel Translation Tool | Japanese to Chinese | Keeps Formatting',
+    'desc': 'Translate Excel files from Japanese to Chinese while keeping formatting, formulas, and merged cells intact',
+    'ogtitle': 'Excel Translation Assistant',
+    'ogdesc': 'Translate Japanese to Chinese while keeping your Excel structure intact.',
+    'locale': 'en_US',
+    'html': 'en'
+  }
+} %}
+{% set cur = seo.get(lang, seo['ja']) %}
+<html lang="{{ cur.html }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ 'Excel翻译工具 | 日语→中文 | 保留格式' if lang == 'zh' else 'Excel翻訳ツール | 日本語→中国語 | 書式保持対応' }}</title>
-<meta name="description" content="{{ '保留Excel格式、公式、合并单元格，实现日语→中文翻译的Excel翻译工具' if lang == 'zh' else 'Excelの書式・数式・結合セルを保持したまま日本語→中国語翻訳ができるExcel翻訳ツール' }}">
-<meta name="keywords" content="Excel 翻訳, エクセル 翻訳, 日本語 中国語 翻訳, xlsx 翻訳, Excel 中国語 翻訳, セル 翻訳, 書式 保持 翻訳, Excel 翻译 中文">
+<title>{{ cur.title }}</title>
+<meta name="description" content="{{ cur.desc }}">
+<meta name="keywords" content="Excel 翻訳, エクセル 翻訳, 日本語 中国語 翻訳, xlsx 翻訳, Excel 中国語 翻訳, セル 翻訳, 書式 保持 翻訳, Excel 翻译 中文, dich Excel Nhat Trung, Excel translation Japanese Chinese">
 <meta name="robots" content="index,follow">
+<link rel="canonical" href="https://excel-app-t3dn.onrender.com/?lang={{ lang if lang in ['ja','zh','vi','en'] else 'ja' }}">
+<link rel="alternate" hreflang="ja" href="https://excel-app-t3dn.onrender.com/?lang=ja">
+<link rel="alternate" hreflang="zh-CN" href="https://excel-app-t3dn.onrender.com/?lang=zh">
+<link rel="alternate" hreflang="vi" href="https://excel-app-t3dn.onrender.com/?lang=vi">
+<link rel="alternate" hreflang="en" href="https://excel-app-t3dn.onrender.com/?lang=en">
+<link rel="alternate" hreflang="x-default" href="https://excel-app-t3dn.onrender.com/?lang=ja">
 <meta property="og:type" content="website">
-<meta property="og:title" content="{{ 'Excel翻译作业支持工具' if lang == 'zh' else 'Excel翻訳作業支援ツール' }}">
-<meta property="og:description" content="{{ '保持Excel结构不变，将日语翻译为中文。' if lang == 'zh' else 'Excelの構造をそのまま保持して、日本語を中国語に翻訳。' }}">
-<meta property="og:locale" content="{{ 'zh_CN' if lang == 'zh' else 'ja_JP' }}">
+<meta property="og:title" content="{{ cur.ogtitle }}">
+<meta property="og:description" content="{{ cur.ogdesc }}">
+<meta property="og:locale" content="{{ cur.locale }}">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "{{ cur.ogtitle }}",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "description": "{{ cur.desc }}",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
 <style>
 :root{
   --ink:#10213f;
@@ -30,6 +82,14 @@
   --radius:14px;
   --shadow:0 10px 34px rgba(8,40,90,.10);
   --font:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",Meiryo,sans-serif;
+  /* ヒーロー用：濃紺 + 燻したゴールド（Webフォント読み込みなし、OS内蔵の明朝体/Georgiaを使用） */
+  --navy-950:#0a1322;
+  --navy-900:#101f36;
+  --navy-800:#182b48;
+  --navy-line:rgba(201,167,88,.28);
+  --gold:#c9a558;
+  --gold-soft:#e6d3a0;
+  --serif:Georgia,"Hiragino Mincho ProN","Yu Mincho","Songti SC","Noto Serif SC",serif;
 }
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
@@ -79,18 +139,56 @@ h1{ font-size:clamp(28px,4.4vw,42px); line-height:1.22; margin:0 0 16px; color:v
 .catch{ font-size:clamp(19px,2.6vw,26px); font-weight:800; color:var(--blue); margin:0 0 14px; line-height:1.3; letter-spacing:-.01em; }
 .catch-sub{ font-size:15.5px; font-weight:700; color:var(--ink-deep); margin:16px 0 0; }
 .disclaimer{ font-size:12px; color:var(--muted); line-height:1.65; margin:16px 0 0; }
-h2{ font-size:clamp(21px,2.6vw,27px); color:var(--ink-deep); margin:0 0 16px; letter-spacing:-.01em; }
+h2{
+  font-family:var(--serif); font-weight:700;
+  font-size:clamp(22px,2.7vw,28px); color:var(--ink-deep); margin:0 0 20px; letter-spacing:-.01em;
+  padding-bottom:12px; border-bottom:2px solid var(--gold); display:inline-block;
+}
 h3{ margin:0 0 6px; color:var(--ink-deep); font-size:17px; }
 p{ font-size:16.5px; }
 
 /* hero */
-.hero{ display:grid; grid-template-columns:1.05fr .95fr; gap:32px; align-items:center; padding-top:52px; }
-.hero p.lead{ font-size:17px; color:#243a5e; }
+.hero{
+  display:block; padding:56px clamp(24px,5vw,64px); margin-top:24px;
+  background:
+    radial-gradient(900px 320px at 15% -20%, rgba(201,165,88,.14) 0%, rgba(201,165,88,0) 60%),
+    linear-gradient(160deg,var(--navy-900),var(--navy-950));
+  border:1px solid var(--navy-line); border-radius:20px;
+  box-shadow:0 24px 60px rgba(6,15,32,.35);
+  color:#e9edf6;
+}
+.hero h1{ font-family:var(--serif); color:#fff; }
+.hero p.lead{ font-size:17px; color:#b9c4dc; max-width:720px; }
+.hero .catch{ color:var(--gold-soft); }
+.hero .catch-sub{ color:#c7d1e6; }
+.hero .disclaimer{ color:#7c8aa8; }
 .tags{ display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 24px; }
+.hero .tag{
+  font-size:13.5px; font-weight:600; color:var(--gold-soft);
+  background:rgba(255,255,255,.03); border:1px solid var(--navy-line); padding:6px 14px; border-radius:999px;
+}
 .tag{
   font-size:13.5px; font-weight:700; color:var(--blue-strong);
   background:#eaf2ff; border:1px solid #cfe0fb; padding:6px 12px; border-radius:999px;
 }
+.hero .fv-trust{
+  display:flex; flex-wrap:wrap; gap:6px 18px; margin:22px 0 6px;
+  font-size:13px; color:#9aa8c4;
+}
+.hero .fv-trust span{ position:relative; padding-left:14px; }
+.hero .fv-trust span::before{ content:"—"; position:absolute; left:0; color:var(--gold); }
+.lang-doors{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:26px 0 8px; }
+.lang-door{
+  display:block; text-align:center; padding:18px 10px; border-radius:12px; text-decoration:none;
+  background:rgba(255,255,255,.03); border:1px solid var(--navy-line);
+  transition:transform .15s, box-shadow .15s, border-color .15s;
+}
+.lang-door:hover{ transform:translateY(-3px); box-shadow:0 10px 26px rgba(201,165,88,.16); border-color:var(--gold); }
+.lang-door.active{ border-color:var(--gold); background:rgba(201,165,88,.08); }
+.lang-door .name{ display:block; font-family:var(--serif); font-size:17px; color:#fff; margin-bottom:2px; }
+.lang-door .sub{ display:block; font-size:11.5px; color:#8b98b5; letter-spacing:.04em; text-transform:uppercase; }
+@media(max-width:640px){ .lang-doors{ grid-template-columns:repeat(2,1fr); } }
+
 .cta-row{ display:flex; flex-wrap:wrap; gap:12px; }
 .btn-main{
   display:inline-block; background:var(--blue); color:#fff; padding:15px 30px;
@@ -385,6 +483,238 @@ const HOME_TEXT = {
     feat5: "支持多个工作表",
     feat6: "保持Excel结构翻译"
   }
+  vi: {
+    title: "Công cụ hỗ trợ dịch Excel",
+    navHome: "Trang chủ",
+    navFlow: "Cách dùng",
+    navLimit: "Giới hạn",
+    navOption: "Tùy chọn",
+    navHelp: "Trợ giúp",
+    heroTitle: "Giữ nguyên cấu trúc Excel, dịch, kiểm tra và áp dụng từ tiếng Nhật sang tiếng Trung.",
+    heroLead: "Dịch file Excel (.xlsx) tiếng Nhật sang tiếng Trung (giản thể zh-CN) mà không phá vỡ bố cục hay công thức. Sau khi kiểm tra và chỉnh sửa kết quả dịch, tạo ra file Excel hoàn chỉnh đã áp dụng nội dung chỉnh sửa.",
+    catch: "Dịch văn bản giờ đã gần gũi hơn nhờ AI. Dịch Excel cũng gần gũi như vậy.",
+    catchSub: "Công cụ dịch Excel hàng loạt, hỗ trợ API dịch của DeepL, Google, Amazon",
+    featTitle: "Công cụ này có thể làm gì",
+    feat1: "Dịch Nhật→Trung",
+    feat2: "Giữ nguyên định dạng",
+    feat3: "Giữ ô đã gộp",
+    feat4: "Giữ nguyên công thức",
+    feat5: "Hỗ trợ nhiều sheet",
+    feat6: "Dịch giữ nguyên cấu trúc Excel",
+    fvA: "A. Excel tiếng Nhật",
+    fvBad: "Nếu dịch bình thường…",
+    fvB: "B. Có thể chọn từ các phương án",
+    fvMore: "Xem thêm ví dụ dịch (phóng to)",
+    fvSteps: "① ② / Tổng 4 bước — tiếp theo là “chọn · sửa → hoàn thành”",
+    fvScroll: "Cuộn xuống để xem quy trình “chọn và hoàn thiện”",
+    fvTrust1: "Giữ nguyên định dạng",
+    fvTrust2: "Tự động chặn macro và liên kết ngoài",
+    fvTrust3: "Dùng thử miễn phí",
+    fvDlgTitle: "Ví dụ dịch: Dịch thông thường và Công cụ này (chọn từ các phương án)",
+    fvDlgClose: "Đóng",
+    dHsrc: "Văn bản gốc (tiếng Nhật)",
+    dHbad: "Dịch thông thường (bị lỗi)",
+    dHgood: "Công cụ này: chọn từ các phương án",
+    dn1a: "Dịch luôn cả phần ghi chú tiếng Anh, bị trùng lặp",
+    dn1b: "Chọn phương án giữ nguyên phần tiếng Anh",
+    dn2a: "Ngắt dòng bị mất, dồn thành 1 dòng",
+    dn2b: "Giữ nguyên vị trí ngắt dòng",
+    dn3a: "Mã hiệu bị chuyển thành ký tự toàn chiều rộng",
+    dn3b: "Giữ nguyên mã hiệu",
+    dn4a: "Công thức bị hỏng hoặc không được dịch",
+    dn4b: "Giữ nguyên công thức, chỉ phần tiếng Nhật được đưa ra phương án dịch",
+    dn5a: "Tên người cũng bị dịch",
+    dn5b: "Chọn K=0 để giữ nguyên văn bản gốc",
+    stepsTitle: "Chỉ với 5 bước thao tác",
+    stepsSub: "Từ tải file lên, kiểm tra · chỉnh sửa, đến tạo file hoàn chỉnh. Không cần cài đặt phức tạp.",
+    s1t: "Tải lên file Excel tiếng Nhật",
+    s1d: "Chỉ cần chọn file .xlsx muốn dịch. Tên file bằng tiếng Nhật hoặc tiếng Trung đều được.",
+    s2t: "Dịch (Generate): Tạo file Excel để kiểm tra · chỉnh sửa",
+    s2d: "Khi nhấn “Generate”, sheet gốc sẽ được dịch trực tiếp sang tiếng Trung. Đồng thời, sheet TRANSLATION_UI cũng được tạo ra để bạn chọn và sửa những chỗ cần thiết.",
+    s3t: "Chọn từ các phương án · tự chỉnh sửa nếu cần",
+    s3d: "Chọn bằng số ở cột K (1〜3 = phương án dịch, 4 = tự nhập ở cột M, 0 = giữ nguyên văn bản gốc). Ghi Y vào cột L để áp dụng.",
+    s3more: "Xem ví dụ bị lỗi khi dịch thông thường (phóng to)",
+    s3note: "Trong sheet TRANSLATION_UI, toàn bộ nội dung và thuộc tính của các ô trong sheet đối tượng được liệt kê. Chỉ những ô cần dịch mới có phương án dịch 1〜3 để chọn và chỉnh sửa.",
+    s3must: "※ Dù có chỉnh sửa trong UI hay không, bước “Áp dụng (Apply)” cuối cùng vẫn luôn cần thiết.",
+    s4t: "Lưu file mà không đổi tên",
+    s4d: "Lưu sheet TRANSLATION_UI đã chỉnh sửa. Vui lòng không đổi tên file (nếu đổi tên sẽ không thể áp dụng).",
+    s5t: "Áp dụng (Apply): Tạo file Excel hoàn chỉnh",
+    s5d: "Khi thực hiện xử lý áp dụng, nội dung đã chọn · chỉnh sửa ở bước ③ sẽ được áp dụng vào file Excel gốc, tạo ra bản hoàn chỉnh với định dạng giữ nguyên.",
+    uUpload: "Tải lên",
+    uChoose: "Chọn file",
+    uChoose2: "Chọn file",
+    uUiSheet: "Sheet TRANSLATION_UI",
+    uOrigTab: "Sheet gốc",
+    uGenTab: "TRANSLATION_UI (đã tạo)",
+    uSave: "Lưu",
+    s4warn: "Nếu tên file bị đổi như “売上表(1).xlsx” sẽ không thể áp dụng được",
+    uApplyBar: "Áp dụng (Apply)",
+    uApplyBtn: "Áp dụng (Apply) ▶",
+    uEdited: "(Đã chỉnh sửa)",
+    uDoneBar: "File Excel hoàn chỉnh (tiếng Trung)",
+    uColProduct: "Sản phẩm (tiếng Trung)",
+    uColNote: "Ghi chú",
+    s5reflect: "Lựa chọn · nội dung tự nhập · giữ nguyên văn bản gốc ở bước ③ đã được áp dụng nguyên trạng",
+    uHsrc: "Văn bản gốc",
+    uHc1: "Phương án 1",
+    uHc2: "Phương án 2",
+    uHc3: "Phương án 3",
+    uHk: "Chọn K",
+    uHl: "Áp dụng L",
+    uHm: "Nội dung chỉnh sửa M",
+    disclaimer: "※ Dịch vụ này là công cụ độc lập sử dụng API dịch của các hãng, không phải là sản phẩm hợp tác phát triển hay liên kết chính thức với Google, Amazon hay DeepL.",
+    tagLang: "Tiếng Nhật → Tiếng Trung (giản thể)",
+    tagFormat: "Giữ nguyên định dạng · công thức",
+    tagCell: "Dịch theo từng ô",
+    tagFile: "Hỗ trợ file .xlsx",
+    start: "Bắt đầu dịch (Generate)",
+    guide: "Xem cách dùng",
+    flowTitle: "Quy trình cơ bản của công cụ này",
+    f1: "Tải lên file Excel trước khi dịch",
+    f2: "Dùng Generate để tạo file Excel kiểm tra · chỉnh sửa kết quả dịch",
+    f3: "Kiểm tra · chỉnh sửa phương án dịch trong sheet TRANSLATION_UI",
+    f4: "Lưu file mà không đổi tên",
+    f5: "Xử lý áp dụng nội dung chỉnh sửa để tạo file hoàn chỉnh",
+    problemTitle: "Bạn có đang gặp những vấn đề này không?",
+    p1: "Dịch xong thì bố cục và công thức Excel bị hỏng",
+    s1: "Dịch trong khi giữ nguyên cấu trúc gốc nhiều nhất có thể",
+    p2: "Copy & paste sau khi dịch tốn nhiều thời gian",
+    s2: "Nội dung đã kiểm tra · chỉnh sửa được đưa lại bằng xử lý áp dụng",
+    p3: "Chất lượng dịch không ổn định tùy thuật ngữ chuyên ngành và ngữ cảnh",
+    s3: "Có thể so sánh 2 kiểu dịch theo chuỗi ký tự và 1 kiểu dịch theo ngữ cảnh",
+    p4: "Không rõ quy trình kiểm tra · sửa sau khi dịch",
+    s4: "Có thể chọn phương án hoặc tự chỉnh sửa trong sheet TRANSLATION_UI",
+    pageTitle: "Hướng dẫn từng trang",
+    c1: "Cách dùng",
+    c1d: "Xem các bước từ tải file lên đến xử lý áp dụng.",
+    c2: "Những việc không thể làm",
+    c2d: "Xem giới hạn về file không hỗ trợ, file quá lớn, văn bản quá ngắn, v.v.",
+    c3: "Tùy chọn",
+    c3d: "Trong tương lai có thể chọn gói dịch, phương thức dịch, cài đặt theo chuyên ngành.",
+    c4: "Màn hình Dịch (Generate) · Áp dụng (Apply)",
+    c4d: "Tải file Excel lên thực tế và bắt đầu xử lý.",
+    warningTitle: "Quan trọng: Lưu ý về tên file",
+    warningBody: "Nếu tải cùng một file xuống nhiều lần, Windows có thể tự thêm “(1)”, “(2)” vào cuối tên file. Nếu chỉnh sửa trong tình trạng đó sẽ không thể áp dụng được. Trước khi chỉnh sửa, hãy đổi lại tên file gốc lúc tải xuống.",
+    limitTitle: "Những việc công cụ này không thể làm",
+    limitBody: "Không hỗ trợ file không phải xlsx, file có khả năng nhiễm virus, file quá lớn, chữ trong hình ảnh, văn bản quá ngắn như 2 ký tự kana. Không đảm bảo độ chính xác 100% của kết quả dịch.",
+    footer: "Công cụ hỗ trợ dịch Excel｜Dịch Excel tiếng Nhật sang tiếng Trung (giản thể), giữ nguyên định dạng"
+  },
+  en: {
+    title: "Excel Translation Assistant",
+    navHome: "Home",
+    navFlow: "How it works",
+    navLimit: "Limitations",
+    navOption: "Options",
+    navHelp: "Help",
+    heroTitle: "Translate, review, and apply Japanese to Chinese while keeping your Excel structure intact.",
+    heroLead: "Translate Japanese Excel workbooks (.xlsx) into Chinese (Simplified, zh-CN) without breaking layout or formulas. Review and edit the translation, then generate a finished workbook with your edits applied.",
+    catch: "AI has made translating text effortless. Now Excel translation is just as easy.",
+    catchSub: "A bulk Excel translation tool supporting DeepL, Google, and Amazon translation APIs",
+    featTitle: "What this tool can do",
+    feat1: "Japanese→Chinese translation",
+    feat2: "Keeps formatting",
+    feat3: "Keeps merged cells",
+    feat4: "Keeps formulas",
+    feat5: "Supports multiple sheets",
+    feat6: "Structure-preserving translation",
+    fvA: "A. Japanese Excel",
+    fvBad: "A plain translation looks like this…",
+    fvB: "B. Choose from candidates",
+    fvMore: "See more translation examples (enlarge)",
+    fvSteps: "① ② / 4 steps total — next comes “choose & fix → finished”",
+    fvScroll: "Scroll down to see the “choose and finish” flow",
+    fvTrust1: "Formatting stays intact",
+    fvTrust2: "Macros and external links are blocked automatically",
+    fvTrust3: "Free to try",
+    fvDlgTitle: "Example: plain translation vs. this tool (choose from candidates)",
+    fvDlgClose: "Close",
+    dHsrc: "Original (Japanese)",
+    dHbad: "Plain translation (broken)",
+    dHgood: "This tool: choose from candidates",
+    dn1a: "Translates the English note too, creating duplication",
+    dn1b: "Choose the candidate that keeps the English note",
+    dn2a: "Line breaks disappear, collapsing into one line",
+    dn2b: "Line break positions are preserved",
+    dn3a: "Model numbers get converted to full-width characters",
+    dn3b: "Model numbers stay exactly as they were",
+    dn4a: "Formulas break, or aren't translated at all",
+    dn4b: "Formulas stay intact; only the Japanese text becomes a candidate",
+    dn5a: "Even people's names get translated",
+    dn5b: "Set K=0 to keep the original text as-is",
+    stepsTitle: "Just 5 steps",
+    stepsSub: "From upload, to review and edit, to the finished file. No complicated setup.",
+    s1t: "Upload your Japanese Excel file",
+    s1d: "Just pick the .xlsx you want translated. Japanese or Chinese file names are fine.",
+    s2t: "Generate: create a workbook for review and editing",
+    s2d: "Press “Generate” and the original sheet is translated into Chinese as-is. A TRANSLATION_UI sheet is also created, where you can pick and fix anything you like.",
+    s3t: "Choose a candidate, or fix it yourself",
+    s3d: "Pick a number in column K (1–3 = candidates, 4 = write your own in column M, 0 = keep the original). Mark column L with Y to include it when applying.",
+    s3more: "See examples of what breaks with plain translation (enlarge)",
+    s3note: "The TRANSLATION_UI sheet lists every cell's content and attributes from the target sheet. Only cells meant for translation get candidates 1–3, which you can select or edit.",
+    s3must: "※ Whether or not you edit anything in the UI, the final “Apply” step is always required.",
+    s4t: "Save without renaming the file",
+    s4d: "Save your edited TRANSLATION_UI sheet. Please don't rename the file — renaming it will prevent Apply from working.",
+    s5t: "Apply: generate the finished Excel file",
+    s5d: "Running Apply writes your selections and edits from step ③ back into the original Excel file, producing a finished workbook with formatting intact.",
+    uUpload: "Upload",
+    uChoose: "Choose file",
+    uChoose2: "Choose file",
+    uUiSheet: "TRANSLATION_UI sheet",
+    uOrigTab: "Original sheet",
+    uGenTab: "TRANSLATION_UI (generated)",
+    uSave: "Save",
+    s4warn: "Renaming the file, e.g. to “Sales(1).xlsx”, will prevent Apply from working",
+    uApplyBar: "Apply",
+    uApplyBtn: "Apply ▶",
+    uEdited: "(edited)",
+    uDoneBar: "Finished Excel file (Chinese)",
+    uColProduct: "Product (Chinese)",
+    uColNote: "Notes",
+    s5reflect: "Your selections, custom edits, and kept-original cells from step ③ are applied exactly as you left them",
+    uHsrc: "Original",
+    uHc1: "Candidate 1",
+    uHc2: "Candidate 2",
+    uHc3: "Candidate 3",
+    uHk: "K (select)",
+    uHl: "L (apply)",
+    uHm: "M (your edit)",
+    disclaimer: "※ This service is an independent tool built on translation APIs from other providers. It is not co-developed with, nor officially affiliated with, Google, Amazon, or DeepL.",
+    tagLang: "Japanese → Chinese (Simplified)",
+    tagFormat: "Keeps formatting & formulas",
+    tagCell: "Translates cell by cell",
+    tagFile: "Supports .xlsx",
+    start: "Start translating (Generate)",
+    guide: "See how it works",
+    flowTitle: "The basic flow of this tool",
+    f1: "Upload the Excel workbook you want translated",
+    f2: "Use Generate to create a workbook for reviewing and editing the translation",
+    f3: "Review and edit translation candidates in the TRANSLATION_UI sheet",
+    f4: "Save without renaming the file",
+    f5: "Run Apply to generate the finished file with your edits",
+    problemTitle: "Does any of this sound familiar?",
+    p1: "Translating breaks your Excel layout or formulas",
+    s1: "We translate while preserving the original structure as much as possible",
+    p2: "Copy-pasting after translation takes forever",
+    s2: "Your reviewed and edited content is written back automatically by Apply",
+    p3: "Translation quality varies depending on terminology and context",
+    s3: "Compare two string-based translation styles plus one context-based style",
+    p4: "It's unclear how to review and fix things after translating",
+    s4: "Pick a candidate or write your own fix directly in the TRANSLATION_UI sheet",
+    pageTitle: "Page guide",
+    c1: "How it works",
+    c1d: "See the steps from upload through Apply.",
+    c2: "What it can't do",
+    c2d: "Check limitations on unsupported files, oversized files, and text that's too short.",
+    c3: "Options",
+    c3d: "Coming soon: choose a translation plan, method, or domain-specific settings.",
+    c4: "Generate / Apply screen",
+    c4d: "Upload your actual Excel workbook here and start processing.",
+    warningTitle: "Important: watch your file name",
+    warningBody: "Downloading the same file more than once can make Windows add “(1)”, “(2)”, etc. to the file name. Editing it in that state will prevent Apply from working. Before editing, rename it back to the original download name.",
+    limitTitle: "What this tool can't do",
+    limitBody: "Non-xlsx files, files that may contain viruses, extremely large files, text inside images, and very short text (like 2-character kana) aren't supported. 100% translation accuracy isn't guaranteed either.",
+    footer: "Excel Translation Assistant | Translate Japanese Excel workbooks into Chinese (Simplified) with formatting intact"
+  },
 };
 function setHomeLang(lang) {
   const t = HOME_TEXT[lang] || HOME_TEXT.ja;
@@ -395,13 +725,24 @@ function setHomeLang(lang) {
   });
   const engine = document.getElementById("engine-link");
   if (engine) {
-    engine.href = "/engine?lang=" + lang;
+    // 実際の翻訳ツール(/engine, /select)は現状 日本語/中国語UIのみ対応。
+    // 越語・英語で閲覧中の訪問者は、ベースの日本語UIへ案内する。
+    engine.href = "/engine?lang=" + (lang === "zh" ? "zh" : "ja");
     engine.textContent = t.start;
   }
-  document.documentElement.lang = (lang === "zh") ? "zh-CN" : "ja";
+  const htmlLangMap = { ja: "ja", zh: "zh-CN", vi: "vi", en: "en" };
+  document.documentElement.lang = htmlLangMap[lang] || "ja";
+  document.querySelectorAll(".lang-door").forEach(function(d) {
+    d.classList.toggle("active", d.getAttribute("data-lang") === lang);
+  });
 }
 window.addEventListener("DOMContentLoaded", function() {
-  setHomeLang(localStorage.getItem("etb_lang") || "ja");
+  var urlLang = new URLSearchParams(window.location.search).get("lang");
+  var validLangs = ["ja", "zh", "vi", "en"];
+  var initialLang = (urlLang && validLangs.indexOf(urlLang) !== -1)
+    ? urlLang
+    : (localStorage.getItem("etb_lang") || "ja");
+  setHomeLang(initialLang);
 });
 </script>
 </head>
@@ -420,6 +761,8 @@ window.addEventListener("DOMContentLoaded", function() {
     <div class="lang">
       <button onclick="setHomeLang('ja')">日本語</button>
       <button onclick="setHomeLang('zh')">中文</button>
+      <button onclick="setHomeLang('vi')">Tiếng Việt</button>
+      <button onclick="setHomeLang('en')">English</button>
     </div>
   </div>
 </header>
@@ -434,6 +777,20 @@ window.addEventListener("DOMContentLoaded", function() {
       <h1 id="home-heroTitle">Excelの構造をそのまま保持して、日本語を中国語に翻訳・確認・反映できます。</h1>
       <p class="lead" id="home-heroLead">日本語のExcelブック（.xlsx）を、レイアウトや数式を崩さずに中国語（簡体字 zh-CN）へ翻訳。翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。</p>
       <p class="catch-sub" id="home-catchSub">DeepL、Google、Amazonの翻訳APIに対応した、Excel一括翻訳ツール</p>
+      <div class="lang-doors" id="lang-doors">
+        <a class="lang-door" data-lang="ja" href="#" onclick="setHomeLang('ja');return false;">
+          <span class="name">日本語</span><span class="sub">Japanese</span>
+        </a>
+        <a class="lang-door" data-lang="zh" href="#" onclick="setHomeLang('zh');return false;">
+          <span class="name">中文</span><span class="sub">Chinese</span>
+        </a>
+        <a class="lang-door" data-lang="vi" href="#" onclick="setHomeLang('vi');return false;">
+          <span class="name">Tiếng Việt</span><span class="sub">Vietnamese</span>
+        </a>
+        <a class="lang-door" data-lang="en" href="#" onclick="setHomeLang('en');return false;">
+          <span class="name">English</span><span class="sub">English</span>
+        </a>
+      </div>
       <div class="tags">
         <span class="tag" id="home-tagLang">日本語 → 中国語（簡体字）</span>
         <span class="tag" id="home-tagFormat">書式・数式を保持</span>
@@ -448,75 +805,6 @@ window.addEventListener("DOMContentLoaded", function() {
       <p class="disclaimer" id="home-disclaimer">※本サービスは、各社が提供する翻訳APIを活用した独立したツールであり、Google社、Amazon社、DeepL社との共同開発や公式連携を示すものではありません。</p>
     </div>
   </section>
-
-  <section class="seo-features" aria-label="主な機能">
-    <style>
-      .seo-features{ margin:28px 0 8px; }
-      .seo-features h2{ font-size:clamp(20px,2.6vw,26px); color:#063577; margin:0 0 14px; }
-      .seo-features ul{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
-      .seo-features li{ background:#fff; border:1px solid #dbe6f7; border-radius:10px; padding:12px 14px; font-size:15px; font-weight:600; color:#10213f; box-shadow:0 4px 14px rgba(8,40,90,.05); }
-      .seo-features li::before{ content:"\2713"; color:#1f9d62; font-weight:700; margin-right:8px; }
-    </style>
-    <h2 id="home-featTitle">このツールでできること</h2>
-    <ul>
-      <li id="home-feat1">日本語→中国語翻訳</li>
-      <li id="home-feat2">書式保持</li>
-      <li id="home-feat3">結合セル保持</li>
-      <li id="home-feat4">数式保持</li>
-      <li id="home-feat5">複数シート対応</li>
-      <li id="home-feat6">Excel構造保持翻訳</li>
-    </ul>
-  </section>
-
-  <style>
-  .cta-fixed{ position:fixed; top:78px; right:22px; z-index:50; background:#075be8; color:#fff; font-weight:600; font-size:15px; padding:12px 20px; border-radius:10px; box-shadow:0 6px 20px rgba(7,91,232,.3); text-decoration:none; }
-  .cta-fixed:hover{ background:#0a4fc4; }
-  .hero-lite{ display:block; }
-  .steps{ }
-  .steps-title{ font-size:clamp(22px,3vw,30px); color:#063577; margin:0 0 6px; }
-  .steps-sub{ color:#5b6b82; font-size:14px; margin:0 0 22px; }
-  .step{ display:flex; gap:16px; align-items:flex-start; padding:20px 0; border-top:1px solid #e6eaf1; }
-  .step-badge{ flex:0 0 56px; height:56px; border-radius:50%; background:#075be8; color:#fff; font-size:26px; font-weight:700; display:flex; align-items:center; justify-content:center; }
-  .step-body{ flex:1 1 auto; min-width:0; }
-  .step-h{ font-size:18px; font-weight:700; color:#063577; margin:0 0 4px; }
-  .step-d{ font-size:14px; color:#46556b; margin:0 0 12px; line-height:1.6; }
-  .scr{ border:1px solid #d8dee8; border-radius:10px; overflow:hidden; background:#fff; max-width:680px; }
-  .scr-bar{ font-size:12px; padding:6px 10px; background:#f3f5f8; color:#5b6b82; border-bottom:1px solid #e6eaf1; }
-  .scr-pad{ padding:14px; }
-  .chip{ display:inline-block; background:#eef3fb; color:#075be8; border:1px solid #cfe0f7; border-radius:6px; padding:6px 12px; font-size:13px; }
-  .drop{ border:2px dashed #b5c6e0; border-radius:10px; padding:18px; text-align:center; color:#6b7a93; font-size:13px; background:#f8fbff; }
-  .btn-fake{ display:inline-block; background:#075be8; color:#fff; font-size:13px; font-weight:600; padding:8px 16px; border-radius:8px; }
-  .btn-ghost{ display:inline-block; background:#fff; color:#075be8; border:1px solid #b5d4f4; font-size:13px; font-weight:600; padding:7px 14px; border-radius:8px; }
-  .tabs{ display:flex; gap:6px; font-size:12px; }
-  .tab{ padding:5px 10px; border:1px solid #d8dee8; border-bottom:none; border-radius:6px 6px 0 0; background:#f3f5f8; color:#5b6b82; }
-  .tab.on{ background:#e9f1fb; color:#075be8; border-color:#b5d4f4; font-weight:600; }
-  .uitbl{ width:100%; border-collapse:collapse; font-size:12px; }
-  .uitbl th,.uitbl td{ border:1px solid #e6eaf1; padding:5px 7px; text-align:left; white-space:nowrap; }
-  .uitbl th{ background:#eef3fb; color:#063577; font-weight:600; font-size:11.5px; }
-  .uitbl .col-k,.uitbl .col-l,.uitbl .col-m{ background:#fffaf0; }
-  .uitbl thead .col-k,.uitbl thead .col-l,.uitbl thead .col-m{ background:#fdeecb; color:#8a5b00; }
-  .pick{ background:#d6efe9; color:#0f5e57; font-weight:600; }
-  .scr-scroll{ overflow-x:auto; }
-  .scr-note{ font-size:12px; color:#0f766e; padding:8px 12px; border-top:1px solid #e6eaf1; }
-  .scr-note.warn{ color:#a86b00; }
-  .scr-link{ font-size:12px; color:#075be8; cursor:pointer; text-decoration:underline; padding:8px 12px; display:inline-block; }
-  .s3-row{ display:flex; gap:16px; align-items:flex-start; }
-  .s3-row .scr{ flex:0 1 680px; }
-  .step-note{ flex:1 1 240px; min-width:200px; font-size:13px; color:#46556b; line-height:1.6; }
-  .step-note .must{ color:#c0392b; font-weight:700; margin-top:10px; }
-  @media(max-width:860px){ .s3-row{ flex-wrap:wrap; } .s3-row .scr{ flex:1 1 100%; } }
-  .grn .scr-bar{ background:#eef7f0; color:#2e7d32; }
-  .grn{ border-color:#bcdcc2; }
-  .reflect{ background:#eafbef; }
-  @media(max-width:640px){ .cta-fixed{ position:static; display:block; text-align:center; margin:0 0 16px; } }
-  #fvDialog{ border:none; border-radius:12px; padding:0; max-width:760px; width:92%; box-shadow:0 10px 40px rgba(0,0,0,.2); }
-  #fvDialog::backdrop{ background:rgba(10,20,40,.45); }
-  .fv-dlg-head{ display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #e6eaf1; }
-  .fv-dlg-body{ padding:14px 18px; overflow-x:auto; }
-  .fv-dlg-body table{ width:100%; border-collapse:collapse; font-size:12.5px; min-width:560px; }
-  .fv-dlg-body th,.fv-dlg-body td{ border:1px solid #e6eaf1; padding:7px 9px; text-align:left; vertical-align:top; }
-  .fv-dlg-body th{ background:#f5f7fa; color:#063577; font-weight:600; }
-  </style>
 
   <section class="steps">
     <h2 class="steps-title" id="home-stepsTitle">操作はこの5ステップ</h2>
@@ -610,6 +898,75 @@ window.addEventListener("DOMContentLoaded", function() {
         </table>
       </div>
     </dialog>
+  </section>
+
+  <style>
+  .cta-fixed{ position:fixed; top:78px; right:22px; z-index:50; background:linear-gradient(135deg,var(--gold-soft),var(--gold)); color:#1a1508; font-weight:700; font-size:15px; padding:12px 22px; border-radius:999px; box-shadow:0 8px 22px rgba(180,140,50,.35); text-decoration:none; letter-spacing:.01em; }
+  .cta-fixed:hover{ box-shadow:0 10px 28px rgba(180,140,50,.48); transform:translateY(-1px); }
+  .hero-lite{ display:block; }
+  .steps{ }
+  .steps-title{ font-size:clamp(22px,3vw,30px); color:#063577; margin:0 0 6px; }
+  .steps-sub{ color:#5b6b82; font-size:14px; margin:0 0 22px; }
+  .step{ display:flex; gap:16px; align-items:flex-start; padding:20px 0; border-top:1px solid #e6eaf1; }
+  .step-badge{ flex:0 0 56px; height:56px; border-radius:50%; background:#075be8; color:#fff; font-size:26px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .step-body{ flex:1 1 auto; min-width:0; }
+  .step-h{ font-size:18px; font-weight:700; color:#063577; margin:0 0 4px; }
+  .step-d{ font-size:14px; color:#46556b; margin:0 0 12px; line-height:1.6; }
+  .scr{ border:1px solid #d8dee8; border-radius:10px; overflow:hidden; background:#fff; max-width:680px; }
+  .scr-bar{ font-size:12px; padding:6px 10px; background:#f3f5f8; color:#5b6b82; border-bottom:1px solid #e6eaf1; }
+  .scr-pad{ padding:14px; }
+  .chip{ display:inline-block; background:#eef3fb; color:#075be8; border:1px solid #cfe0f7; border-radius:6px; padding:6px 12px; font-size:13px; }
+  .drop{ border:2px dashed #b5c6e0; border-radius:10px; padding:18px; text-align:center; color:#6b7a93; font-size:13px; background:#f8fbff; }
+  .btn-fake{ display:inline-block; background:#075be8; color:#fff; font-size:13px; font-weight:600; padding:8px 16px; border-radius:8px; }
+  .btn-ghost{ display:inline-block; background:#fff; color:#075be8; border:1px solid #b5d4f4; font-size:13px; font-weight:600; padding:7px 14px; border-radius:8px; }
+  .tabs{ display:flex; gap:6px; font-size:12px; }
+  .tab{ padding:5px 10px; border:1px solid #d8dee8; border-bottom:none; border-radius:6px 6px 0 0; background:#f3f5f8; color:#5b6b82; }
+  .tab.on{ background:#e9f1fb; color:#075be8; border-color:#b5d4f4; font-weight:600; }
+  .uitbl{ width:100%; border-collapse:collapse; font-size:12px; }
+  .uitbl th,.uitbl td{ border:1px solid #e6eaf1; padding:5px 7px; text-align:left; white-space:nowrap; }
+  .uitbl th{ background:#eef3fb; color:#063577; font-weight:600; font-size:11.5px; }
+  .uitbl .col-k,.uitbl .col-l,.uitbl .col-m{ background:#fffaf0; }
+  .uitbl thead .col-k,.uitbl thead .col-l,.uitbl thead .col-m{ background:#fdeecb; color:#8a5b00; }
+  .pick{ background:#d6efe9; color:#0f5e57; font-weight:600; }
+  .scr-scroll{ overflow-x:auto; }
+  .scr-note{ font-size:12px; color:#0f766e; padding:8px 12px; border-top:1px solid #e6eaf1; }
+  .scr-note.warn{ color:#a86b00; }
+  .scr-link{ font-size:12px; color:#075be8; cursor:pointer; text-decoration:underline; padding:8px 12px; display:inline-block; }
+  .s3-row{ display:flex; gap:16px; align-items:flex-start; }
+  .s3-row .scr{ flex:0 1 680px; }
+  .step-note{ flex:1 1 240px; min-width:200px; font-size:13px; color:#46556b; line-height:1.6; }
+  .step-note .must{ color:#c0392b; font-weight:700; margin-top:10px; }
+  @media(max-width:860px){ .s3-row{ flex-wrap:wrap; } .s3-row .scr{ flex:1 1 100%; } }
+  .grn .scr-bar{ background:#eef7f0; color:#2e7d32; }
+  .grn{ border-color:#bcdcc2; }
+  .reflect{ background:#eafbef; }
+  @media(max-width:640px){ .cta-fixed{ position:static; display:block; text-align:center; margin:0 0 16px; } }
+  #fvDialog{ border:none; border-radius:12px; padding:0; max-width:760px; width:92%; box-shadow:0 10px 40px rgba(0,0,0,.2); }
+  #fvDialog::backdrop{ background:rgba(10,20,40,.45); }
+  .fv-dlg-head{ display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #e6eaf1; }
+  .fv-dlg-body{ padding:14px 18px; overflow-x:auto; }
+  .fv-dlg-body table{ width:100%; border-collapse:collapse; font-size:12.5px; min-width:560px; }
+  .fv-dlg-body th,.fv-dlg-body td{ border:1px solid #e6eaf1; padding:7px 9px; text-align:left; vertical-align:top; }
+  .fv-dlg-body th{ background:#f5f7fa; color:#063577; font-weight:600; }
+  </style>
+
+  <section class="seo-features" aria-label="主な機能">
+    <style>
+      .seo-features{ margin:28px 0 8px; }
+      .seo-features h2{ font-size:clamp(20px,2.6vw,26px); color:#063577; margin:0 0 14px; }
+      .seo-features ul{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
+      .seo-features li{ background:#fff; border:1px solid #dbe6f7; border-radius:10px; padding:12px 14px; font-size:15px; font-weight:600; color:#10213f; box-shadow:0 4px 14px rgba(8,40,90,.05); }
+      .seo-features li::before{ content:"\2713"; color:#1f9d62; font-weight:700; margin-right:8px; }
+    </style>
+    <h2 id="home-featTitle">このツールでできること</h2>
+    <ul>
+      <li id="home-feat1">日本語→中国語翻訳</li>
+      <li id="home-feat2">書式保持</li>
+      <li id="home-feat3">結合セル保持</li>
+      <li id="home-feat4">数式保持</li>
+      <li id="home-feat5">複数シート対応</li>
+      <li id="home-feat6">Excel構造保持翻訳</li>
+    </ul>
   </section>
 
 
