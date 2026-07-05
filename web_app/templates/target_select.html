@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="{{ 'zh' if lang == 'zh' else 'ja' }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% if lang == "zh" %}选择翻译方向{% else %}翻訳先を選択{% endif %}</title>
+<style>
+:root{
+  --navy-950:#0a1322; --navy-900:#101f36;
+  --gold:#c9a558; --gold-soft:#e6d3a0;
+  --serif:Georgia,"Hiragino Mincho ProN","Yu Mincho","Songti SC","Noto Serif SC",serif;
+  --font:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",Meiryo,sans-serif;
+}
+body{
+  margin:0; font-family:var(--font); font-size:17px; color:#e9edf6;
+  background:
+    radial-gradient(900px 320px at 15% -10%, rgba(201,165,88,.12) 0%, rgba(201,165,88,0) 60%),
+    linear-gradient(170deg,var(--navy-900),var(--navy-950));
+  min-height:100vh;
+}
+.wrap{ max-width:1520px; margin:0 auto; padding:56px 32px 80px; }
+.back-door{
+  display:inline-flex; align-items:center; gap:10px; text-decoration:none; color:#cfd8ec;
+  padding:10px 18px; border-radius:8px; border:1px solid rgba(201,165,88,.3); background:rgba(255,255,255,.03);
+  font-size:14.5px; transition:background .15s, border-color .15s;
+}
+.back-door:hover{ background:rgba(201,165,88,.1); border-color:var(--gold); color:var(--gold-soft); }
+.back-door .dest-mark{
+  width:26px; height:26px; border-radius:50%; border:1px solid var(--gold); color:var(--gold-soft);
+  font-size:13px; display:flex; align-items:center; justify-content:center;
+}
+h1{ font-family:var(--serif); font-size:clamp(26px,4vw,38px); color:#fff; margin:32px 0 40px; }
+.path{ display:flex; flex-direction:column; gap:16px; }
+.path-item{
+  display:flex; align-items:center; gap:24px; text-decoration:none;
+  padding:26px 30px; border-radius:14px; border:1px solid rgba(201,165,88,.28);
+  background:rgba(255,255,255,.03); transition:background .15s, transform .15s;
+}
+.path-item:hover{ background:rgba(201,165,88,.1); transform:translateX(6px); }
+.path-item .dest-mark{
+  flex:0 0 auto; width:52px; height:52px; border-radius:50%; border:1px solid var(--gold);
+  color:var(--gold-soft); font-family:var(--serif); font-size:22px; display:flex; align-items:center; justify-content:center;
+}
+.path-item .dest-name{ flex:1 1 auto; font-size:22px; font-weight:700; color:#fff; font-family:var(--serif); }
+.path-item .dest-arrow{ color:var(--gold); font-size:22px; }
+.empty-box{
+  padding:40px 32px; border:1px dashed rgba(201,165,88,.4); border-radius:14px; color:#9aa8c4; text-align:center; font-size:16px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-door" href="/?lang={{ lang }}">
+    <span class="dest-mark">←</span>
+    <span>{% if lang == "zh" %}重新选择出发语言{% else %}出発言語を選び直す{% endif %}</span>
+  </a>
+
+  <h1>
+    {% set src_names = {"ja": ("日本語", "日语"), "zh": ("中文", "中文"), "vi": ("Tiếng Việt", "越南语"), "en": ("English", "英语")} %}
+    {% if lang == "zh" %}
+      从「{{ src_names.get(src, (src, src))[1] }}」翻译成……
+    {% else %}
+      「{{ src_names.get(src, (src, src))[0] }}」から、何語に翻訳しますか？
+    {% endif %}
+  </h1>
+
+  {% if targets|length == 0 %}
+    <div class="empty-box">
+      {% if lang == "zh" %}该出发语言目前暂不支持翻译，敬请期待。{% else %}この出発言語からの翻訳は、現在準備中です。今しばらくお待ちください。{% endif %}
+    </div>
+  {% else %}
+    <div class="path">
+      {% for dst, direction in targets %}
+      {% set dst_names = {"ja": ("日本語", "日语"), "zh": ("中文", "中文"), "vi": ("Tiếng Việt", "越南语")} %}
+      <a class="path-item" href="/engine?lang={{ lang }}&direction={{ direction }}">
+        <span class="dest-mark">{{ dst_names.get(dst, (dst, dst))[0][:1] }}</span>
+        <span class="dest-name">{{ dst_names.get(dst, (dst, dst))[1] if lang == "zh" else dst_names.get(dst, (dst, dst))[0] }}</span>
+        <span class="dest-arrow">→</span>
+      </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+</body>
+</html>

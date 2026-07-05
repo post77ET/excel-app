@@ -10,12 +10,12 @@
   --serif:Georgia,"Hiragino Mincho ProN","Yu Mincho","Songti SC","Noto Serif SC",serif;
 }
 body { font-family: Arial, sans-serif; margin: 32px; line-height: 1.7; font-size:17px; }
-.box { border: 1px solid #dbe6f7; border-radius: 12px; padding: 28px; margin: 0 0 24px; max-width: 1520px; }
+.parchment { border: 1px solid #dbe6f7; border-top:4px solid var(--gold); border-radius: 4px; padding: 32px 34px; margin: 0 0 24px; max-width: 1520px; background:white; box-shadow:0 16px 34px rgba(8,40,90,.08); }
 h1{ font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid var(--gold); display:inline-block; padding-bottom:10px; font-size:28px; }
 h2{ font-family:var(--serif); color:var(--navy-900); font-size:19px; }
-.download-button { display:inline-block; padding:16px 28px; background:#2d74da; color:white; text-decoration:none; border-radius:8px; font-size:20px; font-weight:bold; }
-.apply-button { display:inline-block; padding:16px 28px; background:#1f9d57; color:white; text-decoration:none; border-radius:8px; font-size:20px; font-weight:bold; }
-.help-box { display:none; margin-top:0; border:1px solid #dbe6f7; padding:24px; background:#fafcff; border-radius:12px; }
+.download-crest { display:inline-block; padding:17px 30px; background:#2d74da; color:white; text-decoration:none; border-radius:999px; font-size:20px; font-weight:bold; }
+.apply-crest { display:inline-block; padding:17px 30px; background:#1f9d57; color:white; text-decoration:none; border-radius:999px; font-size:20px; font-weight:bold; }
+.guide-scroll { display:none; margin-top:0; border:1px dashed var(--gold); padding:24px; background:#fffdf7; border-radius:4px; }
 img { max-width:100%; border:1px solid #ccc; margin-top:8px; }
 .layout{ display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
 @media(max-width:900px){ .layout{ grid-template-columns:1fr; } }
@@ -46,7 +46,7 @@ box-shadow:0 14px 40px rgba(8,40,90,.12);
 
 <h1>{% if lang == "zh" %}翻译（Generate）完成{% else %}翻訳（Generate）完了{% endif %}</h1>
 
-<div class="box">
+<div class="parchment">
   <div class="layout">
   <div class="col-main">
   {% if lang == "zh" %}
@@ -58,7 +58,7 @@ box-shadow:0 14px 40px rgba(8,40,90,.12);
   {% endif %}
 
   <p style="margin-top:24px;">
-    <a class="download-button" href="{{ download_url }}" onclick="showGuide()">
+    <a class="download-crest" href="{{ download_url }}" onclick="showGuide()">
       {% if lang == "zh" %}
         下载翻译结果确认・编辑用Excel工作簿
       {% else %}
@@ -69,7 +69,7 @@ box-shadow:0 14px 40px rgba(8,40,90,.12);
   </div>
 
   <div class="col-side">
-  <div id="guide-box" class="help-box">
+  <div id="guide-box" class="guide-scroll">
     <h2>{% if lang == "zh" %}下一步操作{% else %}{{ "下一步操作" if lang == "zh" else "次の作業" }}{% endif %}</h2>
 
     {% if lang == "zh" %}
@@ -113,7 +113,7 @@ box-shadow:0 14px 40px rgba(8,40,90,.12);
       <h2>反映（Apply）</h2>
       <p>前往「反映（Apply）」画面，上传已编辑的Excel工作簿。</p>
       <p style="margin-top:24px;">
-      <a href="/engine?lang={{ lang }}" class="apply-button">前往反映（Apply）画面</a>
+      <a href="/engine?lang={{ lang }}" class="apply-crest">前往反映（Apply）画面</a>
       </p>
       <p style="margin-top:12px;">
       <a href="/?lang={{ lang }}">返回首页</a>
@@ -138,7 +138,7 @@ box-shadow:0 14px 40px rgba(8,40,90,.12);
       <h2>反映（Apply）</h2>
       <p>「反映（Apply）」画面へ進み、編集済みExcelブックをアップロードしてください。</p>
       <p style="margin-top:24px;">
-      <a href="/engine?lang={{ lang }}" class="apply-button">反映（Apply）画面へ進む</a>
+      <a href="/engine?lang={{ lang }}" class="apply-crest">反映（Apply）画面へ進む</a>
       </p>
       <p style="margin-top:12px;">
       <a href="/?lang={{ lang }}">ホームに戻る</a>

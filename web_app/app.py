@@ -526,6 +526,30 @@ def index():
     return render_template("landing.html", lang=request.args.get("lang", "ja"))
 
 
+# src(出発言語)から実際に翻訳可能な行き先一覧。rust_core/src/direction/mod.rs の
+# 対応方向(ja2zh, zh2ja, ja2vi, vi2ja)と完全一致させること。
+SRC_TO_TARGETS = {
+    "ja": [("zh", "ja2zh"), ("vi", "ja2vi")],
+    "zh": [("ja", "zh2ja")],
+    "vi": [("ja", "vi2ja")],
+    "en": [],  # 現時点で英語を出発点とする翻訳方向は未対応
+}
+
+
+@app.get("/start")
+def start():
+    src = request.args.get("src", "ja")
+    if src not in SRC_TO_TARGETS:
+        src = "ja"
+    page_lang = request.args.get("lang", src if src in ("ja", "zh") else "ja")
+    return render_template(
+        "target_select.html",
+        src=src,
+        targets=SRC_TO_TARGETS[src],
+        lang=page_lang,
+    )
+
+
 @app.get("/googlea52e60130d420841.html")
 def google_site_verification():
     # Google Search Console 所有権確認用。確認状態維持のため削除しないこと。
@@ -569,7 +593,11 @@ def sitemap_xml():
 
 @app.get("/engine")
 def engine():
-    return render_template("engine.html", lang=request.args.get("lang", "ja"))
+    return render_template(
+        "engine.html",
+        lang=request.args.get("lang", "ja"),
+        direction=request.args.get("direction", "ja2zh"),
+    )
 
 @app.get("/health")
 def health():
@@ -612,6 +640,7 @@ def upload():
     try:
         mode = normalize_mode(request.form.get("mode"))
         lang = request.form.get("lang", "ja")
+        direction = request.form.get("direction", "ja2zh")
         original_path = save_uploaded_file("file", "original")
         sheet_names = workbook_sheet_names(original_path)
         return render_template(
@@ -620,6 +649,7 @@ def upload():
             mode=mode,
             sheet_names=sheet_names,
             lang=lang,
+            direction=direction,
         )
     except Exception as exc:
         print("[UPLOAD ERROR]", repr(exc), flush=True)

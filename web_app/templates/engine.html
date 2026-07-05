@@ -32,48 +32,60 @@
     .stage{ display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
     @media(max-width:980px){ .stage{ grid-template-columns:1fr; } }
 
-    .box { border: 1px solid #dbe6f7; border-radius: 14px; padding: 28px; margin: 0; background:white; box-shadow:0 10px 28px rgba(8,40,90,.06); }
-    .box .step-tag{ display:inline-block; font-size:13px; font-weight:700; letter-spacing:.06em; color:#9c7a2e; text-transform:uppercase; margin-bottom:6px; }
+    /* ==== ゲートパネル(engine.html専用。左上に菱形マーカー) ==== */
+    .gate-panel{
+      position:relative; border: 1px solid #dbe6f7; border-radius: 4px; padding: 32px 30px 26px; margin: 0;
+      background:white; box-shadow:0 16px 34px rgba(8,40,90,.08);
+    }
+    .gate-panel::before{
+      content:""; position:absolute; top:-11px; left:26px; width:22px; height:22px;
+      background:linear-gradient(135deg,var(--gold-soft),var(--gold)); transform:rotate(45deg);
+      box-shadow:0 4px 10px rgba(180,140,50,.35);
+    }
+    .gate-panel .step-tag{ display:inline-block; font-size:13px; font-weight:700; letter-spacing:.06em; color:#9c7a2e; text-transform:uppercase; margin-bottom:6px; }
 
     input, button { font-size: 16px; }
     button { padding: 10px 18px; border-radius:8px; }
 
-    .radio-card{ display:flex; align-items:flex-start; gap:10px; padding:14px 16px; border:1px solid #dbe6f7; border-radius:10px; margin:10px 0 4px; cursor:pointer; transition:.15s; }
-    .radio-card:hover{ border-color:var(--gold); background:#fbf6ea; }
-    .radio-card input{ margin-top:4px; }
-    .radio-card .label-main{ font-weight:700; font-size:17px; }
+    /* モードタイル(体験/標準選択。engine.html専用) */
+    .mode-tile{ display:flex; align-items:flex-start; gap:12px; padding:16px 18px; border:1px solid #dbe6f7; border-radius:4px; margin:10px 0 4px; cursor:pointer; transition:.15s; border-left:4px solid #dbe6f7; }
+    .mode-tile:hover{ border-left-color:var(--gold); background:#fbf6ea; }
+    .mode-tile input{ margin-top:4px; }
+    .mode-tile .label-main{ font-weight:700; font-size:17px; }
 
-    .file-row{ display:flex; align-items:center; gap:12px; margin:14px 0; flex-wrap:wrap; }
-    .file-btn{ background:#eef3fb; border:1px solid #c7d6f5; color:var(--navy-900); font-weight:700; }
-    .file-btn:hover{ background:#e2ecfb; }
+    /* ファイルピッカー(engine.html専用。破線トレイ風) */
+    .file-tray{ display:flex; align-items:center; gap:12px; margin:14px 0; flex-wrap:wrap; padding:14px 16px; border:1.5px dashed #c7d6f5; border-radius:4px; background:#fafcff; }
+    .file-picker{ background:var(--navy-900); border:1px solid var(--navy-900); color:#e6d3a0; font-weight:700; border-radius:999px; padding:9px 20px; }
+    .file-picker:hover{ background:var(--navy-950); }
     .file-status{ color:#5b6b82; font-size:15px; }
 
-    button.generate-action { background:#2d74da; color:white; border:1px solid #2d74da; font-size:17px; font-weight:700; padding:14px 26px; }
-    button.apply-action { background:#1f9d57; color:white; border:1px solid #1f9d57; font-size:17px; font-weight:700; padding:14px 26px; }
-    .note { color: #5b6b82; font-size: 14.5px; margin:10px 0; }
+    button.generate-action { background:#2d74da; color:white; border:1px solid #2d74da; font-size:17px; font-weight:700; padding:15px 28px; border-radius:999px; }
+    button.apply-action { background:#1f9d57; color:white; border:1px solid #1f9d57; font-size:17px; font-weight:700; padding:15px 28px; border-radius:999px; }
+    .fine-note { color: #5b6b82; font-size: 14.5px; margin:10px 0; border-left:3px solid #dbe6f7; padding-left:10px; }
     .field-label{ font-size:15px; font-weight:700; color:var(--navy-900); margin:18px 0 8px; }
   </style>
 
 <style>
-.progress-box {
+.status-strip {
   display:none;
   margin-top:20px;
-  padding:16px;
-  border:1px solid #ccc;
-  background:#f8f8f8;
-  border-radius:10px;
+  padding:14px 18px;
+  border:1px solid var(--gold);
+  background:#fffdf5;
+  border-radius:999px;
 }
-.progress-bar-bg {
+.status-strip .bar-bg {
   width:100%;
-  height:18px;
-  background:#ddd;
-  border-radius:9px;
+  height:8px;
+  background:#f0e6cc;
+  border-radius:6px;
   overflow:hidden;
+  margin-top:10px;
 }
-.progress-bar-fill {
+.status-strip .bar-fill {
   width:0%;
   height:100%;
-  background:#4a90e2;
+  background:linear-gradient(90deg,var(--gold-soft),var(--gold));
   animation: progressMove 18s linear forwards;
 }
 @keyframes progressMove {
@@ -237,40 +249,41 @@ window.addEventListener("DOMContentLoaded", function() {
   <h1 id="main-title">Excel翻訳作業支援</h1>
 
   <div class="stage">
-  <div class="box">
+  <div class="gate-panel">
     <span class="step-tag">Step 1</span>
     <h2 id="upload-title">1. 翻訳（Generate）：アップロード・コース選択</h2>
     <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="return showProgress('upload-progress-message', 'upload-progress-box');">
       <input type="hidden" name="lang" id="lang-upload" value="ja">
-      <label class="radio-card"><input type="radio" name="mode" value="experience" checked><span><span class="label-main" id="course-exp">体験コース</span><br><span class="note" id="course-exp-note" style="margin:2px 0 0;">選択シートの A1:D5 の範囲で確認します。</span></span></label>
-      <label class="radio-card"><input type="radio" name="mode" value="paid"><span><span class="label-main" id="course-std">標準コース</span><br><span class="note" id="course-std-note" style="margin:2px 0 0;">選択シートを通常処理します。</span></span></label>
+      <input type="hidden" name="direction" value="{{ direction|default('ja2zh') }}">
+      <label class="mode-tile"><input type="radio" name="mode" value="experience" checked><span><span class="label-main" id="course-exp">体験コース</span><br><span class="fine-note" id="course-exp-note" style="margin:2px 0 0;">選択シートの A1:D5 の範囲で確認します。</span></span></label>
+      <label class="mode-tile"><input type="radio" name="mode" value="paid"><span><span class="label-main" id="course-std">標準コース</span><br><span class="fine-note" id="course-std-note" style="margin:2px 0 0;">選択シートを通常処理します。</span></span></label>
       <div class="field-label" id="original-book">原本Excel（.xlsx）</div>
-      <div class="file-row">
+      <div class="file-tray">
         <input id="original-file-input" type="file" name="file" accept=".xlsx" required style="display:none;" onchange="updateFileName('original-file-input','original-file-status')">
-        <button type="button" class="file-btn" id="original-file-button" onclick="chooseFile('original-file-input')">ファイルを選択</button>
+        <button type="button" class="file-picker" id="original-file-button" onclick="chooseFile('original-file-input')">ファイルを選択</button>
         <span class="file-status" id="original-file-status">ファイルが選択されていません</span>
       </div>
       <button type="submit" id="upload-button" class="generate-action">翻訳（Generate）設定へ進む</button>
     </form>
-    <div id="upload-progress-box" class="progress-box">
+    <div id="upload-progress-box" class="status-strip">
       <strong id="upload-progress-message">原本Excelを確認中です。しばらくお待ちください。</strong>
-      <div class="progress-bar-bg"><div class="progress-bar-fill"></div></div>
+      <div class="bar-bg"><div class="bar-fill"></div></div>
     </div>
   </div>
 
-  <div class="box">
+  <div class="gate-panel">
     <span class="step-tag">Step 2</span>
     <h2 id="reflect-title">2. 反映（Apply）：編集内容の反映</h2>
     <form action="/apply" method="post" enctype="multipart/form-data" onsubmit="return showProgress('apply-progress-message', 'apply-progress-box');">
       <input type="hidden" name="lang" id="lang-apply" value="ja">
       <div class="field-label" id="edited-book">編集済みExcelブック（.xlsx）</div>
-      <div class="file-row">
+      <div class="file-tray">
         <input id="ui-file-input" type="file" name="ui_file" accept=".xlsx" required style="display:none;" onchange="updateFileName('ui-file-input','ui-file-status')">
-        <button type="button" class="file-btn" id="ui-file-button" onclick="chooseFile('ui-file-input')">ファイルを選択</button>
+        <button type="button" class="file-picker" id="ui-file-button" onclick="chooseFile('ui-file-input')">ファイルを選択</button>
         <span class="file-status" id="ui-file-status">ファイルが選択されていません</span>
       </div>
-      <div class="note" id="reflect-note1">注意：ファイル名は変更しないでください。ファイル名を変更すると、Generate時に保存した原本クローンと照合できず、Applyできません。</div>
-      <div class="note" id="reflect-note2">原本Excelの再アップロードは不要です。Generate時のサーバ保存原本を自動使用します。</div>
+      <div class="fine-note" id="reflect-note1">注意：ファイル名は変更しないでください。ファイル名を変更すると、Generate時に保存した原本クローンと照合できず、Applyできません。</div>
+      <div class="fine-note" id="reflect-note2">原本Excelの再アップロードは不要です。Generate時のサーバ保存原本を自動使用します。</div>
       <button type="submit" id="reflect-button" class="apply-action">反映（Apply）を実行</button>
     </form>
 
@@ -307,7 +320,7 @@ margin-top:20px;
       <img src="/static/ui_edit_example.png" alt="TRANSLATION_UI edit example" style="max-width:100%; border:1px solid #ccc;">
     </div>
 
-    <div id="apply-progress-box" class="progress-box">
+    <div id="apply-progress-box" class="status-strip">
       <div style="
 margin-top:48px;
 padding:36px;
@@ -340,12 +353,12 @@ line-height:1.8;
 {% endif %}
 </div>
 </div>
-      <div class="progress-bar-bg"><div class="progress-bar-fill"></div></div>
+      <div class="bar-bg"><div class="bar-fill"></div></div>
     </div>
   </div>
   </div>
 
-  <div class="box" style="margin-top:28px;">
+  <div class="gate-panel" style="margin-top:28px;">
     <h2>Health</h2>
     <a href="/health">/health</a>
   </div>
