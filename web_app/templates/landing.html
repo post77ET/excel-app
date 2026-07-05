@@ -118,7 +118,8 @@ body{
 }
 .logo{ font-size:20px; font-weight:800; color:var(--ink-deep); letter-spacing:.2px; }
 nav{ margin-left:auto; display:flex; flex-wrap:wrap; }
-nav a{ margin:0 10px; color:var(--blue-strong); text-decoration:none; font-weight:700; font-size:15px; }
+nav a{ margin:0 10px; color:var(--navy-900); text-decoration:none; font-weight:700; font-size:15px; border-bottom:2px solid transparent; padding-bottom:2px; }
+nav a:hover{ border-bottom-color:var(--gold); }
 nav a:hover{ text-decoration:underline; }
 .lang{ display:flex; gap:6px; }
 .lang button{
@@ -168,8 +169,8 @@ p{ font-size:16.5px; }
   background:rgba(255,255,255,.03); border:1px solid var(--navy-line); padding:6px 14px; border-radius:999px;
 }
 .tag{
-  font-size:13.5px; font-weight:700; color:var(--blue-strong);
-  background:#eaf2ff; border:1px solid #cfe0fb; padding:6px 12px; border-radius:999px;
+  font-size:13.5px; font-weight:700; color:#9c7a2e;
+  background:#fbf6ea; border:1px solid #ecd9a8; padding:6px 12px; border-radius:999px;
 }
 .hero .fv-trust{
   display:flex; flex-wrap:wrap; gap:6px 18px; margin:22px 0 6px;
@@ -240,7 +241,7 @@ p{ font-size:16.5px; }
 .problem{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
 .problem .card{ border-left:5px solid #cdd8e8; }
 .problem .card strong{ font-size:15.5px; }
-.solution{ border-left-color:var(--green) !important; background:var(--green-bg); }
+.solution{ border-left-color:var(--gold) !important; background:#fffdf5; }
 
 .notice-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .warn{ background:var(--warn-bg); border:1px solid var(--warn-line); border-radius:var(--radius); padding:22px; }
@@ -1004,7 +1005,7 @@ window.addEventListener("DOMContentLoaded", function() {
       .seo-features h2{ font-size:clamp(20px,2.6vw,26px); color:#063577; margin:0 0 14px; }
       .seo-features ul{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
       .seo-features li{ background:#fff; border:1px solid #dbe6f7; border-top:3px solid var(--gold); border-radius:10px; padding:12px 14px; font-size:15px; font-weight:600; color:#10213f; box-shadow:0 4px 14px rgba(8,40,90,.05); }
-      .seo-features li::before{ content:"\2713"; color:#1f9d62; font-weight:700; margin-right:8px; }
+      .seo-features li::before{ content:"\2713"; color:#9c7a2e; font-weight:700; margin-right:8px; }
     </style>
     <h2 id="home-featTitle">このツールでできること</h2>
     <ul>

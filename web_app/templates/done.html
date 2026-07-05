@@ -38,13 +38,21 @@ color:#10213f;
 <div style="
 max-width:1520px;
 margin:40px auto;
-padding:36px 40px;
 background:white;
-border-radius:18px;
+border-radius:4px;
 box-shadow:0 14px 40px rgba(8,40,90,.12);
+overflow:hidden;
 ">
 
-<h1>{% if lang == "zh" %}翻译（Generate）完成{% else %}翻訳（Generate）完了{% endif %}</h1>
+<div style="
+padding:28px 40px 24px;
+background:linear-gradient(160deg,#101f36,#0a1322);
+border-bottom:3px solid #c9a558;
+">
+<h1 style="margin:0; color:#fff; border:none;">{% if lang == "zh" %}翻译（Generate）完成{% else %}翻訳（Generate）完了{% endif %}</h1>
+</div>
+
+<div style="padding:36px 40px 44px;">
 
 <div class="parchment">
   <div class="layout">
@@ -147,6 +155,7 @@ box-shadow:0 14px 40px rgba(8,40,90,.12);
   </div>
   </div>
   </div>
+</div>
 </div>
 </div>
 </body>

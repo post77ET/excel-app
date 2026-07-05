@@ -14,8 +14,10 @@
 }
 body { font-family: Arial, sans-serif; margin:0; line-height:1.8; color:#10213f; font-size:17px;
   background: radial-gradient(1200px 480px at 50% -180px,#e7f0ff 0%,rgba(231,240,255,0) 70%), #f5f8ff; }
-.hall { max-width:1520px; margin:40px auto; padding:40px 44px; background:white; border-radius:4px; border-top:4px solid var(--gold); box-shadow:0 14px 40px rgba(8,40,90,.12); }
-h1 { font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid var(--gold); display:inline-block; padding-bottom:10px; font-size:28px; }
+.hall { max-width:1520px; margin:40px auto; background:white; border-radius:4px; box-shadow:0 14px 40px rgba(8,40,90,.12); overflow:hidden; }
+.hall-masthead{ padding:28px 44px 24px; background:linear-gradient(160deg,var(--navy-900),var(--navy-950)); border-bottom:3px solid var(--gold); }
+.hall-body{ padding:36px 44px 44px; }
+h1 { font-family:var(--serif); color:#fff; margin:0; font-size:28px; font-weight:700; }
 .layout{ display:grid; grid-template-columns:1.1fr .9fr; gap:32px; margin-top:24px; align-items:start; }
 @media(max-width:900px){ .layout{ grid-template-columns:1fr; } }
 .side-panel{ background:#fafcff; border:1px solid #dbe6f7; border-radius:14px; padding:24px; }
@@ -32,7 +34,10 @@ h1 { font-family:var(--serif); color:var(--navy-900); border-bottom:2px solid va
 </head>
 <body>
 <div class="hall">
+  <div class="hall-masthead">
   <h1 id="page-title">{% if lang == "zh" %}正在翻译处理…{% else %}翻訳処理中です…{% endif %}</h1>
+  </div>
+  <div class="hall-body">
 
   <div class="layout">
   <div class="col-main">

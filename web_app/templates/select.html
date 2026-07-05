@@ -11,8 +11,14 @@
     }
     body { font-family: Arial, sans-serif; margin: 0; line-height: 1.8; color: #10213f; font-size:17px;
       background: radial-gradient(1200px 480px at 50% -180px,#e7f0ff 0%,rgba(231,240,255,0) 70%), #f5f8ff; }
-    .container { max-width: 1520px; margin: 40px auto; padding: 40px 44px; background: white; border-radius: 18px; box-shadow: 0 14px 40px rgba(8,40,90,.12); }
-    h1 { margin-top: 0; font-family: var(--serif); color: var(--navy-900); border-bottom: 2px solid var(--gold); display: inline-block; padding-bottom: 10px; font-size:30px; }
+    .container { max-width: 1520px; margin: 40px auto; background: white; border-radius: 4px; box-shadow: 0 14px 40px rgba(8,40,90,.12); overflow:hidden; }
+    .masthead{
+      padding:28px 44px 24px; background:linear-gradient(160deg,var(--navy-900),var(--navy-950));
+      border-bottom:3px solid var(--gold);
+    }
+    .masthead-eyebrow{ font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:#9c7a2e; color:var(--gold-soft); opacity:.85; margin:0 0 6px; }
+    .body-pad{ padding:36px 44px 44px; }
+    h1 { margin:0; font-family: var(--serif); color: #fff; font-size:30px; font-weight:700; }
     .step { display: none; }
     .step.active { display: block; }
     ol { line-height: 2; font-size: 16px; }
@@ -47,10 +53,10 @@
     }
     .stage-panel h2{ margin:6px 0 20px; font-size: 22px; font-family: var(--serif); color: var(--navy-900); }
 
-    .direction-fixed{ display:flex; align-items:center; gap:16px; margin:10px 0 22px; padding:16px 20px; background:linear-gradient(160deg,var(--navy-900),var(--navy-950)); border-radius:10px; }
-    .direction-fixed-label{ color:#fff; font-family:var(--serif); font-size:19px; font-weight:700; }
-    .direction-fixed-change{ margin-left:auto; color:var(--gold-soft); font-size:14px; text-decoration:none; border-bottom:1px solid rgba(201,165,88,.5); padding-bottom:2px; }
-    .direction-fixed-change:hover{ color:#fff; }
+    .direction-fixed{ display:flex; align-items:center; gap:16px; margin:10px 0 22px; padding:16px 20px; background:#fffdf5; border:1px solid var(--gold); border-radius:10px; }
+    .direction-fixed-label{ color:var(--navy-900); font-family:var(--serif); font-size:19px; font-weight:700; }
+    .direction-fixed-change{ margin-left:auto; color:#9c7a2e; font-size:14px; text-decoration:none; border-bottom:1px solid rgba(201,165,88,.5); padding-bottom:2px; }
+    .direction-fixed-change:hover{ color:var(--navy-900); }
 
     .sheet-scroll-note{ font-size:14.5px; color:#5b6b82; background:#fafcff; border-left:3px solid var(--gold); padding:10px 16px; margin:14px 0; border-radius:0 8px 8px 0; }
     .sheet-list{ columns:2; column-gap:32px; font-size:16px; line-height:2; }
@@ -59,6 +65,7 @@
     .sheet-input-row input{ font-size:16px; padding:8px 14px; border-radius:8px; border:1px solid #cfd8ec; width:220px; }
 
     /* ==== Step2: 料金ティア風カード（course選択、select.html以外未使用の専用部品） ==== */
+    .tier-intro{ font-size:15px; color:#46556b; background:#fafcff; border-left:3px solid var(--gold); padding:12px 18px; border-radius:0 8px 8px 0; margin:10px 0 20px; line-height:1.7; }
     .tier-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin:8px 0 20px; }
     @media(max-width:900px){ .tier-grid{ grid-template-columns:1fr; } }
     .tier-card{
@@ -69,7 +76,7 @@
     .tier-card input{ display:none; }
     .tier-card .tier-crown{ font-size:26px; color:var(--gold); margin-bottom:8px; }
     .tier-card .tier-name{ font-family:var(--serif); font-size:19px; color:var(--navy-900); display:block; margin-bottom:8px; }
-    .tier-card .tier-desc{ font-size:14px; color:#5b6b82; }
+    .tier-card .tier-desc{ font-size:14.5px; color:#46556b; line-height:1.6; }
     .tier-card:has(input:checked){
       border-color:var(--gold); background:linear-gradient(180deg,#fffdf5,#fbf6ea);
       box-shadow:0 12px 30px rgba(201,165,88,.22);
@@ -81,8 +88,11 @@
 
     /* ==== Step3: エンジン割当てを「チケット行」風に(select.html専用) ==== */
     .method-legend{
-      border:1px solid #eadfc4; background:#fffdf7; border-radius:10px; padding:18px 20px; margin-bottom:22px; font-size:14.5px; line-height:1.7;
+      border:1px solid #eadfc4; background:#fffdf7; border-radius:10px; padding:14px 20px; margin-bottom:22px; font-size:14.5px; line-height:1.7;
     }
+    .method-legend summary{ cursor:pointer; font-weight:700; color:#9c7a2e; list-style:none; }
+    .method-legend summary::-webkit-details-marker{ display:none; }
+    .method-legend-body{ margin-top:12px; color:#46556b; }
     .engine-ticket{
       display:grid; grid-template-columns:70px 1fr auto; align-items:center; gap:16px;
       padding:16px 18px; border-bottom:1px dashed #d7deec;
@@ -92,7 +102,14 @@
       width:48px; height:48px; border-radius:50%; border:1px solid var(--gold); color:var(--gold-deep);
       font-family:var(--serif); font-size:18px; display:flex; align-items:center; justify-content:center; font-weight:700;
     }
-    .engine-ticket select{ font-size: 15px; padding: 8px 12px; border-radius: 8px; border: 1px solid #cfd8ec; }
+    .engine-ticket select{
+      font-size: 15px; padding: 9px 14px; border-radius: 8px; border: 1px solid #cfd8ec;
+      background:#fff; color:var(--navy-900); font-weight:600; cursor:pointer; appearance:none;
+      background-image:linear-gradient(45deg,transparent 50%,#9c7a2e 50%),linear-gradient(135deg,#9c7a2e 50%,transparent 50%);
+      background-position:calc(100% - 18px) center, calc(100% - 13px) center; background-size:5px 5px, 5px 5px; background-repeat:no-repeat;
+      padding-right:32px;
+    }
+    .engine-ticket select:focus{ outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,165,88,.2); }
     .engine-ticket .sel-row{ display:flex; gap:10px; flex-wrap:wrap; }
     .deepl-alert{
       display:none; margin-top:14px; padding:14px 18px; border-radius:10px; font-size:14px;
@@ -143,7 +160,11 @@
 </head>
 <body>
 <div class="container">
-  <h1>{% if lang == "zh" %}翻译（Generate）设置{% else %}翻訳（Generate）設定{% endif %}</h1>
+  <div class="masthead">
+    <div class="masthead-eyebrow">EX-TR-MULTI</div>
+    <h1>{% if lang == "zh" %}翻译（Generate）设置{% else %}翻訳（Generate）設定{% endif %}</h1>
+  </div>
+  <div class="body-pad">
 
   <div class="step-indicator" id="step-indicator">
     <div class="dot active" data-step="1"><span class="n">①</span>{% if lang == "zh" %}选择工作表{% else %}シート選択{% endif %}</div>
@@ -194,24 +215,31 @@
   <div id="step2" class="step">
     <div class="stage-panel" data-step-no="STEP 2">
       <h2>{% if lang == "zh" %}选择翻译课程{% else %}翻訳コースを選択{% endif %}</h2>
+      <p class="tier-intro">
+        {% if lang == "zh" %}
+        最多可同时使用 <strong>DeepL・Google・Amazon</strong> 这3种翻译AI，比较它们各自的翻译结果，从中选择最合适的一个。可根据需要使用的AI数量（1〜3种）选择课程。
+        {% else %}
+        <strong>DeepL・Google・Amazon</strong>という3種類の翻訳AIの候補を見比べて、一番良いものを選べます。同時に使うAIの数（1〜3種類）でコースが分かれています。
+        {% endif %}
+      </p>
       <div class="tier-grid">
         <label class="tier-card">
           <input type="radio" name="course" value="full" checked onchange="updateCourse()">
           <div class="tier-crown">◆◆◆</div>
-          <span class="tier-name">{% if lang == "zh" %}全套课程{% else %}フルコース{% endif %}</span>
-          <div class="tier-desc">{% if lang == "zh" %}候选1 + 候选2 + 候选3（3种翻译引擎）{% else %}候補1 + 候補2 + 候補3（3エンジン翻訳）{% endif %}</div>
+          <span class="tier-name">{% if lang == "zh" %}3种AI比较{% else %}3種類のAIで比較{% endif %}</span>
+          <div class="tier-desc">{% if lang == "zh" %}DeepL・Google・Amazon 全部使用。翻译质量最容易保证{% else %}DeepL・Google・Amazon を全部使用。一番おすすめです{% endif %}</div>
         </label>
         <label class="tier-card">
           <input type="radio" name="course" value="c1c3" onchange="updateCourse()">
           <div class="tier-crown">◆◆</div>
-          <span class="tier-name">{% if lang == "zh" %}简化课程{% else %}C1+C3コース{% endif %}</span>
-          <div class="tier-desc">{% if lang == "zh" %}候选1 + 候选3（2种引擎）{% else %}候補1 + 候補3（2エンジン翻訳）{% endif %}</div>
+          <span class="tier-name">{% if lang == "zh" %}2种AI比较{% else %}2種類のAIで比較{% endif %}</span>
+          <div class="tier-desc">{% if lang == "zh" %}DeepL + Google の2种使用。费用を抑えつつ比较できます{% else %}DeepL + Google の2種類を使用。費用を抑えつつ比較できます{% endif %}</div>
         </label>
         <label class="tier-card">
           <input type="radio" name="course" value="c1only" onchange="updateCourse()">
           <div class="tier-crown">◆</div>
-          <span class="tier-name">{% if lang == "zh" %}经济课程{% else %}C1のみコース{% endif %}</span>
-          <div class="tier-desc">{% if lang == "zh" %}仅候选1（1种引擎，最经济）{% else %}候補1のみ（1エンジン・最経済）{% endif %}</div>
+          <span class="tier-name">{% if lang == "zh" %}1种AI（最经济）{% else %}1種類のAIのみ（最も経済的）{% endif %}</span>
+          <div class="tier-desc">{% if lang == "zh" %}DeepL のみ使用。最も安く翻訳できます{% else %}DeepL のみ使用。最も安く翻訳できます{% endif %}</div>
         </label>
       </div>
       <p class="fee-note">{% if lang == "zh" %}费用根据翻译量而定{% else %}料金は翻訳量に応じて変動します{% endif %}</p>
@@ -227,25 +255,24 @@
     <div class="stage-panel" data-step-no="STEP 3">
       <h2>{% if lang == "zh" %}选择翻译引擎{% else %}翻訳エンジンを選択{% endif %}</h2>
 
-      <div class="method-legend">
+      <details class="method-legend">
+        <summary>{% if lang == "zh" %}关于翻译方式（点击展开）{% else %}翻訳方式について(クリックで展開){% endif %}</summary>
+        <div class="method-legend-body">
         {% if lang == "zh" %}
-        <strong>关于翻译方式</strong><br>
         ・<strong>上下文翻译</strong>：将整个单元格一并交给翻译引擎。考虑前后关系，误译较少。<br>
         ・<strong>分割翻译</strong>：把单元格内容分段后逐段翻译。速度快但会丢失上下文，短词易误译。<br>
         例（中→日）：「第2工厂 3楼」分割时会变成「いいえ。2工場 3建物」，上下文翻译则为「第2工場 3階」。<br>
-        ⚠️ 中文→日语 使用分割翻译时，任何引擎都容易出现误译，<strong>建议使用上下文翻译</strong>。<br>
-        ※ DeepL 仅支持上下文翻译。<br>
-        ⚠️ Google 翻译无法保留单元格内的换行（换行可能被删除，多行会合并为一行）。如需保留换行，请选择 Amazon 或 DeepL。
+        <strong>注意：</strong>中文→日语 使用分割翻译时，任何引擎都容易出现误译，<strong>建议使用上下文翻译</strong>。DeepL 仅支持上下文翻译。<br>
+        <strong>注意：</strong>Google 翻译无法保留单元格内的换行（换行可能被删除，多行会合并为一行）。如需保留换行，请选择 Amazon 或 DeepL。
         {% else %}
-        <strong>翻訳方式について</strong><br>
         ・<strong>文脈翻訳</strong>：セル全体をまとめて翻訳エンジンに渡す方式。前後関係を踏まえるため誤訳が少ない。<br>
         ・<strong>分割翻訳</strong>：セル内を区切って部分ごとに翻訳する方式。速いが文脈を失い、短い語が誤訳されやすい。<br>
         例（中→日）：「第2工厂 3楼」→ 分割では「いいえ。2工場 3建物」と崩れ、文脈では「第2工場 3階」と正しく訳されます。<br>
-        ⚠️ 中国語→日本語で分割翻訳を行うと、どの翻訳機でも誤訳が多発する傾向があります。<strong>文脈翻訳の使用を推奨します。</strong><br>
-        ※ DeepL は文脈翻訳のみ対応です。<br>
-        ⚠️ Google 翻訳は、セル内の改行を保持できません（改行が削除され、1行にまとまる場合があります）。改行を維持したい場合は Amazon または DeepL をお選びください。
+        <strong>注意：</strong>中国語→日本語で分割翻訳を行うと、どの翻訳機でも誤訳が多発する傾向があります。文脈翻訳の使用を推奨します。DeepL は文脈翻訳のみ対応です。<br>
+        <strong>注意：</strong>Google 翻訳は、セル内の改行を保持できません（改行が削除され、1行にまとまる場合があります）。改行を維持したい場合は Amazon または DeepL をお選びください。
         {% endif %}
-      </div>
+        </div>
+      </details>
 
       <div id="engine-c1" class="engine-ticket">
         <div class="slot-badge">C1</div>
@@ -344,6 +371,7 @@
   </div>
 
   <a class="home-return" href="/?lang={{ lang }}">{% if lang == "zh" %}返回首页{% else %}トップへ戻る{% endif %}</a>
+  </div>
 </div>
 
 <script>
@@ -416,7 +444,7 @@ function updateConfirm() {
   var m2 = document.getElementById('sel-m2').value;
   var m3 = document.getElementById('sel-m3').value;
 
-  var courseLabel = { full: 'フルコース', c1c3: 'C1+C3コース', c1only: 'C1のみコース' };
+  var courseLabel = { full: '3種類のAIで比較', c1c3: '2種類のAIで比較', c1only: '1種類のAIのみ' };
   var engineLabel = { google: 'Google', amazon: 'Amazon', deepl: 'DeepL' };
   var methodLabel = ('{{ "zh" if lang == "zh" else "ja" }}' === 'zh')
     ? { split: '分割', whole: '上下文' }
