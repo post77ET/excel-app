@@ -47,15 +47,10 @@
     }
     .stage-panel h2{ margin:6px 0 20px; font-size: 22px; font-family: var(--serif); color: var(--navy-900); }
 
-    /* 方向選択カード(Step1) */
-    .direction-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:14px 0 22px; }
-    @media(max-width:900px){ .direction-grid{ grid-template-columns:repeat(2,1fr); } }
-    .direction-card{ display:block; padding:18px 10px; border:1px solid #dbe6f7; border-radius:10px; text-align:center; cursor:pointer; transition:.15s; }
-    .direction-card:hover{ border-color:var(--gold); background:#fbf6ea; }
-    .direction-card input{ display:none; }
-    .direction-card span{ font-size:15.5px; font-weight:700; }
-    .direction-card input:checked + span{ color:var(--gold-deep); }
-    .direction-card:has(input:checked){ border-color:var(--gold); background:#fbf6ea; box-shadow:0 4px 14px rgba(201,165,88,.18); }
+    .direction-fixed{ display:flex; align-items:center; gap:16px; margin:10px 0 22px; padding:16px 20px; background:linear-gradient(160deg,var(--navy-900),var(--navy-950)); border-radius:10px; }
+    .direction-fixed-label{ color:#fff; font-family:var(--serif); font-size:19px; font-weight:700; }
+    .direction-fixed-change{ margin-left:auto; color:var(--gold-soft); font-size:14px; text-decoration:none; border-bottom:1px solid rgba(201,165,88,.5); padding-bottom:2px; }
+    .direction-fixed-change:hover{ color:#fff; }
 
     .sheet-scroll-note{ font-size:14.5px; color:#5b6b82; background:#fafcff; border-left:3px solid var(--gold); padding:10px 16px; margin:14px 0; border-radius:0 8px 8px 0; }
     .sheet-list{ columns:2; column-gap:32px; font-size:16px; line-height:2; }
@@ -162,13 +157,19 @@
     <div class="stage-panel" data-step-no="STEP 1">
       <h2>{% if lang == "zh" %}选择工作表{% else %}翻訳対象シートを選択{% endif %}</h2>
       <div style="margin:10px 0 16px;">
+        {% set cur_dir = direction|default('ja2zh') %}
+        {% set dir_labels = {
+          'ja2zh': ('日本語 → 中国語', '日语 → 中文'),
+          'zh2ja': ('中国語 → 日本語', '中文 → 日语'),
+          'ja2vi': ('日本語 → ベトナム語', '日语 → 越南语'),
+          'vi2ja': ('ベトナム語 → 日本語', '越南语 → 日语')
+        } %}
         <strong>{% if lang == "zh" %}翻译方向{% else %}翻訳方向{% endif %}</strong>
-        <div class="direction-grid">
-          <label class="direction-card"><input type="radio" name="direction" value="ja2zh" {% if (direction|default('ja2zh')) == 'ja2zh' %}checked{% endif %} onchange="onDirectionChange()"><span>{% if lang == "zh" %}日语 → 中文{% else %}日本語 → 中国語{% endif %}</span></label>
-          <label class="direction-card"><input type="radio" name="direction" value="zh2ja" {% if (direction|default('ja2zh')) == 'zh2ja' %}checked{% endif %} onchange="onDirectionChange()"><span>{% if lang == "zh" %}中文 → 日语{% else %}中国語 → 日本語{% endif %}</span></label>
-          <label class="direction-card"><input type="radio" name="direction" value="ja2vi" {% if (direction|default('ja2zh')) == 'ja2vi' %}checked{% endif %} onchange="onDirectionChange()"><span>{% if lang == "zh" %}日语 → 越南语{% else %}日本語 → ベトナム語{% endif %}</span></label>
-          <label class="direction-card"><input type="radio" name="direction" value="vi2ja" {% if (direction|default('ja2zh')) == 'vi2ja' %}checked{% endif %} onchange="onDirectionChange()"><span>{% if lang == "zh" %}越南语 → 日语{% else %}ベトナム語 → 日本語{% endif %}</span></label>
+        <div class="direction-fixed">
+          <span class="direction-fixed-label">{{ dir_labels[cur_dir][1] if lang == "zh" else dir_labels[cur_dir][0] }}</span>
+          <a class="direction-fixed-change" href="/?lang={{ lang }}">{% if lang == "zh" %}重新选择{% else %}選び直す{% endif %}</a>
         </div>
+        <input type="radio" name="direction" value="{{ cur_dir }}" checked style="display:none;" onchange="onDirectionChange()">
       </div>
       {% if mode == "experience" %}
         <p class="sheet-scroll-note">{% if lang == "zh" %}体验模式：仅处理1个工作表的 <strong>A1:D5</strong> 范围{% else %}体験コース：1シートの <strong>A1:D5</strong> の範囲で処理{% endif %}</p>

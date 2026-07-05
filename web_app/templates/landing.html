@@ -280,7 +280,7 @@ const HOME_TEXT = {
     navOption: "オプション",
     navHelp: "困ったときは",
     heroTitle: "Excelの構造をそのまま保持して、日本語を中国語に翻訳・確認・反映できます。",
-    heroLead: "日本語のExcelブック（.xlsx）を、レイアウトや数式を崩さずに中国語（簡体字 zh-CN）へ翻訳。翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。",
+    heroLead: "日本語のExcelブック（.xlsx）を、レイアウトや数式を崩さずに中国語（簡体字 zh-CN）へ翻訳。翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。エクセル 翻訳・Excel 日本語 中国語 翻訳をお探しの方にも対応した無料のExcel翻訳ツールです。日本語からベトナム語への翻訳（Excel dịch tiếng Việt）にも対応しています。",
     catch: "文章の翻訳は、AIがぐっと身近に。Excelの翻訳も、同じくらい身近に。",
     catchSub: "DeepL、Google、Amazonの翻訳APIに対応した、Excel一括翻訳ツール",
     gateLead: "翻訳したい原文は何語ですか？",
@@ -397,7 +397,7 @@ const HOME_TEXT = {
     navOption: "选项",
     navHelp: "遇到问题时",
     heroTitle: "保持Excel结构不变，将日语翻译为中文，并完成确认与反映处理。",
-    heroLead: "将日语Excel工作簿（.xlsx）在保持排版与公式的前提下翻译为中文（简体 zh-CN）。确认并编辑翻译结果后，生成已反映编辑内容的Excel工作簿。",
+    heroLead: "将日语Excel工作簿（.xlsx）在保持排版与公式的前提下翻译为中文（简体 zh-CN）。确认并编辑翻译结果后，生成已反映编辑内容的Excel工作簿。支持Excel日语翻译中文、Excel翻译工具等常见搜索需求，同时支持日语与越南语之间的互译。",
     catch: "文章翻译，AI 让它变得触手可及。Excel 翻译，也想让它一样简单。",
     catchSub: "支持 DeepL、Google、Amazon 翻译API的 Excel 批量翻译工具",
     gateLead: "要翻译的原文是什么语言？",
@@ -514,7 +514,7 @@ const HOME_TEXT = {
     navOption: "Tùy chọn",
     navHelp: "Trợ giúp",
     heroTitle: "Giữ nguyên cấu trúc Excel, dịch, kiểm tra và áp dụng từ tiếng Nhật sang tiếng Trung.",
-    heroLead: "Dịch file Excel (.xlsx) tiếng Nhật sang tiếng Trung (giản thể zh-CN) mà không phá vỡ bố cục hay công thức. Sau khi kiểm tra và chỉnh sửa kết quả dịch, tạo ra file Excel hoàn chỉnh đã áp dụng nội dung chỉnh sửa.",
+    heroLead: "Dịch file Excel (.xlsx) tiếng Nhật sang tiếng Trung (giản thể zh-CN) mà không phá vỡ bố cục hay công thức. Sau khi kiểm tra và chỉnh sửa kết quả dịch, tạo ra file Excel hoàn chỉnh đã áp dụng nội dung chỉnh sửa. Công cụ dịch Excel miễn phí, hỗ trợ dịch Excel tiếng Nhật sang tiếng Việt và ngược lại.",
     catch: "Dịch văn bản giờ đã gần gũi hơn nhờ AI. Dịch Excel cũng gần gũi như vậy.",
     catchSub: "Công cụ dịch Excel hàng loạt, hỗ trợ API dịch của DeepL, Google, Amazon",
     gateLead: "Văn bản gốc bạn muốn dịch là ngôn ngữ nào?",
@@ -631,7 +631,7 @@ const HOME_TEXT = {
     navOption: "Options",
     navHelp: "Help",
     heroTitle: "Translate, review, and apply Japanese to Chinese while keeping your Excel structure intact.",
-    heroLead: "Translate Japanese Excel workbooks (.xlsx) into Chinese (Simplified, zh-CN) without breaking layout or formulas. Review and edit the translation, then generate a finished workbook with your edits applied.",
+    heroLead: "Translate Japanese Excel workbooks (.xlsx) into Chinese (Simplified, zh-CN) without breaking layout or formulas. Review and edit the translation, then generate a finished workbook with your edits applied. A free Excel translation tool for Japanese to Chinese translation, also supporting Japanese to Vietnamese translation.",
     catch: "AI has made translating text effortless. Now Excel translation is just as easy.",
     catchSub: "A bulk Excel translation tool supporting DeepL, Google, and Amazon translation APIs",
     gateLead: "What language is your original text in?",
@@ -841,6 +841,7 @@ window.addEventListener("DOMContentLoaded", function() {
     <h2 class="steps-title" id="home-stepsTitle">操作はこの5ステップ</h2>
     <p class="steps-sub" id="home-stepsSub">アップロードから、確認・編集、完成版の生成まで。難しい設定はありません。</p>
 
+    <div class="steps-list">
     <div class="step">
       <div class="step-badge">①</div>
       <div class="step-body">
@@ -929,6 +930,7 @@ window.addEventListener("DOMContentLoaded", function() {
         </table>
       </div>
     </dialog>
+    </div>
   </section>
 
   <style>
@@ -937,30 +939,27 @@ window.addEventListener("DOMContentLoaded", function() {
   .hero-lite{ display:block; }
   .steps{ }
   .steps-title{ font-size:clamp(22px,3vw,30px); color:#063577; margin:0 0 6px; }
-  .steps-sub{ color:#5b6b82; font-size:14px; margin:0 0 22px; }
-  .steps{ position:relative; }
-  .steps::before{
-    content:""; position:absolute; left:50%; top:70px; bottom:20px; width:2px;
-    background:linear-gradient(var(--gold),rgba(201,165,88,.15)); transform:translateX(-50%);
+  .steps-sub{ color:#5b6b82; font-size:14px; margin:0 0 34px; }
+  .steps-list{ position:relative; padding-left:74px; }
+  .steps-list::before{
+    content:""; position:absolute; left:26px; top:6px; bottom:6px; width:1px;
+    background:linear-gradient(var(--gold),rgba(201,165,88,.12));
   }
-  .step{
-    position:relative; display:flex; gap:32px; align-items:flex-start; padding:26px 0; max-width:560px;
-  }
-  .step:nth-child(odd){ margin-right:auto; flex-direction:row; }
-  .step:nth-child(even){ margin-left:auto; flex-direction:row-reverse; }
+  .step{ position:relative; padding:0 0 48px; }
+  .step:last-child{ padding-bottom:0; }
   .step-badge{
-    position:relative; z-index:1; flex:0 0 56px; height:56px; border-radius:50%;
-    background:linear-gradient(160deg,var(--navy-900),var(--navy-950)); border:1px solid var(--gold); color:var(--gold-soft);
-    font-family:var(--serif); font-size:24px; font-weight:700; display:flex; align-items:center; justify-content:center;
-    box-shadow:0 0 0 6px #fff;
+    position:absolute; left:-74px; top:-4px; width:48px; text-align:right;
+    font-family:var(--serif); font-size:34px; font-weight:700; color:var(--gold);
+    line-height:1; letter-spacing:0;
   }
-  @media(max-width:820px){
-    .steps::before{ left:28px; }
-    .step, .step:nth-child(even){ max-width:none; margin:0; flex-direction:row; text-align:left; }
+  .step-body{ }
+  @media(max-width:640px){
+    .steps-list{ padding-left:52px; }
+    .steps-list::before{ left:18px; }
+    .step-badge{ left:-52px; width:34px; font-size:26px; }
   }
-  .step-body{ flex:1 1 auto; min-width:0; }
-  .step-h{ font-size:18px; font-weight:700; color:#063577; margin:0 0 4px; }
-  .step-d{ font-size:14px; color:#46556b; margin:0 0 12px; line-height:1.6; }
+  .step-h{ font-size:19px; font-weight:700; color:#063577; margin:0 0 6px; font-family:var(--serif); }
+  .step-d{ font-size:14.5px; color:#46556b; margin:0 0 14px; line-height:1.7; }
   .scr{ border:1px solid #d8dee8; border-radius:10px; overflow:hidden; background:#fff; max-width:680px; }
   .scr-bar{ font-size:12px; padding:6px 10px; background:#f3f5f8; color:#5b6b82; border-bottom:1px solid #e6eaf1; }
   .scr-pad{ padding:14px; }
