@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="{% if lang == "zh" %}zh{% else %}ja{% endif %}">
+<html lang="{% if lang == 'zh' %}zh{% elif lang == 'vi' %}vi{% elif lang == 'en' %}en{% else %}ja{% endif %}">
 <head>
   <meta charset="utf-8">
-  <title>{% if lang == "zh" %}Excel翻译作业支持{% else %}Excel翻訳作業支援{% endif %}</title>
+  <title>{% if lang == "zh" %}Excel翻译作业支持{% elif lang == "vi" %}Hỗ trợ công việc dịch Excel{% elif lang == "en" %}Excel Translation Assistant{% else %}Excel翻訳作業支援{% endif %}</title>
   <style>
     :root{
       --navy-950:#0a1322; --navy-900:#101f36;
@@ -28,6 +28,7 @@
       background:rgba(255,255,255,.04); color:#e6d3a0; cursor:pointer; font-weight:600;
     }
     .topbar .lang-switch button:hover{ border-color:var(--gold); color:#fff; }
+    .topbar .lang-switch button.active{ background:var(--gold); color:#1a1508; border-color:var(--gold); }
     .topbar a#home-link{ color:#b9c5db; font-size:15px; text-decoration:none; border-bottom:1px solid rgba(201,165,88,.5); padding-bottom:2px; }
     .topbar a#home-link:hover{ color:var(--gold-soft); }
     h1 { font-size: 30px; font-family:var(--serif); color:#fff; margin:0; font-weight:700; }
@@ -142,9 +143,10 @@ function applyLang(t) {
   });
 }
 
-function setLangJa() {
-  rememberLang("ja");
-  applyLang({
+// 言語を追加する場合は、この ENGINE_LANG オブジェクトに1言語分キーを追加し、
+// 下の LANG_BUTTONS に切替ボタンを1行足すだけでよい（関数を増やす必要はない）。
+var ENGINE_LANG = {
+  ja: {
     "main-title": "Excel翻訳作業支援",
     "upload-title": "1. 翻訳（Generate）：アップロード・コース選択",
     "course-exp": "体験コース",
@@ -176,18 +178,14 @@ function setLangJa() {
     "guide-sheet-title": "どのシートを開くか：",
     "guide-edit-title": "どこを編集するか：",
     "apply-progress-message": "編集内容の反映処理中です。しばらくお待ちください。",
+    "apply-progress-sub": "ブラウザを閉じないでください。",
     "original-file-button": "ファイルを選択",
     "original-file-status": "ファイルが選択されていません",
     "ui-file-button": "ファイルを選択",
     "ui-file-status": "ファイルが選択されていません",
     "home-link": "ホームに戻る"
-  });
-  var hl = document.getElementById("home-link"); if (hl) hl.href = "/?lang=ja";
-}
-
-function setLangZh() {
-  rememberLang("zh");
-  applyLang({
+  },
+  zh: {
     "main-title": "Excel翻译作业支持",
     "upload-title": "1. 翻译（Generate）：上传・选择范围",
     "course-exp": "体验模式",
@@ -219,26 +217,113 @@ function setLangZh() {
     "guide-sheet-title": "打开哪个工作表：",
     "guide-edit-title": "编辑哪里：",
     "apply-progress-message": "正在反映编辑内容，请稍候。",
+    "apply-progress-sub": "请勿关闭浏览器。",
     "original-file-button": "选择文件",
     "original-file-status": "尚未选择文件",
     "ui-file-button": "选择文件",
     "ui-file-status": "尚未选择文件",
     "home-link": "返回首页"
+  },
+  vi: {
+    "main-title": "Hỗ trợ công việc dịch Excel",
+    "upload-title": "1. Dịch (Generate): Tải lên · chọn gói",
+    "course-exp": "Gói dùng thử",
+    "course-exp-note": "Xử lý trong phạm vi A1:D5 của sheet đã chọn.",
+    "course-std": "Gói tiêu chuẩn",
+    "course-std-note": "Xử lý toàn bộ sheet đã chọn theo cách thông thường.",
+    "original-book": "File Excel gốc (.xlsx)",
+    "upload-button": "Đến cài đặt Dịch (Generate)",
+    "reflect-title": "2. Áp dụng (Apply): Áp dụng nội dung đã chỉnh sửa",
+    "edited-book": "File Excel đã chỉnh sửa (.xlsx)",
+    "reflect-note1": "Lưu ý: Vui lòng không đổi tên file. Nếu đổi tên, hệ thống sẽ không thể đối chiếu với bản gốc đã lưu khi Generate, và sẽ không thể Apply.",
+    "reflect-note2": "Không cần tải lại file Excel gốc. Hệ thống sẽ tự động dùng bản gốc đã lưu lúc Generate.",
+    "reflect-button": "Thực hiện Áp dụng (Apply)",
+    "guide-button": "Xem lại cách chỉnh sửa",
+    "guide-title": "Quy trình đến khi áp dụng nội dung chỉnh sửa",
+    "guide-step1": "Mở file Excel đã tải xuống.",
+    "guide-step2": "Mở sheet TRANSLATION_UI.",
+    "guide-step3": "Nhập số bạn muốn dùng vào cột K.",
+    "guide-step4": "Nhập Y vào cột L.",
+    "guide-step5": "Nếu nhập 4 vào cột K, hãy nhập câu bạn muốn áp dụng vào cột M.",
+    "guide-step6": "Lưu file mà không đổi tên.",
+    "guide-step7": "Tải file Excel đã lưu lên từ mục “Áp dụng nội dung chỉnh sửa” trên màn hình này.",
+    "guide-k-title": "Số ở cột K:",
+    "guide-k0": "0: Quay lại trước khi dịch (giữ nguyên văn bản gốc)",
+    "guide-k1": "1: Candidate1 (GOOGLE)",
+    "guide-k2": "2: Candidate2 (AMAZON)",
+    "guide-k3": "3: Candidate3 (DEEPL)",
+    "guide-k4": "4: Dùng câu do bạn tự nhập",
+    "guide-sheet-title": "Mở sheet nào:",
+    "guide-edit-title": "Chỉnh sửa ở đâu:",
+    "apply-progress-message": "Đang áp dụng nội dung chỉnh sửa. Vui lòng đợi trong giây lát.",
+    "apply-progress-sub": "Vui lòng không đóng trình duyệt.",
+    "original-file-button": "Chọn file",
+    "original-file-status": "Chưa chọn file",
+    "ui-file-button": "Chọn file",
+    "ui-file-status": "Chưa chọn file",
+    "home-link": "Về trang chủ"
+  },
+  en: {
+    "main-title": "Excel Translation Assistant",
+    "upload-title": "1. Generate: Upload & choose course",
+    "course-exp": "Trial course",
+    "course-exp-note": "Processes the A1:D5 range of the selected sheet.",
+    "course-std": "Standard course",
+    "course-std-note": "Processes the selected sheet normally.",
+    "original-book": "Original Excel file (.xlsx)",
+    "upload-button": "Go to Generate settings",
+    "reflect-title": "2. Apply: Apply your edits",
+    "edited-book": "Edited Excel workbook (.xlsx)",
+    "reflect-note1": "Note: Please don't rename the file. Renaming it will prevent matching with the original clone saved during Generate, so Apply will fail.",
+    "reflect-note2": "No need to re-upload the original Excel file. The server automatically uses the original saved during Generate.",
+    "reflect-button": "Run Apply",
+    "guide-button": "Review how to edit again",
+    "guide-title": "Steps to apply your edits",
+    "guide-step1": "Open the downloaded Excel workbook.",
+    "guide-step2": "Open the TRANSLATION_UI sheet.",
+    "guide-step3": "Enter the number you want to use in column K.",
+    "guide-step4": "Enter Y in column L.",
+    "guide-step5": "If you entered 4 in column K, enter the text you want to apply in column M.",
+    "guide-step6": "Save the file without renaming it.",
+    "guide-step7": "Upload the saved Excel file from the “Apply edits” section on this screen.",
+    "guide-k-title": "Column K number:",
+    "guide-k0": "0: Revert to before translation (keep original text)",
+    "guide-k1": "1: Candidate1 (GOOGLE)",
+    "guide-k2": "2: Candidate2 (AMAZON)",
+    "guide-k3": "3: Candidate3 (DEEPL)",
+    "guide-k4": "4: Use your own text",
+    "guide-sheet-title": "Which sheet to open:",
+    "guide-edit-title": "What to edit:",
+    "apply-progress-message": "Applying your edits. Please wait a moment.",
+    "apply-progress-sub": "Please don't close your browser.",
+    "original-file-button": "Choose file",
+    "original-file-status": "No file chosen",
+    "ui-file-button": "Choose file",
+    "ui-file-status": "No file chosen",
+    "home-link": "Back to home"
+  }
+};
+
+function setLang(lang) {
+  if (!ENGINE_LANG[lang]) lang = "ja";
+  rememberLang(lang);
+  applyLang(ENGINE_LANG[lang]);
+  var hl = document.getElementById("home-link");
+  if (hl) hl.href = "/?lang=" + lang;
+  document.querySelectorAll(".lang-switch button").forEach(function(b) {
+    b.classList.toggle("active", b.getAttribute("data-lang") === lang);
   });
-  var hl = document.getElementById("home-link"); if (hl) hl.href = "/?lang=zh";
 }
 
 window.addEventListener("DOMContentLoaded", function() {
   var serverLang = "{{ lang }}";
-  var lang = (serverLang === "zh" || serverLang === "ja") ? serverLang : (localStorage.getItem("etb_lang") || "ja");
-  if (lang === "zh") {
-    setLangZh();
-  } else {
-    setLangJa();
-  }
+  var lang = ENGINE_LANG[serverLang] ? serverLang : (localStorage.getItem("etb_lang") || "ja");
+  if (!ENGINE_LANG[lang]) lang = "ja";
+  setLang(lang);
 });
 
 </script>
+
 
 </head>
 <body>
@@ -246,8 +331,10 @@ window.addEventListener("DOMContentLoaded", function() {
 
   <div class="topbar">
     <div class="lang-switch">
-      <button type="button" onclick="setLangJa()">日本語</button>
-      <button type="button" onclick="setLangZh()">中文</button>
+      <button type="button" data-lang="ja" onclick="setLang('ja')">日本語</button>
+      <button type="button" data-lang="zh" onclick="setLang('zh')">中文</button>
+      <button type="button" data-lang="vi" onclick="setLang('vi')">Tiếng Việt</button>
+      <button type="button" data-lang="en" onclick="setLang('en')">English</button>
     </div>
     <a id="home-link" href="/?lang=ja">ホームに戻る</a>
   </div>
@@ -353,7 +440,7 @@ line-height:1.8;
 {% endif %}
 </strong>
 
-<div style="margin-top:10px; color:#555;">
+<div id="apply-progress-sub" style="margin-top:10px; color:#555;">
 {% if lang == "zh" %}
 请勿关闭浏览器。
 {% else %}

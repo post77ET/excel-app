@@ -119,7 +119,7 @@
   --muted:#2f3b52;
   --radius:14px;
   --shadow:0 10px 34px rgba(8,40,90,.10);
-  --font:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",Meiryo,sans-serif;
+  --font:"Segoe UI","Noto Sans","Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",Meiryo,sans-serif;
   /* ヒーロー用：濃紺 + 燻したゴールド（Webフォント読み込みなし、OS内蔵の明朝体/Georgiaを使用） */
   --navy-950:#0a1322;
   --navy-900:#101f36;
@@ -127,7 +127,7 @@
   --navy-line:rgba(201,167,88,.28);
   --gold:#c9a558;
   --gold-soft:#e6d3a0;
-  --serif:Georgia,"Hiragino Mincho ProN","Yu Mincho","Songti SC","Noto Serif SC",serif;
+  --serif:Georgia,"Noto Serif","Hiragino Mincho ProN","Yu Mincho","Songti SC","Noto Serif SC",serif;
 }
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
@@ -323,6 +323,7 @@ const HOME_TEXT = {
     catch: "文章の翻訳は、AIがぐっと身近に。Excelの翻訳も、同じくらい身近に。",
     catchSub: "DeepL、Google、Amazonの翻訳APIに対応した、Excel一括翻訳ツール",
     gateLead: "翻訳したい原文は何語ですか？",
+    gateJa: "日本語", gateZh: "中国語", gateVi: "ベトナム語", gateEn: "英語",
     featTitle: "このツールでできること",
     feat1: "日本語→中国語翻訳",
     feat2: "書式保持",
@@ -428,6 +429,7 @@ const HOME_TEXT = {
     catch: "文章翻译，AI 让它变得触手可及。Excel 翻译，也想让它一样简单。",
     catchSub: "支持 DeepL、Google、Amazon 翻译API的 Excel 批量翻译工具",
     gateLead: "要翻译的原文是什么语言？",
+    gateJa: "日语", gateZh: "中文", gateVi: "越南语", gateEn: "英语",
     fvTrust1: "格式原样保留",
     fvTrust2: "宏·外部链接自动拦截",
     fvTrust3: "可先从体验课程开始试用",
@@ -533,6 +535,7 @@ const HOME_TEXT = {
     catch: "Dịch văn bản giờ đã gần gũi hơn nhờ AI. Dịch Excel cũng gần gũi như vậy.",
     catchSub: "Công cụ dịch Excel hàng loạt, hỗ trợ API dịch của DeepL, Google, Amazon",
     gateLead: "Văn bản gốc bạn muốn dịch là ngôn ngữ nào?",
+    gateJa: "Tiếng Nhật", gateZh: "Tiếng Trung", gateVi: "Tiếng Việt", gateEn: "Tiếng Anh",
     featTitle: "Công cụ này có thể làm gì",
     feat1: "Dịch Nhật→Trung",
     feat2: "Giữ nguyên định dạng",
@@ -638,6 +641,7 @@ const HOME_TEXT = {
     catch: "AI has made translating text effortless. Now Excel translation is just as easy.",
     catchSub: "A bulk Excel translation tool supporting DeepL, Google, and Amazon translation APIs",
     gateLead: "What language is your original text in?",
+    gateJa: "Japanese", gateZh: "Chinese", gateVi: "Vietnamese", gateEn: "English",
     featTitle: "What this tool can do",
     feat1: "Japanese→Chinese translation",
     feat2: "Keeps formatting",
@@ -794,22 +798,22 @@ window.addEventListener("DOMContentLoaded", function() {
       <div class="source-gate">
         <a class="gate-card" href="/start?src=ja&amp;lang=ja">
           <span class="gate-mark">日</span>
-          <span class="gate-name">日本語</span>
+          <span class="gate-name" id="home-gateJa">日本語</span>
           <span class="gate-arrow">→</span>
         </a>
         <a class="gate-card" href="/start?src=zh&amp;lang=zh">
           <span class="gate-mark">中</span>
-          <span class="gate-name">中文</span>
+          <span class="gate-name" id="home-gateZh">中文</span>
           <span class="gate-arrow">→</span>
         </a>
         <a class="gate-card" href="/start?src=vi&amp;lang=ja">
           <span class="gate-mark">V</span>
-          <span class="gate-name">Tiếng Việt</span>
+          <span class="gate-name" id="home-gateVi">Tiếng Việt</span>
           <span class="gate-arrow">→</span>
         </a>
         <a class="gate-card is-soon" href="/start?src=en&amp;lang=en">
           <span class="gate-mark">E</span>
-          <span class="gate-name">English</span>
+          <span class="gate-name" id="home-gateEn">English</span>
           <span class="gate-arrow">→</span>
         </a>
       </div>
