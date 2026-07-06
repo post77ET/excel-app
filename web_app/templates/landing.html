@@ -52,6 +52,14 @@
 <meta property="og:title" content="{{ cur.ogtitle }}">
 <meta property="og:description" content="{{ cur.ogdesc }}">
 <meta property="og:locale" content="{{ cur.locale }}">
+<meta property="og:url" content="https://excel-app-t3dn.onrender.com/?lang={{ lang if lang in ['ja','zh','vi','en'] else 'ja' }}">
+<meta property="og:image" content="https://excel-app-t3dn.onrender.com/static/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ cur.ogtitle }}">
+<meta name="twitter:description" content="{{ cur.ogdesc }}">
+<meta name="twitter:image" content="https://excel-app-t3dn.onrender.com/static/ogp.png">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -63,6 +71,36 @@
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
 }
 </script>
+{% if lang == "ja" %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Excelの翻訳ツールは無料ですか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "体験コースは無料でお試しいただけます。1シートのA1:D5の範囲で、実際の翻訳結果・書式保持の挙動をご確認いただけます。" }
+    },
+    {
+      "@type": "Question",
+      "name": "日本語から中国語以外にも翻訳できますか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "はい。日本語⇄中国語（簡体字）に加えて、日本語⇄ベトナム語の翻訳にも対応しています。" }
+    },
+    {
+      "@type": "Question",
+      "name": "Excelの書式や数式は崩れませんか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "セル単位で翻訳し、書式・数式・結合セルをそのまま保持した状態でExcelブックを生成します。" }
+    },
+    {
+      "@type": "Question",
+      "name": "どの翻訳エンジンを使っていますか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "DeepL・Google翻訳・Amazon Translateの3種類に対応しており、複数エンジンの翻訳候補を比較して選ぶことができます。" }
+    }
+  ]
+}
+</script>
+{% endif %}
 <style>
 :root{
   --ink:#10213f;
@@ -71,14 +109,14 @@
   --blue-strong:#0b4db8;
   --bg:#f5f8ff;
   --surface:#ffffff;
-  --line:#dbe6f7;
+  --line:#c5d0e3;
   --green:#1f9d62;
   --green-bg:#f1fdf6;
   --warn-bg:#fff6f4;
   --warn-line:#f3bcb2;
   --limit-bg:#fffaf0;
   --limit-line:#f0d28a;
-  --muted:#5b6b82;
+  --muted:#2f3b52;
   --radius:14px;
   --shadow:0 10px 34px rgba(8,40,90,.10);
   --font:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",Meiryo,sans-serif;
@@ -139,7 +177,7 @@ section{ padding:40px 0; }
 h1{ font-size:clamp(28px,4.4vw,42px); line-height:1.22; margin:0 0 16px; color:var(--ink-deep); letter-spacing:-.01em; }
 .catch{ font-size:clamp(19px,2.6vw,26px); font-weight:800; color:var(--blue); margin:0 0 14px; line-height:1.3; letter-spacing:-.01em; }
 .catch-sub{ font-size:15.5px; font-weight:700; color:var(--ink-deep); margin:16px 0 0; }
-.disclaimer{ font-size:12px; color:var(--muted); line-height:1.65; margin:16px 0 0; }
+.disclaimer{ font-size:13.5px; color:var(--muted); line-height:1.7; margin:16px 0 0; }
 h2{
   font-family:var(--serif); font-weight:700;
   font-size:clamp(22px,2.7vw,28px); color:var(--ink-deep); margin:0 0 20px; letter-spacing:-.01em;
@@ -162,23 +200,23 @@ p{ font-size:16.5px; }
 .hero p.lead{ font-size:17px; color:#b9c4dc; max-width:720px; }
 .hero .catch{ color:var(--gold-soft); }
 .hero .catch-sub{ color:#c7d1e6; }
-.hero .disclaimer{ color:#7c8aa8; }
+.hero .disclaimer{ color:#a9b7d6; }
 .tags{ display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 24px; }
 .hero .tag{
-  font-size:13.5px; font-weight:600; color:var(--gold-soft);
-  background:rgba(255,255,255,.03); border:1px solid var(--navy-line); padding:6px 14px; border-radius:999px;
+  font-size:15px; font-weight:600; color:var(--gold-soft);
+  background:rgba(255,255,255,.03); border:1px solid var(--navy-line); padding:7px 16px; border-radius:999px;
 }
 .tag{
-  font-size:13.5px; font-weight:700; color:#9c7a2e;
-  background:#fbf6ea; border:1px solid #ecd9a8; padding:6px 12px; border-radius:999px;
+  font-size:15px; font-weight:700; color:#9c7a2e;
+  background:#ffffff; border:1px solid #ecd9a8; padding:7px 14px; border-radius:999px;
 }
 .hero .fv-trust{
   display:flex; flex-wrap:wrap; gap:6px 18px; margin:22px 0 6px;
-  font-size:13px; color:#9aa8c4;
+  font-size:14.5px; color:#d7deef;
 }
 .hero .fv-trust span{ position:relative; padding-left:14px; }
 .hero .fv-trust span::before{ content:"—"; position:absolute; left:0; color:var(--gold); }
-.gate-lead{ font-size:15px; color:#9aa8c4; margin:24px 0 10px; font-weight:700; letter-spacing:.02em; }
+.gate-lead{ font-size:15px; color:#d7deef; margin:24px 0 10px; font-weight:700; letter-spacing:.02em; }
 .source-gate{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin:0 0 8px; }
 .gate-card{
   position:relative; display:flex; flex-direction:column; align-items:center; gap:10px; text-decoration:none;
@@ -241,7 +279,7 @@ p{ font-size:16.5px; }
 .problem{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
 .problem .card{ border-left:5px solid #cdd8e8; }
 .problem .card strong{ font-size:15.5px; }
-.solution{ border-left-color:var(--gold) !important; background:#fffdf5; }
+.solution{ border-left-color:var(--gold) !important; background:#ffffff; }
 
 .notice-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .warn{ background:var(--warn-bg); border:1px solid var(--warn-line); border-radius:var(--radius); padding:22px; }
@@ -280,7 +318,7 @@ const HOME_TEXT = {
     navLimit: "制限事項",
     navOption: "オプション",
     navHelp: "困ったときは",
-    heroTitle: "Excelの構造をそのまま保持して、日本語を中国語に翻訳・確認・反映できます。",
+    heroTitle: "Excelの構造をそのまま保持して、日本語⇄中国語・ベトナム語に翻訳・確認・反映できます。",
     heroLead: "日本語のExcelブック（.xlsx）を、レイアウトや数式を崩さずに中国語（簡体字 zh-CN）へ翻訳。翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。エクセル 翻訳・Excel 日本語 中国語 翻訳をお探しの方にも対応した無料のExcel翻訳ツールです。日本語からベトナム語への翻訳（Excel dịch tiếng Việt）にも対応しています。",
     catch: "文章の翻訳は、AIがぐっと身近に。Excelの翻訳も、同じくらい身近に。",
     catchSub: "DeepL、Google、Amazonの翻訳APIに対応した、Excel一括翻訳ツール",
@@ -300,7 +338,7 @@ const HOME_TEXT = {
     fvScroll: "下にスクロールで「選んで仕上げる」流れ",
     fvTrust1: "書式そのまま",
     fvTrust2: "マクロ・外部リンクは自動ブロック",
-    fvTrust3: "体験は無料",
+    fvTrust3: "まずは体験コースからお試しいただけます",
     fvDlgTitle: "翻訳例：ふつうの翻訳 と 本ツール（候補から選択）",
     fvDlgClose: "閉じる",
     dHsrc: "原文（日本語）",
@@ -354,7 +392,7 @@ const HOME_TEXT = {
     uHl: "L 適用",
     uHm: "M 編集内容",
     disclaimer: "※本サービスは、各社が提供する翻訳APIを活用した独立したツールであり、Google社、Amazon社、DeepL社との共同開発や公式連携を示すものではありません。",
-    tagLang: "日本語 → 中国語（簡体字）",
+    tagLang: "日本語⇄中国語・ベトナム語 対応",
     tagFormat: "書式・数式を保持",
     tagCell: "セル単位で翻訳",
     tagFile: ".xlsx 対応",
@@ -397,7 +435,7 @@ const HOME_TEXT = {
     navLimit: "限制事项",
     navOption: "选项",
     navHelp: "遇到问题时",
-    heroTitle: "保持Excel结构不变，将日语翻译为中文，并完成确认与反映处理。",
+    heroTitle: "保持Excel结构不变，实现日语⇄中文・越南语的翻译、确认与反映。",
     heroLead: "将日语Excel工作簿（.xlsx）在保持排版与公式的前提下翻译为中文（简体 zh-CN）。确认并编辑翻译结果后，生成已反映编辑内容的Excel工作簿。支持Excel日语翻译中文、Excel翻译工具等常见搜索需求，同时支持日语与越南语之间的互译。",
     catch: "文章翻译，AI 让它变得触手可及。Excel 翻译，也想让它一样简单。",
     catchSub: "支持 DeepL、Google、Amazon 翻译API的 Excel 批量翻译工具",
@@ -410,7 +448,7 @@ const HOME_TEXT = {
     fvScroll: "向下滚动查看「选择并完成」的流程",
     fvTrust1: "格式原样保留",
     fvTrust2: "宏·外部链接自动拦截",
-    fvTrust3: "体验免费",
+    fvTrust3: "可先从体验课程开始试用",
     fvDlgTitle: "翻译示例：普通翻译 与 本工具（从候选中选择）",
     fvDlgClose: "关闭",
     dHsrc: "原文（日语）",
@@ -464,7 +502,7 @@ const HOME_TEXT = {
     uHl: "L 适用",
     uHm: "M 编辑内容",
     disclaimer: "※本服务为利用各公司所提供翻译API的独立工具，不代表与Google、Amazon、DeepL公司的共同开发或官方合作关系。",
-    tagLang: "日语 → 中文（简体）",
+    tagLang: "日语⇄中文・越南语 均支持",
     tagFormat: "保持格式・公式",
     tagCell: "按单元格翻译",
     tagFile: "支持 .xlsx",
@@ -514,7 +552,7 @@ const HOME_TEXT = {
     navLimit: "Giới hạn",
     navOption: "Tùy chọn",
     navHelp: "Trợ giúp",
-    heroTitle: "Giữ nguyên cấu trúc Excel, dịch, kiểm tra và áp dụng từ tiếng Nhật sang tiếng Trung.",
+    heroTitle: "Giữ nguyên cấu trúc Excel, dịch, kiểm tra và áp dụng giữa tiếng Nhật với tiếng Trung và tiếng Việt.",
     heroLead: "Dịch file Excel (.xlsx) tiếng Nhật sang tiếng Trung (giản thể zh-CN) mà không phá vỡ bố cục hay công thức. Sau khi kiểm tra và chỉnh sửa kết quả dịch, tạo ra file Excel hoàn chỉnh đã áp dụng nội dung chỉnh sửa. Công cụ dịch Excel miễn phí, hỗ trợ dịch Excel tiếng Nhật sang tiếng Việt và ngược lại.",
     catch: "Dịch văn bản giờ đã gần gũi hơn nhờ AI. Dịch Excel cũng gần gũi như vậy.",
     catchSub: "Công cụ dịch Excel hàng loạt, hỗ trợ API dịch của DeepL, Google, Amazon",
@@ -534,7 +572,7 @@ const HOME_TEXT = {
     fvScroll: "Cuộn xuống để xem quy trình “chọn và hoàn thiện”",
     fvTrust1: "Giữ nguyên định dạng",
     fvTrust2: "Tự động chặn macro và liên kết ngoài",
-    fvTrust3: "Dùng thử miễn phí",
+    fvTrust3: "Có thể bắt đầu từ gói dùng thử",
     fvDlgTitle: "Ví dụ dịch: Dịch thông thường và Công cụ này (chọn từ các phương án)",
     fvDlgClose: "Đóng",
     dHsrc: "Văn bản gốc (tiếng Nhật)",
@@ -588,7 +626,7 @@ const HOME_TEXT = {
     uHl: "Áp dụng L",
     uHm: "Nội dung chỉnh sửa M",
     disclaimer: "※ Dịch vụ này là công cụ độc lập sử dụng API dịch của các hãng, không phải là sản phẩm hợp tác phát triển hay liên kết chính thức với Google, Amazon hay DeepL.",
-    tagLang: "Tiếng Nhật → Tiếng Trung (giản thể)",
+    tagLang: "Hỗ trợ Nhật⇄Trung và Nhật⇄Việt",
     tagFormat: "Giữ nguyên định dạng · công thức",
     tagCell: "Dịch theo từng ô",
     tagFile: "Hỗ trợ file .xlsx",
@@ -631,7 +669,7 @@ const HOME_TEXT = {
     navLimit: "Limitations",
     navOption: "Options",
     navHelp: "Help",
-    heroTitle: "Translate, review, and apply Japanese to Chinese while keeping your Excel structure intact.",
+    heroTitle: "Translate, review, and apply Japanese ⇄ Chinese and Vietnamese while keeping your Excel structure intact.",
     heroLead: "Translate Japanese Excel workbooks (.xlsx) into Chinese (Simplified, zh-CN) without breaking layout or formulas. Review and edit the translation, then generate a finished workbook with your edits applied. A free Excel translation tool for Japanese to Chinese translation, also supporting Japanese to Vietnamese translation.",
     catch: "AI has made translating text effortless. Now Excel translation is just as easy.",
     catchSub: "A bulk Excel translation tool supporting DeepL, Google, and Amazon translation APIs",
@@ -651,7 +689,7 @@ const HOME_TEXT = {
     fvScroll: "Scroll down to see the “choose and finish” flow",
     fvTrust1: "Formatting stays intact",
     fvTrust2: "Macros and external links are blocked automatically",
-    fvTrust3: "Free to try",
+    fvTrust3: "Start with the trial course",
     fvDlgTitle: "Example: plain translation vs. this tool (choose from candidates)",
     fvDlgClose: "Close",
     dHsrc: "Original (Japanese)",
@@ -705,7 +743,7 @@ const HOME_TEXT = {
     uHl: "L (apply)",
     uHm: "M (your edit)",
     disclaimer: "※ This service is an independent tool built on translation APIs from other providers. It is not co-developed with, nor officially affiliated with, Google, Amazon, or DeepL.",
-    tagLang: "Japanese → Chinese (Simplified)",
+    tagLang: "Supports Japanese ⇄ Chinese and Vietnamese",
     tagFormat: "Keeps formatting & formulas",
     tagCell: "Translates cell by cell",
     tagFile: "Supports .xlsx",
@@ -940,40 +978,43 @@ window.addEventListener("DOMContentLoaded", function() {
   .hero-lite{ display:block; }
   .steps{ }
   .steps-title{ font-size:clamp(22px,3vw,30px); color:#063577; margin:0 0 6px; }
-  .steps-sub{ color:#5b6b82; font-size:14px; margin:0 0 34px; }
+  .steps-sub{ color:#2f3b52; font-size:14px; margin:0 0 34px; }
   .steps-list{ position:relative; padding-left:74px; }
   .steps-list::before{
     content:""; position:absolute; left:26px; top:6px; bottom:6px; width:1px;
     background:linear-gradient(var(--gold),rgba(201,165,88,.12));
+    z-index:0;
   }
   .step{ position:relative; padding:0 0 48px; }
   .step:last-child{ padding-bottom:0; }
   .step-badge{
-    position:absolute; left:-74px; top:-4px; width:48px; text-align:right;
-    font-family:var(--serif); font-size:34px; font-weight:700; color:var(--gold);
-    line-height:1; letter-spacing:0;
+    position:absolute; left:-74px; top:-4px; width:52px; height:52px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:50%; background:var(--bg); border:1px solid var(--gold);
+    font-family:var(--serif); font-size:22px; font-weight:700; color:var(--gold);
+    z-index:1;
   }
   .step-body{ }
   @media(max-width:640px){
     .steps-list{ padding-left:52px; }
     .steps-list::before{ left:18px; }
-    .step-badge{ left:-52px; width:34px; font-size:26px; }
+    .step-badge{ left:-52px; width:38px; height:38px; font-size:17px; }
   }
   .step-h{ font-size:19px; font-weight:700; color:#063577; margin:0 0 6px; font-family:var(--serif); }
-  .step-d{ font-size:14.5px; color:#46556b; margin:0 0 14px; line-height:1.7; }
+  .step-d{ font-size:14.5px; color:#2f3b52; margin:0 0 14px; line-height:1.7; }
   .scr{ border:1px solid #d8dee8; border-radius:10px; overflow:hidden; background:#fff; max-width:680px; }
-  .scr-bar{ font-size:12px; padding:6px 10px; background:#f3f5f8; color:#5b6b82; border-bottom:1px solid #e6eaf1; }
+  .scr-bar{ font-size:12px; padding:6px 10px; background:#f3f5f8; color:#2f3b52; border-bottom:1px solid #e6eaf1; }
   .scr-pad{ padding:14px; }
-  .chip{ display:inline-block; background:#eef3fb; color:#075be8; border:1px solid #cfe0f7; border-radius:6px; padding:6px 12px; font-size:13px; }
+  .chip{ display:inline-block; background:#ffffff; color:#075be8; border:1px solid #cfe0f7; border-radius:6px; padding:6px 12px; font-size:13px; }
   .drop{ border:2px dashed #b5c6e0; border-radius:10px; padding:18px; text-align:center; color:#6b7a93; font-size:13px; background:#f8fbff; }
   .btn-fake{ display:inline-block; background:#075be8; color:#fff; font-size:13px; font-weight:600; padding:8px 16px; border-radius:8px; }
   .btn-ghost{ display:inline-block; background:#fff; color:#075be8; border:1px solid #b5d4f4; font-size:13px; font-weight:600; padding:7px 14px; border-radius:8px; }
   .tabs{ display:flex; gap:6px; font-size:12px; }
-  .tab{ padding:5px 10px; border:1px solid #d8dee8; border-bottom:none; border-radius:6px 6px 0 0; background:#f3f5f8; color:#5b6b82; }
+  .tab{ padding:5px 10px; border:1px solid #d8dee8; border-bottom:none; border-radius:6px 6px 0 0; background:#f3f5f8; color:#2f3b52; }
   .tab.on{ background:#e9f1fb; color:#075be8; border-color:#b5d4f4; font-weight:600; }
   .uitbl{ width:100%; border-collapse:collapse; font-size:12px; }
   .uitbl th,.uitbl td{ border:1px solid #e6eaf1; padding:5px 7px; text-align:left; white-space:nowrap; }
-  .uitbl th{ background:#eef3fb; color:#063577; font-weight:600; font-size:11.5px; }
+  .uitbl th{ background:#ffffff; color:#063577; font-weight:600; font-size:11.5px; }
   .uitbl .col-k,.uitbl .col-l,.uitbl .col-m{ background:#fffaf0; }
   .uitbl thead .col-k,.uitbl thead .col-l,.uitbl thead .col-m{ background:#fdeecb; color:#8a5b00; }
   .pick{ background:#d6efe9; color:#0f5e57; font-weight:600; }
@@ -983,7 +1024,7 @@ window.addEventListener("DOMContentLoaded", function() {
   .scr-link{ font-size:12px; color:#075be8; cursor:pointer; text-decoration:underline; padding:8px 12px; display:inline-block; }
   .s3-row{ display:flex; gap:16px; align-items:flex-start; }
   .s3-row .scr{ flex:0 1 680px; }
-  .step-note{ flex:1 1 240px; min-width:200px; font-size:13px; color:#46556b; line-height:1.6; }
+  .step-note{ flex:1 1 240px; min-width:200px; font-size:13px; color:#2f3b52; line-height:1.6; }
   .step-note .must{ color:#c0392b; font-weight:700; margin-top:10px; }
   @media(max-width:860px){ .s3-row{ flex-wrap:wrap; } .s3-row .scr{ flex:1 1 100%; } }
   .grn .scr-bar{ background:#eef7f0; color:#2e7d32; }
@@ -1004,7 +1045,7 @@ window.addEventListener("DOMContentLoaded", function() {
       .seo-features{ margin:28px 0 8px; }
       .seo-features h2{ font-size:clamp(20px,2.6vw,26px); color:#063577; margin:0 0 14px; }
       .seo-features ul{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
-      .seo-features li{ background:#fff; border:1px solid #dbe6f7; border-top:3px solid var(--gold); border-radius:10px; padding:12px 14px; font-size:15px; font-weight:600; color:#10213f; box-shadow:0 4px 14px rgba(8,40,90,.05); }
+      .seo-features li{ background:#fff; border:1px solid #c5d0e3; border-top:3px solid var(--gold); border-radius:10px; padding:12px 14px; font-size:15px; font-weight:600; color:#10213f; box-shadow:0 4px 14px rgba(8,40,90,.05); }
       .seo-features li::before{ content:"\2713"; color:#9c7a2e; font-weight:700; margin-right:8px; }
     </style>
     <h2 id="home-featTitle">このツールでできること</h2>
@@ -1056,6 +1097,30 @@ window.addEventListener("DOMContentLoaded", function() {
       </div>
     </div>
   </section>
+
+  {% if lang == "ja" %}
+  <section class="container" style="margin-top:24px;">
+    <h2>よくあるご質問</h2>
+    <div style="display:flex; flex-direction:column; gap:16px; margin-top:20px;">
+      <div class="card">
+        <h3>Excelの翻訳ツールは無料ですか？</h3>
+        <p>体験コースは無料でお試しいただけます。1シートのA1:D5の範囲で、実際の翻訳結果・書式保持の挙動をご確認いただけます。</p>
+      </div>
+      <div class="card">
+        <h3>日本語から中国語以外にも翻訳できますか？</h3>
+        <p>はい。日本語⇄中国語（簡体字）に加えて、日本語⇄ベトナム語の翻訳にも対応しています。</p>
+      </div>
+      <div class="card">
+        <h3>Excelの書式や数式は崩れませんか？</h3>
+        <p>セル単位で翻訳し、書式・数式・結合セルをそのまま保持した状態でExcelブックを生成します。</p>
+      </div>
+      <div class="card">
+        <h3>どの翻訳エンジンを使っていますか？</h3>
+        <p>DeepL・Google翻訳・Amazon Translateの3種類に対応しており、複数エンジンの翻訳候補を比較して選ぶことができます。</p>
+      </div>
+    </div>
+  </section>
+  {% endif %}
 
 </main>
 

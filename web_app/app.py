@@ -167,7 +167,12 @@ def validate_xlsx(path: Path) -> None:
             if missing:
                 raise ValueError("xlsx必須構成が不足: " + ", ".join(missing))
             if any(name.startswith("xl/externalLinks/") for name in names):
-                raise ValueError("外部リンク付きxlsxは安全上ブロックします。")
+                raise ValueError(
+                    "外部リンク付きxlsxは安全上ブロックします。"
+                    "【対処法】Excelでファイルを開き、「データ」タブ→「リンクの編集」→"
+                    "該当リンクを選択して「リンクの解除」を行い、保存し直してから"
+                    "再度アップロードしてください。"
+                )
             if any(name.endswith("vbaProject.bin") for name in names):
                 raise ValueError("マクロ付きファイルは安全上ブロックします。")
     except zipfile.BadZipFile as exc:
