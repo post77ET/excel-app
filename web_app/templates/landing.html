@@ -1,34 +1,34 @@
 <!doctype html>
 {% set seo = {
   'ja': {
-    'title': 'Excel翻訳ツール | 日本語→中国語 | 書式保持対応',
-    'desc': 'Excelの書式・数式・結合セルを保持したまま日本語→中国語翻訳ができるExcel翻訳ツール',
+    'title': 'Excel翻訳ツール | 日本語⇄中国語・ベトナム語 | 書式保持対応',
+    'desc': 'Excelの書式・数式・結合セルを保持したまま日本語⇄中国語・ベトナム語の翻訳ができるExcel翻訳ツール',
     'ogtitle': 'Excel翻訳作業支援ツール',
-    'ogdesc': 'Excelの構造をそのまま保持して、日本語を中国語に翻訳。',
+    'ogdesc': 'Excelの構造をそのまま保持して、日本語⇄中国語・ベトナム語に翻訳。',
     'locale': 'ja_JP',
     'html': 'ja'
   },
   'zh': {
-    'title': 'Excel翻译工具 | 日语→中文 | 保留格式',
-    'desc': '保留Excel格式、公式、合并单元格，实现日语→中文翻译的Excel翻译工具',
+    'title': 'Excel翻译工具 | 日语⇄中文・越南语 | 保留格式',
+    'desc': '保留Excel格式、公式、合并单元格，实现日语⇄中文・越南语翻译的Excel翻译工具',
     'ogtitle': 'Excel翻译作业支持工具',
-    'ogdesc': '保持Excel结构不变，将日语翻译为中文。',
+    'ogdesc': '保持Excel结构不变，实现日语⇄中文・越南语的翻译。',
     'locale': 'zh_CN',
     'html': 'zh-CN'
   },
   'vi': {
-    'title': 'Công cụ dịch Excel | Nhật→Trung | Giữ nguyên định dạng',
+    'title': 'Công cụ dịch Excel | Nhật⇄Trung・Việt | Giữ nguyên định dạng',
     'desc': 'Công cụ dịch Excel từ tiếng Nhật sang tiếng Trung, giữ nguyên định dạng, công thức và ô đã gộp',
     'ogtitle': 'Công cụ hỗ trợ dịch Excel',
-    'ogdesc': 'Dịch tiếng Nhật sang tiếng Trung trong khi vẫn giữ nguyên cấu trúc Excel.',
+    'ogdesc': 'Dịch tiếng Nhật sang tiếng Trung và tiếng Việt trong khi vẫn giữ nguyên cấu trúc Excel.',
     'locale': 'vi_VN',
     'html': 'vi'
   },
   'en': {
-    'title': 'Excel Translation Tool | Japanese to Chinese | Keeps Formatting',
-    'desc': 'Translate Excel files from Japanese to Chinese while keeping formatting, formulas, and merged cells intact',
+    'title': 'Excel Translation Tool | Japanese ⇄ Chinese & Vietnamese | Keeps Formatting',
+    'desc': 'Translate Excel files between Japanese, Chinese, and Vietnamese while keeping formatting, formulas, and merged cells intact',
     'ogtitle': 'Excel Translation Assistant',
-    'ogdesc': 'Translate Japanese to Chinese while keeping your Excel structure intact.',
+    'ogdesc': 'Translate Japanese to Chinese and Vietnamese while keeping your Excel structure intact.',
     'locale': 'en_US',
     'html': 'en'
   }
@@ -330,12 +330,6 @@ const HOME_TEXT = {
     feat4: "数式保持",
     feat5: "複数シート対応",
     feat6: "Excel構造保持翻訳",
-    fvA: "A. 日本語のExcel",
-    fvBad: "ふつうに翻訳すると…",
-    fvB: "B. 候補から選べる",
-    fvMore: "翻訳例をもっと見る（拡大）",
-    fvSteps: "① ② ／ 全4ステップ — この先で「選ぶ・直す → 完成」まで",
-    fvScroll: "下にスクロールで「選んで仕上げる」流れ",
     fvTrust1: "書式そのまま",
     fvTrust2: "マクロ・外部リンクは自動ブロック",
     fvTrust3: "まずは体験コースからお試しいただけます",
@@ -398,12 +392,6 @@ const HOME_TEXT = {
     tagFile: ".xlsx 対応",
     start: "翻訳（Generate）を始める",
     guide: "使い方を見る",
-    flowTitle: "このツールの基本の流れ",
-    f1: "翻訳前のExcelブックをアップロード",
-    f2: "Generateで翻訳結果確認・編集用Excelブックを生成",
-    f3: "TRANSLATION_UIシートで翻訳候補を確認・編集",
-    f4: "ファイル名を変えずに保存",
-    f5: "編集内容の反映処理で完成ファイルを生成",
     problemTitle: "こんなことで困っていませんか？",
     p1: "翻訳するとExcelのレイアウトや数式が崩れる",
     s1: "元の構造をできるだけ保持したまま翻訳します",
@@ -440,12 +428,6 @@ const HOME_TEXT = {
     catch: "文章翻译，AI 让它变得触手可及。Excel 翻译，也想让它一样简单。",
     catchSub: "支持 DeepL、Google、Amazon 翻译API的 Excel 批量翻译工具",
     gateLead: "要翻译的原文是什么语言？",
-    fvA: "A. 日语Excel",
-    fvBad: "普通翻译的话…",
-    fvB: "B. 可从候选中选择",
-    fvMore: "查看更多翻译示例（放大）",
-    fvSteps: "① ② ／ 共4步 — 之后「选择·修改 → 完成」",
-    fvScroll: "向下滚动查看「选择并完成」的流程",
     fvTrust1: "格式原样保留",
     fvTrust2: "宏·外部链接自动拦截",
     fvTrust3: "可先从体验课程开始试用",
@@ -508,12 +490,6 @@ const HOME_TEXT = {
     tagFile: "支持 .xlsx",
     start: "开始翻译（Generate）",
     guide: "查看使用方法",
-    flowTitle: "本工具的基本流程",
-    f1: "上传翻译前的Excel工作簿",
-    f2: "通过Generate生成翻译结果确认・编辑用Excel工作簿",
-    f3: "在TRANSLATION_UI工作表中确认・编辑翻译候选",
-    f4: "不要更改文件名，直接保存",
-    f5: "通过编辑内容反映处理生成完成文件",
     problemTitle: "您是否遇到过这些问题？",
     p1: "翻译后Excel布局或公式被破坏",
     s1: "尽可能保持原有结构进行翻译",
@@ -544,7 +520,7 @@ const HOME_TEXT = {
     feat4: "保留公式",
     feat5: "支持多个工作表",
     feat6: "保持Excel结构翻译"
-  }
+  },
   vi: {
     title: "Công cụ hỗ trợ dịch Excel",
     navHome: "Trang chủ",
@@ -564,12 +540,6 @@ const HOME_TEXT = {
     feat4: "Giữ nguyên công thức",
     feat5: "Hỗ trợ nhiều sheet",
     feat6: "Dịch giữ nguyên cấu trúc Excel",
-    fvA: "A. Excel tiếng Nhật",
-    fvBad: "Nếu dịch bình thường…",
-    fvB: "B. Có thể chọn từ các phương án",
-    fvMore: "Xem thêm ví dụ dịch (phóng to)",
-    fvSteps: "① ② / Tổng 4 bước — tiếp theo là “chọn · sửa → hoàn thành”",
-    fvScroll: "Cuộn xuống để xem quy trình “chọn và hoàn thiện”",
     fvTrust1: "Giữ nguyên định dạng",
     fvTrust2: "Tự động chặn macro và liên kết ngoài",
     fvTrust3: "Có thể bắt đầu từ gói dùng thử",
@@ -632,12 +602,6 @@ const HOME_TEXT = {
     tagFile: "Hỗ trợ file .xlsx",
     start: "Bắt đầu dịch (Generate)",
     guide: "Xem cách dùng",
-    flowTitle: "Quy trình cơ bản của công cụ này",
-    f1: "Tải lên file Excel trước khi dịch",
-    f2: "Dùng Generate để tạo file Excel kiểm tra · chỉnh sửa kết quả dịch",
-    f3: "Kiểm tra · chỉnh sửa phương án dịch trong sheet TRANSLATION_UI",
-    f4: "Lưu file mà không đổi tên",
-    f5: "Xử lý áp dụng nội dung chỉnh sửa để tạo file hoàn chỉnh",
     problemTitle: "Bạn có đang gặp những vấn đề này không?",
     p1: "Dịch xong thì bố cục và công thức Excel bị hỏng",
     s1: "Dịch trong khi giữ nguyên cấu trúc gốc nhiều nhất có thể",
@@ -681,12 +645,6 @@ const HOME_TEXT = {
     feat4: "Keeps formulas",
     feat5: "Supports multiple sheets",
     feat6: "Structure-preserving translation",
-    fvA: "A. Japanese Excel",
-    fvBad: "A plain translation looks like this…",
-    fvB: "B. Choose from candidates",
-    fvMore: "See more translation examples (enlarge)",
-    fvSteps: "① ② / 4 steps total — next comes “choose & fix → finished”",
-    fvScroll: "Scroll down to see the “choose and finish” flow",
     fvTrust1: "Formatting stays intact",
     fvTrust2: "Macros and external links are blocked automatically",
     fvTrust3: "Start with the trial course",
@@ -749,12 +707,6 @@ const HOME_TEXT = {
     tagFile: "Supports .xlsx",
     start: "Start translating (Generate)",
     guide: "See how it works",
-    flowTitle: "The basic flow of this tool",
-    f1: "Upload the Excel workbook you want translated",
-    f2: "Use Generate to create a workbook for reviewing and editing the translation",
-    f3: "Review and edit translation candidates in the TRANSLATION_UI sheet",
-    f4: "Save without renaming the file",
-    f5: "Run Apply to generate the finished file with your edits",
     problemTitle: "Does any of this sound familiar?",
     p1: "Translating breaks your Excel layout or formulas",
     s1: "We translate while preserving the original structure as much as possible",
@@ -835,8 +787,8 @@ window.addEventListener("DOMContentLoaded", function() {
   <section class="hero hero-lite">
     <div>
       <p class="catch" id="home-catch">文章の翻訳は、AIがぐっと身近に。Excelの翻訳も、同じくらい身近に。</p>
-      <h1 id="home-heroTitle">Excelの構造をそのまま保持して、日本語を中国語に翻訳・確認・反映できます。</h1>
-      <p class="lead" id="home-heroLead">日本語のExcelブック（.xlsx）を、レイアウトや数式を崩さずに中国語（簡体字 zh-CN）へ翻訳。翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。</p>
+      <h1 id="home-heroTitle">Excelの構造をそのまま保持して、日本語⇄中国語・ベトナム語に翻訳・確認・反映できます。</h1>
+      <p class="lead" id="home-heroLead">日本語のExcelブック（.xlsx）を、レイアウトや数式を崩さずに中国語（簡体字 zh-CN）へ翻訳。翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。エクセル 翻訳・Excel 日本語 中国語 翻訳をお探しの方にも対応した無料のExcel翻訳ツールです。日本語からベトナム語への翻訳（Excel dịch tiếng Việt）にも対応しています。</p>
       <p class="catch-sub" id="home-catchSub">DeepL、Google、Amazonの翻訳APIに対応した、Excel一括翻訳ツール</p>
       <p class="gate-lead" id="home-gateLead">{% if lang == "zh" %}要翻译的原文是什么语言？{% else %}翻訳したい原文は何語ですか？{% endif %}</p>
       <div class="source-gate">
@@ -862,7 +814,7 @@ window.addEventListener("DOMContentLoaded", function() {
         </a>
       </div>
       <div class="tags">
-        <span class="tag" id="home-tagLang">日本語 → 中国語（簡体字）</span>
+        <span class="tag" id="home-tagLang">日本語⇄中国語・ベトナム語 対応</span>
         <span class="tag" id="home-tagFormat">書式・数式を保持</span>
         <span class="tag" id="home-tagCell">セル単位で翻訳</span>
         <span class="tag" id="home-tagFile">.xlsx 対応</span>
@@ -870,7 +822,7 @@ window.addEventListener("DOMContentLoaded", function() {
       <div class="fv-trust">
         <span id="home-fvTrust1">書式そのまま</span>
         <span id="home-fvTrust2">マクロ・外部リンクは自動ブロック</span>
-        <span id="home-fvTrust3">体験は無料</span>
+        <span id="home-fvTrust3">まずは体験コースからお試しいただけます</span>
       </div>
       <p class="disclaimer" id="home-disclaimer">※本サービスは、各社が提供する翻訳APIを活用した独立したツールであり、Google社、Amazon社、DeepL社との共同開発や公式連携を示すものではありません。</p>
     </div>
@@ -893,7 +845,7 @@ window.addEventListener("DOMContentLoaded", function() {
     <div class="step">
       <div class="step-badge">②</div>
       <div class="step-body">
-        <p class="step-h" id="home-s2t">翻訳して、確認・編集用のExcelを生成</p>
+        <p class="step-h" id="home-s2t">翻訳（Generate）：確認・編集用のExcelを生成</p>
         <p class="step-d" id="home-s2d">「Generate」を押すと、元のシートがそのまま中国語に翻訳されます。あわせて、直したい箇所を選んで修正するための TRANSLATION_UI シートも作られます。</p>
         <div class="scr"><div class="scr-bar"><span class="btn-fake">Generate ▶</span></div><div class="scr-pad"><div class="tabs"><span class="tab" id="home-uOrigTab">元のシート</span><span class="tab on" id="home-uGenTab">TRANSLATION_UI（生成）</span></div></div></div>
       </div>
@@ -937,7 +889,7 @@ window.addEventListener("DOMContentLoaded", function() {
     <div class="step">
       <div class="step-badge">⑤</div>
       <div class="step-body">
-        <p class="step-h" id="home-s5t">反映して、完成版Excelを生成</p>
+        <p class="step-h" id="home-s5t">反映（Apply）：完成版Excelを生成</p>
         <p class="step-d" id="home-s5d">反映処理を実行すると、③で選んだ・直した内容が元のExcelに反映され、書式そのままの完成版ができます。</p>
         <div class="scr"><div class="scr-bar" id="home-uApplyBar">反映（Apply）</div><div class="scr-pad"><span class="btn-ghost" id="home-uChoose2">ファイルを選択</span> <span class="chip">📄 売上表.xlsx<span id="home-uEdited">（編集済み）</span></span><span style="margin:0 8px; color:#9aa3b2;">→</span><span class="btn-fake" id="home-uApplyBtn">反映（Apply）▶</span></div></div>
         <div style="height:10px;"></div>
