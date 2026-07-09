@@ -667,7 +667,10 @@ fn resolve_sheet_xml_path(
 }
 
 fn extract_sheet_rid(workbook_xml: &str, sheet_name: &str) -> Result<Option<String>, String> {
-    let marker = format!("name=\"{sheet_name}\"");
+    // workbook.xml内では & 等がXMLエスケープされて保存されているため、
+    // シート名側もエスケープしてから検索する（例: "A&B" は name="A&amp;B" と一致させる）。
+    let escaped_sheet_name = xml_escape_text(sheet_name);
+    let marker = format!("name=\"{escaped_sheet_name}\"");
     let start = match workbook_xml.find(marker.as_str()) {
         Some(pos) => pos,
         None => return Ok(None),
