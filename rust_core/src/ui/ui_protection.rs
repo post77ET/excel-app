@@ -267,6 +267,205 @@ pub fn apply_apply_output_protection(
     Ok(())
 }
 
+/// 図形・画像(drawing*.xml)を、翻訳前の元ファイルの内容でそのまま復元する。
+///
+/// 背景（実データで確認済み）：umya-spreadsheet 3.0.0 は、グループ図形が
+/// 2階層以上ネストしている場合（例：画像2枚＋図形をグループ化し、それを
+/// さらに別の要素とグループ化する等）、read→write の往復でグループ内の
+/// 画像・図形のアンカー座標（twoCellAnchor の from/to）を正しく再現できず、
+/// 位置ズレ・縦横比の破損を引き起こすことが確認された。ネストが1階層まで
+/// （単純なグループ化1回）であれば往復は正常。
+///
+/// 翻訳処理はセルのテキストだけを書き換えるものであり、画像・図形
+/// （drawing*.xml）の内容は本来一切変更する必要がない。そのため、
+/// umyaによる書き出しが終わった後、対象シートのdrawing*.xmlを
+/// 「翻訳前の元ファイルにあったバイト列」でそのまま置き換えることで、
+/// グループのネスト階層数に関わらず、画像・図形が絶対に壊れないようにする。
+///
+/// - `original_path`: 翻訳前の元ファイル（ユーザーが最初にアップロードしたもの）
+/// - `output_path`: umyaが書き出した直後の生成/反映後ファイル（このファイルを書き換える）
+/// - `sheet_names`: 復元対象のシート名一覧（通常は処理対象の全シート）
+pub fn restore_original_drawings_in_file(
+    original_path: &str,
+    output_path: &str,
+    sheet_names: &[String],
+) -> Result<(), String> {
+    let orig_file = fs::File::open(original_path)
+        .map_err(|e| format!("restore_drawings: original open failed: {e}"))?;
+    let mut orig_archive = ZipArchive::new(orig_file)
+        .map_err(|e| format!("restore_drawings: original zip open failed: {e}"))?;
+
+    let orig_workbook_xml = read_zip_entry_string(&mut orig_archive, "xl/workbook.xml")?;
+    let orig_workbook_rels_xml =
+        read_zip_entry_string(&mut orig_archive, "xl/_rels/workbook.xml.rels")?;
+
+    // シート名 -> 元ファイル側のdrawingパス、を先に確定させる。
+    let mut sheet_to_drawing_bytes: HashMap<String, Vec<u8>> = HashMap::new();
+    for sheet_name in sheet_names {
+        let Some(sheet_xml_path) =
+            resolve_sheet_xml_path(&orig_workbook_xml, &orig_workbook_rels_xml, sheet_name)?
+        else {
+            continue; // シートが元ファイル側に無ければスキップ（新規追加シート等）
+        };
+        let Some(drawing_path) =
+            resolve_sheet_drawing_path(&mut orig_archive, &sheet_xml_path)?
+        else {
+            continue; // このシートに図形・画像が無ければスキップ
+        };
+        let Ok(mut entry) = orig_archive.by_name(drawing_path.as_str()) else {
+            continue;
+        };
+        let mut data = Vec::new();
+        entry
+            .read_to_end(&mut data)
+            .map_err(|e| format!("restore_drawings: original drawing read failed: {e}"))?;
+        sheet_to_drawing_bytes.insert(sheet_name.clone(), data);
+    }
+
+    if sheet_to_drawing_bytes.is_empty() {
+        return Ok(()); // 復元対象なし
+    }
+
+    // 出力ファイル側で、各シート名がどのdrawingパスに対応するか確定させる。
+    let out_source_path = Path::new(output_path);
+    let out_file = fs::File::open(out_source_path)
+        .map_err(|e| format!("restore_drawings: output open failed: {e}"))?;
+    let mut out_archive = ZipArchive::new(out_file)
+        .map_err(|e| format!("restore_drawings: output zip open failed: {e}"))?;
+
+    let out_workbook_xml = read_zip_entry_string(&mut out_archive, "xl/workbook.xml")?;
+    let out_workbook_rels_xml =
+        read_zip_entry_string(&mut out_archive, "xl/_rels/workbook.xml.rels")?;
+
+    // drawingパス(出力ファイル内) -> 復元すべきバイト列
+    let mut target_entries: HashMap<String, Vec<u8>> = HashMap::new();
+    for (sheet_name, bytes) in &sheet_to_drawing_bytes {
+        let Some(sheet_xml_path) =
+            resolve_sheet_xml_path(&out_workbook_xml, &out_workbook_rels_xml, sheet_name)?
+        else {
+            continue;
+        };
+        let Some(drawing_path) = resolve_sheet_drawing_path(&mut out_archive, &sheet_xml_path)?
+        else {
+            continue;
+        };
+        target_entries.insert(drawing_path, bytes.clone());
+    }
+
+    if target_entries.is_empty() {
+        return Ok(());
+    }
+
+    let temp_path = build_temp_xlsx_path(out_source_path);
+    let temp_file = fs::File::create(&temp_path)
+        .map_err(|e| format!("restore_drawings: temp create failed: {e}"))?;
+    let mut writer = ZipWriter::new(temp_file);
+
+    for idx in 0..out_archive.len() {
+        let mut entry = out_archive
+            .by_index(idx)
+            .map_err(|e| format!("restore_drawings: zip entry open failed: {e}"))?;
+        let entry_name = entry.name().to_string();
+        let options = SimpleFileOptions::default().compression_method(entry.compression());
+
+        if entry.is_dir() {
+            writer
+                .add_directory(entry_name, options)
+                .map_err(|e| format!("restore_drawings: add directory failed: {e}"))?;
+            continue;
+        }
+
+        let mut data = Vec::new();
+        entry
+            .read_to_end(&mut data)
+            .map_err(|e| format!("restore_drawings: entry read failed: {e}"))?;
+
+        writer
+            .start_file(entry_name.as_str(), options)
+            .map_err(|e| format!("restore_drawings: start file failed: {e}"))?;
+
+        if let Some(restore_bytes) = target_entries.get(&entry_name) {
+            println!("[RESTORE_DRAWINGS] restoring original bytes for {entry_name}");
+            writer
+                .write_all(restore_bytes)
+                .map_err(|e| format!("restore_drawings: write restored drawing failed: {e}"))?;
+        } else {
+            writer
+                .write_all(&data)
+                .map_err(|e| format!("restore_drawings: passthrough write failed: {e}"))?;
+        }
+    }
+
+    writer
+        .finish()
+        .map_err(|e| format!("restore_drawings: zip finish failed: {e}"))?;
+
+    drop(out_archive);
+    fs::rename(&temp_path, out_source_path)
+        .map_err(|e| format!("restore_drawings: rename temp failed: {e}"))?;
+
+    Ok(())
+}
+
+/// sheetN.xml内の <drawing r:id="..."/> から、対応するdrawingM.xmlのパスを取得する。
+fn resolve_sheet_drawing_path(
+    archive: &mut ZipArchive<fs::File>,
+    sheet_xml_path: &str,
+) -> Result<Option<String>, String> {
+    let sheet_xml = read_zip_entry_string(archive, sheet_xml_path)?;
+    let Some(rid_start) = sheet_xml.find("<drawing ") else {
+        return Ok(None); // このシートに図形・画像が無い
+    };
+    let tail = &sheet_xml[rid_start..];
+    let key = "r:id=\"";
+    let Some(key_pos) = tail.find(key) else {
+        return Ok(None);
+    };
+    let value_start = key_pos + key.len();
+    let Some(end) = tail[value_start..].find('"') else {
+        return Ok(None);
+    };
+    let rid = &tail[value_start..value_start + end];
+
+    // sheetN.xml.rels のパスを組み立てる（例: xl/worksheets/sheet5.xml -> xl/worksheets/_rels/sheet5.xml.rels）
+    let Some(slash_idx) = sheet_xml_path.rfind('/') else {
+        return Ok(None);
+    };
+    let (dir, file) = sheet_xml_path.split_at(slash_idx);
+    let file = &file[1..]; // 先頭の '/' を除く
+    let rels_path = format!("{dir}/_rels/{file}.rels");
+
+    let rels_xml = match read_zip_entry_string(archive, rels_path.as_str()) {
+        Ok(xml) => xml,
+        Err(_) => return Ok(None), // rels自体が無ければ図形は無い扱い
+    };
+    let target = extract_relationship_target(&rels_xml, rid)?;
+    let Some(target) = target else {
+        return Ok(None);
+    };
+
+    // targetは "../drawings/drawing3.xml" のような相対パス（sheetN.xmlのある場所からの相対）
+    let resolved = normalize_relative_path(dir, target.as_str());
+    Ok(Some(resolved))
+}
+
+/// "xl/worksheets" + "../drawings/drawing3.xml" のような相対パスを正規化して
+/// "xl/drawings/drawing3.xml" のような絶対パス（zip内パス）にする。
+fn normalize_relative_path(base_dir: &str, relative: &str) -> String {
+    let mut parts: Vec<&str> = base_dir.split('/').collect();
+    for seg in relative.split('/') {
+        match seg {
+            ".." => {
+                parts.pop();
+            }
+            "." | "" => {}
+            other => parts.push(other),
+        }
+    }
+    parts.join("/")
+}
+
+
 pub fn patch_named_sheet_protection_in_file(
     path: &str,
     sheet_passwords: &[(&str, Option<&str>)],

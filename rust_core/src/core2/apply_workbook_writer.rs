@@ -12,6 +12,7 @@ use crate::ui::ui_sheet_reader::read_ui_rows;
 use crate::ui::ui_protection::{
     apply_apply_output_protection,
     patch_named_sheet_protection_in_file,
+    restore_original_drawings_in_file,
     UI_SHEET_NAME,
     WARNINGS_SHEET_NAME,
 };
@@ -252,6 +253,15 @@ pub fn write_apply_workbook(
     patch_named_sheet_protection_in_file(output_path, &protection_targets)?;
 
     patch_apply_shared_formula_groups(base_workbook_path, output_path, &shared_overrides)?;
+
+    // 図形・画像（drawing*.xml）は反映処理で変更する必要が無いため、
+    // umyaの往復処理で壊れる可能性のあるグループ図形等を、元ファイルの
+    // バイト列でそのまま復元する（QA報告: ネストしたグループ図形の位置ズレ対応）。
+    if let Err(e) =
+        restore_original_drawings_in_file(base_workbook_path, output_path, &unlock_sheet_names)
+    {
+        println!("[APPLY][RESTORE_DRAWINGS][WARN] {e}");
+    }
 
     Ok(())
 }

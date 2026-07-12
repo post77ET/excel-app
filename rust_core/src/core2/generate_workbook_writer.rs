@@ -12,6 +12,7 @@ use crate::ui::ui_protection::{
     patch_datavalidation_show_error_in_file,
     patch_named_sheet_protection_in_file,
     patch_shared_formula_masters_in_file,
+    restore_original_drawings_in_file,
     INTERNAL_SHEET_NAME,
     SECURITY_REPORT_SHEET_NAME,
     UI_SHEET_NAME,
@@ -108,6 +109,13 @@ pub fn write_generate_workbook(
 
     patch_shared_formula_masters_in_file(output_path)?;
     patch_datavalidation_show_error_in_file(output_path)?;
+
+    // 図形・画像（drawing*.xml）は翻訳処理で変更する必要が無いため、
+    // umyaの往復処理で壊れる可能性のあるグループ図形等を、元ファイルの
+    // バイト列でそのまま復元する（QA報告: ネストしたグループ図形の位置ズレ対応）。
+    if let Err(e) = restore_original_drawings_in_file(source_path, output_path, &main_sheet_names) {
+        println!("[GENERATE][RESTORE_DRAWINGS][WARN] {e}");
+    }
 
     Ok(())
 }

@@ -21,6 +21,8 @@ from typing import Iterable
 from flask import Flask, abort, request, send_file, render_template, url_for
 from werkzeug.utils import secure_filename
 
+from error_messages import t_error
+
 # ============================================================
 # Excel Translation Web Frontend for Render
 #
@@ -73,7 +75,7 @@ GENERATE_SEMAPHORE = threading.BoundedSemaphore(GENERATE_WORKERS)
 GENERATE_QUEUE_ORDER: list[str] = []  # 待機中 job_id の順序（待ち人数の表示用）
 
 
-def _run_generate_serialized(job_id: str, original_path: str, output_path: Path, extra_env: dict) -> None:
+def _run_generate_serialized(job_id: str, original_path: str, output_path: Path, extra_env: dict, lang: str = "ja") -> None:
     """セマフォで直列化したうえでGenerateを実行する（リクエスト毎スレッドで起動）。"""
     try:
         GENERATE_SEMAPHORE.acquire()  # 取得できるまで待機＝順番待ち
@@ -84,7 +86,7 @@ def _run_generate_serialized(job_id: str, original_path: str, output_path: Path,
                 job = GENERATE_JOBS.get(job_id, {})
                 job["status"] = "running"
                 GENERATE_JOBS[job_id] = job
-            _generate_worker(job_id, original_path, output_path, extra_env)
+            _generate_worker(job_id, original_path, output_path, extra_env, lang)
         finally:
             GENERATE_SEMAPHORE.release()
     except Exception as exc:  # スレッドは絶対に落とさない
@@ -151,43 +153,42 @@ def log_file_check(label: str, path: Path) -> str:
         return "ERROR"
 
 
-def validate_xlsx(path: Path) -> None:
+def validate_xlsx(path: Path, lang: str = "ja") -> None:
     if path.suffix.lower() != ".xlsx":
-        raise ValueError(".xlsx ファイルのみ対応です。")
+        raise ValueError(t_error("XLSX_ONLY", lang))
     if not path.exists() or path.stat().st_size == 0:
-        raise ValueError("ファイルが空、または存在しません。")
+        raise ValueError(t_error("FILE_EMPTY", lang))
     try:
         with zipfile.ZipFile(path, "r") as zf:
             bad = zf.testzip()
             if bad is not None:
-                raise ValueError(f"xlsx ZIP破損: {bad}")
+                print(f"[VALIDATE_XLSX][ZIP_CORRUPT] path={path} bad_entry={bad}", flush=True)
+                raise ValueError(t_error("XLSX_CORRUPTED", lang))
             names = set(zf.namelist())
             required = {"[Content_Types].xml", "xl/workbook.xml", "_rels/.rels"}
             missing = sorted(required - names)
             if missing:
-                raise ValueError("xlsx必須構成が不足: " + ", ".join(missing))
+                print(f"[VALIDATE_XLSX][MISSING_PARTS] path={path} missing={missing}", flush=True)
+                raise ValueError(t_error("XLSX_INVALID_FORMAT", lang))
             if any(name.startswith("xl/externalLinks/") for name in names):
-                raise ValueError(
-                    "外部リンク付きxlsxは安全上ブロックします。"
-                    "【対処法】Excelでファイルを開き、「データ」タブ→「リンクの編集」→"
-                    "該当リンクを選択して「リンクの解除」を行い、保存し直してから"
-                    "再度アップロードしてください。"
-                )
+                raise ValueError(t_error("EXTERNAL_LINK_BLOCKED", lang))
             if any(name.endswith("vbaProject.bin") for name in names):
-                raise ValueError("マクロ付きファイルは安全上ブロックします。")
+                raise ValueError(t_error("MACRO_BLOCKED", lang))
     except zipfile.BadZipFile as exc:
-        raise ValueError("xlsxとして開けません。") from exc
+        print(f"[VALIDATE_XLSX][BAD_ZIP] path={path} error={repr(exc)}", flush=True)
+        raise ValueError(t_error("XLSX_OPEN_FAILED", lang)) from exc
 
 
-def save_uploaded_file(field_name: str, prefix: str) -> Path:
+def save_uploaded_file(field_name: str, prefix: str, lang: str = "ja") -> Path:
     file_storage = request.files.get(field_name)
     if file_storage is None or file_storage.filename == "":
-        raise ValueError(f"アップロードファイルがありません: {field_name}")
+        print(f"[SAVE_UPLOADED_FILE][MISSING_FIELD] field_name={field_name}", flush=True)
+        raise ValueError(t_error("FILE_NOT_SELECTED", lang))
     # 拡張子は「元の」ファイル名で判定する。secure_filename() は日本語・中国語など
     # 非ASCII文字を除去するため、「売上表.xlsx」のような全角名だと拡張子が消え、
     # 正常な.xlsxでも誤って弾かれていた（全角名ユーザーを直撃）。
     if Path(file_storage.filename).suffix.lower() != ".xlsx":
-        raise ValueError(".xlsx ファイルのみ対応です。")
+        raise ValueError(t_error("XLSX_ONLY", lang))
     # アップロード直後にサイズを測り、上限超過なら保存・Rust処理の前に即エラー。
     stream = file_storage.stream
     stream.seek(0, os.SEEK_END)
@@ -196,13 +197,7 @@ def save_uploaded_file(field_name: str, prefix: str) -> Path:
     if size_bytes > MAX_WORKBOOK_BYTES:
         size_mb = size_bytes / (1024 * 1024)
         limit_mb = MAX_WORKBOOK_BYTES / (1024 * 1024)
-        raise ValueError(
-            f"ファイルが大きすぎます。上限は {limit_mb:.0f}MB ですが、"
-            f"このファイルは約 {size_mb:.1f}MB あります。"
-            f"不要なシートや画像を減らして {limit_mb:.0f}MB 以下にしてから、もう一度お試しください。 / "
-            f"文件过大。上限为 {limit_mb:.0f}MB，当前文件约 {size_mb:.1f}MB。"
-            f"请删除不需要的工作表或图片，缩小至 {limit_mb:.0f}MB 以下后重试。"
-        )
+        raise ValueError(t_error("FILE_TOO_LARGE", lang, limit_mb=limit_mb, size_mb=size_mb))
     # 保存用の安全名。本体が非ASCIIで消えても拡張子は必ず付与する。
     original_name = secure_filename(file_storage.filename)
     if Path(original_name).suffix.lower() != ".xlsx":
@@ -210,12 +205,12 @@ def save_uploaded_file(field_name: str, prefix: str) -> Path:
     safe_name = f"{timestamp()}_{uuid.uuid4().hex[:8]}_{prefix}_{original_name}"
     save_path = UPLOAD_DIR / safe_name
     file_storage.save(save_path)
-    validate_xlsx(save_path)
+    validate_xlsx(save_path, lang)
     return save_path
 
 
-def workbook_sheet_names(path: Path) -> list[str]:
-    validate_xlsx(path)
+def workbook_sheet_names(path: Path, lang: str = "ja") -> list[str]:
+    validate_xlsx(path, lang)
     with zipfile.ZipFile(path, "r") as zf:
         workbook_xml = zf.read("xl/workbook.xml")
     root = ET.fromstring(workbook_xml)
@@ -226,7 +221,8 @@ def workbook_sheet_names(path: Path) -> list[str]:
         if name:
             names.append(name)
     if not names:
-        raise ValueError("シートが見つかりません。")
+        print(f"[WORKBOOK_SHEET_NAMES][NO_SHEETS] path={path}", flush=True)
+        raise ValueError(t_error("NO_SHEETS_FOUND", lang))
     return names
 
 
@@ -234,13 +230,13 @@ def normalize_mode(value: str | None) -> str:
     return "paid" if value == "paid" else "experience"
 
 
-def parse_selected_sheets(selection: str, sheet_names: list[str], mode: str) -> tuple[str, str]:
+def parse_selected_sheets(selection: str, sheet_names: list[str], mode: str, lang: str = "ja") -> tuple[str, str]:
     text = (selection or "").strip()
     if not text:
-        raise ValueError("翻訳対象シートが未入力です。")
+        raise ValueError(t_error("SHEET_SELECTION_EMPTY", lang))
     if mode == "experience":
         if text.lower() == "all" or "," in text:
-            raise ValueError("体験コースは1シートのみ指定してください。")
+            raise ValueError(t_error("EXPERIENCE_ONE_SHEET_ONLY", lang))
     if text.lower() == "all":
         return "all", ", ".join(sheet_names)
     selected_names: list[str] = []
@@ -248,16 +244,16 @@ def parse_selected_sheets(selection: str, sheet_names: list[str], mode: str) -> 
     for raw in text.split(','):
         token = raw.strip()
         if not token:
-            raise ValueError("シート指定に空欄があります。")
+            raise ValueError(t_error("SHEET_TOKEN_BLANK", lang))
         if token.isdigit():
             idx = int(token)
             if idx < 1 or idx > len(sheet_names):
-                raise ValueError(f"シート番号が範囲外です: {idx}")
+                raise ValueError(t_error("SHEET_INDEX_OUT_OF_RANGE", lang, idx=idx))
             selected_names.append(sheet_names[idx - 1])
             normalized_tokens.append(str(idx))
         else:
             if token not in sheet_names:
-                raise ValueError(f"存在しないシート名です: {token}")
+                raise ValueError(t_error("SHEET_NAME_NOT_FOUND", lang, token=token))
             selected_names.append(token)
             normalized_tokens.append(token)
     return ",".join(normalized_tokens), ", ".join(selected_names)
@@ -339,37 +335,12 @@ class InvalidCandidateComboError(Exception):
 
 # Rust 側が返す安定キー。これを ja/zh の客向け文言に変換する（表示は Web の責務）。
 WORKBOOK_PARSE_FAILED_KEY = "WORKBOOK_PARSE_FAILED"
-WORKBOOK_PARSE_MESSAGES = {
-    "ja": (
-        "翻訳処理を完了できませんでした。\n\n"
-        "【対処方法】\n"
-        "対象のファイルを Excel で開き、改めて .xlsx 形式で「名前を付けて保存」してから再度アップロードしてください。\n\n"
-        "※上記を行っても改善しない場合、ファイルの構造上の原因により対応していない可能性がございます。恐れ入りますが、あらかじめご了承ください。"
-    ),
-    "zh": (
-        "翻译处理未能完成。\n\n"
-        "【解决方法】\n"
-        "请在 Excel 中打开目标文件，重新通过\"另存为\"保存为 .xlsx 格式后，再次上传。\n\n"
-        "※ 如果完成上述操作后仍无法改善，可能是文件结构方面的原因导致暂不支持，敬请谅解。"
-    ),
-}
-
-
-# C-5: provider×method の不正組合せ（DeepL×split）の安定キーと客向け文言。
+# C-5: provider×method の不正組合せ（DeepL×split）の安定キー。
+# 客向け文言は error_messages.py の INVALID_CANDIDATE_COMBO で一元管理。
 INVALID_CANDIDATE_COMBO_KEY = "INVALID_CANDIDATE_METHOD_PROVIDER"
-INVALID_CANDIDATE_COMBO_MESSAGES = {
-    "ja": (
-        "選択された翻訳エンジンと翻訳方式の組合せに対応していません。\n\n"
-        "DeepL を使用する場合は「文脈翻訳」を選択してください。"
-    ),
-    "zh": (
-        "所选择的翻译引擎与翻译方式的组合暂不支持。\n\n"
-        "使用 DeepL 时，请选择\"上下文翻译\"。"
-    ),
-}
 
 
-def run_rust(args: list[str], extra_env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
+def run_rust(args: list[str], extra_env: dict[str, str] | None = None, lang: str = "ja") -> subprocess.CompletedProcess[str]:
     rust_env = build_rust_env(extra_env)
     print_env_check(rust_env, args[0] if args else "")
     cmd = [rust_binary_path(), *args]
@@ -396,7 +367,7 @@ def run_rust(args: list[str], extra_env: dict[str, str] | None = None) -> subpro
             raise WorkbookParseError()
         if result.stderr and INVALID_CANDIDATE_COMBO_KEY in result.stderr:
             raise InvalidCandidateComboError()
-        raise RuntimeError("Rust処理に失敗しました。Renderログの [RUST STDERR] を確認してください。")
+        raise RuntimeError(t_error("RUST_PROCESSING_FAILED", lang))
     return result
 
 
@@ -469,7 +440,7 @@ def iter_xlsx_files() -> Iterable[Path]:
             yield from directory.rglob("*.xlsx")
 
 
-def newest_created_xlsx(exclude: set[Path]) -> Path:
+def newest_created_xlsx(exclude: set[Path], lang: str = "ja") -> Path:
     candidates = []
     for path in iter_xlsx_files():
         resolved = path.resolve()
@@ -478,49 +449,53 @@ def newest_created_xlsx(exclude: set[Path]) -> Path:
         if path.exists() and path.stat().st_size > 0:
             candidates.append(path)
     if not candidates:
-        raise RuntimeError("Rust処理後の出力xlsxが見つかりません。")
+        print(f"[FIND_OUTPUT][NOT_FOUND] exclude={exclude}", flush=True)
+        raise RuntimeError(t_error("GENERATE_OUTPUT_MISSING", lang))
     return max(candidates, key=lambda p: p.stat().st_mtime)
 
 
-def server_original_path(job_id: str) -> Path:
+def server_original_path(job_id: str, lang: str = "ja") -> Path:
     safe_job_id = secure_filename(job_id)
     if not re.fullmatch(r"job\d{14}_[0-9a-fA-F]{8}", safe_job_id):
-        raise ValueError(f"不正なJOB_IDです: {job_id}")
+        print(f"[SERVER_ORIGINAL_PATH][INVALID_JOB_ID] job_id={job_id}", flush=True)
+        raise ValueError(t_error("INVALID_OPERATION_INFO", lang))
     return SERVER_ORIGINAL_DIR / f"{safe_job_id}_original.xlsx"
 
 
-def extract_job_id_from_ui_filename(filename: str) -> str:
+def extract_job_id_from_ui_filename(filename: str, lang: str = "ja") -> str:
     # Windowsが付ける重複連番 "(1)" "(2)" や前後の空白を除いてから探す（保険）。
     # 本来 job_id はファイル名の途中に埋め込まれているため re.search で足りるが、
     # 将来の命名変更にも耐えられるよう、明示的に連番・空白を除去しておく。
     normalized = re.sub(r"\s*\(\d+\)(?=\.[^.]+$|$)", "", filename)
     match = re.search(r"(job\d{14}_[0-9a-fA-F]{8})", normalized)
     if not match:
-        raise ValueError("UIファイル名からJOB_IDを取得できません。ファイル名を大きく変更した可能性があります（末尾に(1)や(2)が付くのは問題ありません）。ダウンロード時の元のファイル名に戻すか、最初からGenerateをやり直してください。")
+        print(f"[EXTRACT_JOB_ID][NOT_FOUND] filename={filename}", flush=True)
+        raise ValueError(t_error("JOB_ID_NOT_FOUND", lang))
     return match.group(1)
 
 
-def save_server_original_clone(job_id: str, original_path: Path) -> Path:
-    clone_path = server_original_path(job_id)
+def save_server_original_clone(job_id: str, original_path: Path, lang: str = "ja") -> Path:
+    clone_path = server_original_path(job_id, lang)
     print("[SERVER ORIGINAL] clone start job_id=", job_id, flush=True)
     src_hash = log_file_check("GENERATE_ORIGINAL_BEFORE_CLONE", original_path)
     shutil.copy2(original_path, clone_path)
-    validate_xlsx(clone_path)
+    validate_xlsx(clone_path, lang)
     clone_hash = log_file_check("SERVER_ORIGINAL_AFTER_CLONE", clone_path)
     print("[SERVER ORIGINAL] saved =", str(clone_path), flush=True)
     print("[SERVER ORIGINAL] clone_hash_match =", "OK" if src_hash == clone_hash else "MISMATCH", flush=True)
     return clone_path
 
 
-def load_server_original_for_ui(ui_path: Path) -> Path:
+def load_server_original_for_ui(ui_path: Path, lang: str = "ja") -> Path:
     print("[SERVER ORIGINAL] apply lookup ui_filename=", ui_path.name, flush=True)
-    job_id = extract_job_id_from_ui_filename(ui_path.name)
+    job_id = extract_job_id_from_ui_filename(ui_path.name, lang)
     print("[SERVER ORIGINAL] apply lookup job_id=", job_id, flush=True)
     log_file_check("APPLY_UI_UPLOAD", ui_path)
-    original_path = server_original_path(job_id)
+    original_path = server_original_path(job_id, lang)
     if not original_path.exists():
-        raise ValueError(f"対応するサーバ保存原本が見つかりません: {original_path.name}。UIファイルが迷子、またはサーバ側の一時保存が失われています。最初からGenerateをやり直してください。Apply前なので無料でやり直しできます。")
-    validate_xlsx(original_path)
+        print(f"[LOAD_SERVER_ORIGINAL][NOT_FOUND] original_path={original_path}", flush=True)
+        raise ValueError(t_error("SERVER_ORIGINAL_MISSING", lang))
+    validate_xlsx(original_path, lang)
     print("[SERVER ORIGINAL] loaded =", str(original_path), flush=True)
     log_file_check("APPLY_SERVER_ORIGINAL", original_path)
     return original_path
@@ -646,8 +621,8 @@ def upload():
         mode = normalize_mode(request.form.get("mode"))
         lang = request.form.get("lang", "ja")
         direction = request.form.get("direction", "ja2zh")
-        original_path = save_uploaded_file("file", "original")
-        sheet_names = workbook_sheet_names(original_path)
+        original_path = save_uploaded_file("file", "original", lang)
+        sheet_names = workbook_sheet_names(original_path, lang)
         return render_template(
             "select.html",
             filename=original_path.name,
@@ -656,30 +631,37 @@ def upload():
             lang=lang,
             direction=direction,
         )
-    except Exception as exc:
+    except (ValueError, RuntimeError) as exc:
         print("[UPLOAD ERROR]", repr(exc), flush=True)
         abort(500, description=str(exc))
+    except Exception as exc:
+        print("[UPLOAD ERROR][UNEXPECTED]", repr(exc), flush=True)
+        safe_lang = request.form.get("lang", "ja")
+        abort(500, description=t_error("UNEXPECTED_ERROR", safe_lang))
 
 
 @app.post("/generate")
 def generate():
     try:
+        lang = request.form.get("lang", "ja")
         filename = secure_filename(request.form.get("filename", ""))
         if not filename:
-            raise ValueError("filename がありません。")
+            print("[GENERATE][MISSING_FILENAME]", flush=True)
+            raise ValueError(t_error("UPLOAD_FILE_INFO_UNREADABLE", lang))
         original_path = (UPLOAD_DIR / filename).resolve()
         if UPLOAD_DIR.resolve() not in original_path.parents:
-            raise ValueError("不正なfilenameです。")
-        validate_xlsx(original_path)
+            print(f"[GENERATE][INVALID_FILENAME] filename={filename}", flush=True)
+            raise ValueError(t_error("UPLOAD_FILE_INFO_UNREADABLE", lang))
+        validate_xlsx(original_path, lang)
 
         mode = normalize_mode(request.form.get("mode"))
-        lang = request.form.get("lang", "ja")
         # Phase 4B: 翻訳方向（表示言語 lang とは別物）。許可値以外は黙ってja2zhに落とさずエラー。
         direction = request.form.get("direction", "ja2zh")
         if direction not in ("ja2zh", "zh2ja", "ja2vi", "vi2ja"):
-            raise ValueError(f"不正な翻訳方向です: {direction!r}")
-        sheet_names = workbook_sheet_names(original_path)
-        selected_token, selected_label = parse_selected_sheets(request.form.get("sheets", ""), sheet_names, mode)
+            print(f"[GENERATE][INVALID_DIRECTION] direction={direction!r}", flush=True)
+            raise ValueError(t_error("DIRECTION_INVALID", lang))
+        sheet_names = workbook_sheet_names(original_path, lang)
+        selected_token, selected_label = parse_selected_sheets(request.form.get("sheets", ""), sheet_names, mode, lang)
 
         job_id = request_id()
         output_path = OUTPUT_DIR / f"{job_id}_{original_path.stem}_ui.xlsx"
@@ -687,7 +669,7 @@ def generate():
         print("[GENERATE FILE CHECK] original_filename =", original_path.name, flush=True)
         print("[GENERATE FILE CHECK] output_ui_filename =", output_path.name, flush=True)
         print("[GENERATE FILE CHECK] output_ui_path =", str(output_path), flush=True)
-        save_server_original_clone(job_id, original_path)
+        save_server_original_clone(job_id, original_path, lang)
         course = request.form.get("course", "full")
         c1_provider = request.form.get("c1_provider", None)
         c2_provider = request.form.get("c2_provider", None)
@@ -730,7 +712,7 @@ def generate():
 
         worker = threading.Thread(
             target=_run_generate_serialized,
-            args=(job_id, str(original_path), output_path, extra_env),
+            args=(job_id, str(original_path), output_path, extra_env, lang),
             daemon=True,
         )
         worker.start()
@@ -743,20 +725,22 @@ def generate():
             result_url=url_for("job_result", job_id=job_id, lang=lang),
             status_url=url_for("job_status", job_id=job_id),
         )
-    except Exception as exc:
+    except (ValueError, RuntimeError) as exc:
         print("[GENERATE ERROR]", repr(exc), flush=True)
         abort(500, description=str(exc))
+    except Exception as exc:
+        print("[GENERATE ERROR][UNEXPECTED]", repr(exc), flush=True)
+        safe_lang = request.form.get("lang", "ja")
+        abort(500, description=t_error("UNEXPECTED_ERROR", safe_lang))
 
 
-def _generate_worker(job_id: str, original_path: str, output_path: Path, extra_env: dict) -> None:
+def _generate_worker(job_id: str, original_path: str, output_path: Path, extra_env: dict, lang: str = "ja") -> None:
     """CL-10: Generateの重い処理をバックグラウンドで実行し、結果を記録する。"""
     try:
-        run_rust(["generate-select", original_path], extra_env=extra_env)
+        run_rust(["generate-select", original_path], extra_env=extra_env, lang=lang)
         if not output_path.exists() or output_path.stat().st_size <= 0:
-            raise RuntimeError(
-                f"Generate出力ファイルが見つかりません: {output_path.name}\n"
-                "Rustログの [RUST STDERR] を確認してください。"
-            )
+            print(f"[GENERATE][OUTPUT_MISSING] output_path={output_path}", flush=True)
+            raise RuntimeError(t_error("GENERATE_OUTPUT_MISSING", lang))
         with GENERATE_JOBS_LOCK:
             job = GENERATE_JOBS.get(job_id, {})
             job.update({"status": "done", "filename": output_path.name})
@@ -767,11 +751,9 @@ def _generate_worker(job_id: str, original_path: str, output_path: Path, extra_e
         with GENERATE_JOBS_LOCK:
             job = GENERATE_JOBS.get(job_id, {})
             if isinstance(exc, WorkbookParseError):
-                lang = job.get("lang", "ja")
-                msg = WORKBOOK_PARSE_MESSAGES.get(lang, WORKBOOK_PARSE_MESSAGES["ja"])
+                msg = t_error("WORKBOOK_PARSE_FAILED", job.get("lang", "ja"))
             elif isinstance(exc, InvalidCandidateComboError):
-                lang = job.get("lang", "ja")
-                msg = INVALID_CANDIDATE_COMBO_MESSAGES.get(lang, INVALID_CANDIDATE_COMBO_MESSAGES["ja"])
+                msg = t_error("INVALID_CANDIDATE_COMBO", job.get("lang", "ja"))
             else:
                 msg = str(exc)
             job.update({"status": "error", "message": msg})
@@ -877,9 +859,9 @@ def download_job(job_id: str):
 def apply():
     try:
         lang = request.form.get("lang", "ja")
-        ui_path = save_uploaded_file("ui_file", "ui")
-        job_id = extract_job_id_from_ui_filename(ui_path.name)
-        original_path = load_server_original_for_ui(ui_path)
+        ui_path = save_uploaded_file("ui_file", "ui", lang)
+        job_id = extract_job_id_from_ui_filename(ui_path.name, lang)
+        original_path = load_server_original_for_ui(ui_path, lang)
         # 元ファイル名を含めて識別しやすくする
         apply_output_path = (OUTPUT_DIR / f"{job_id}_{original_path.stem}_apply.xlsx").resolve()
 
@@ -891,7 +873,8 @@ def apply():
         print("[APPLY FILE CHECK] apply_output_path =", str(apply_output_path), flush=True)
 
         if OUTPUT_DIR.resolve() not in apply_output_path.parents:
-            raise ValueError("不正なApply出力先です。")
+            print(f"[APPLY][INVALID_OUTPUT_PATH] apply_output_path={apply_output_path}", flush=True)
+            raise ValueError(t_error("APPLY_PREPARE_ERROR", lang))
 
         if apply_output_path.exists():
             apply_output_path.unlink()
@@ -902,12 +885,14 @@ def apply():
                 "ETB_APPLY_OUTPUT": str(apply_output_path),
                 "ETB_OUTPUT_DIR": str(OUTPUT_DIR),
             },
+            lang=lang,
         )
 
         if not apply_output_path.exists() or apply_output_path.stat().st_size <= 0:
-            raise RuntimeError(f"Apply指定出力ファイルが生成されていません: {apply_output_path}")
+            print(f"[APPLY][OUTPUT_MISSING] apply_output_path={apply_output_path}", flush=True)
+            raise RuntimeError(t_error("APPLY_NOT_COMPLETED", lang))
 
-        validate_xlsx(apply_output_path)
+        validate_xlsx(apply_output_path, lang)
         download_name = apply_output_path.name
 
         return render_template(
@@ -915,9 +900,14 @@ def apply():
             download_url=url_for("download_output", filename=download_name),
             lang=lang if lang in ["ja", "zh"] else "ja",
         )
-    except Exception as exc:
+    except (ValueError, RuntimeError) as exc:
         print("[APPLY ERROR]", repr(exc), flush=True)
         return render_template("apply_error.html", message=str(exc), lang=request.form.get("lang", "ja")), 400
+    except Exception as exc:
+        print("[APPLY ERROR][UNEXPECTED]", repr(exc), flush=True)
+        safe_lang = request.form.get("lang", "ja")
+        fallback_msg = t_error("UNEXPECTED_ERROR", safe_lang)
+        return render_template("apply_error.html", message=fallback_msg, lang=safe_lang), 400
 
 
 def self_ping():

@@ -52,13 +52,7 @@ font-size:17px;
   <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start;">
     <div>
       <h2 style="font-family:Georgia,serif; color:#101f36; font-size:19px;">原因 / Reason / 原因</h2>
-      <div style="border:1px solid #c5d0e3; border-radius:10px; padding:18px; background:#ffffff; font-size:15.5px;">
-      {% if lang == "zh" %}
-        文件名不一致、文件损坏、或Apply对象错误。
-      {% else %}
-        ファイル名不一致、ファイル破損、またはApply対象ファイル誤りの可能性があります。
-      {% endif %}
-      </div>
+      <div style="border:1px solid #c5d0e3; border-radius:10px; padding:18px; background:#ffffff; font-size:15.5px; white-space:pre-wrap;">{{ message }}</div>
     </div>
     <div>
       <h2 style="font-family:Georgia,serif; color:#101f36; font-size:19px;">確認してください / Please check / 请确认</h2>
