@@ -21,7 +21,14 @@ from typing import Iterable
 from flask import Flask, abort, request, send_file, render_template, url_for
 from werkzeug.utils import secure_filename
 
-from error_messages import t_error
+try:
+    # Render本番: `gunicorn web_app.app:app` のようにパッケージ経由で起動される場合
+    from web_app.error_messages import t_error
+except ImportError:
+    # ローカル開発: `web_app/` ディレクトリに cd して `python app.py` のように
+    # 直接実行する場合（この場合 sys.path には web_app/ 自体が入るため、
+    # パッケージ接頭辞なしの絶対インポートで解決できる）
+    from error_messages import t_error
 
 # ============================================================
 # Excel Translation Web Frontend for Render
