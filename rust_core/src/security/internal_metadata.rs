@@ -42,12 +42,15 @@ impl InternalMetadata {
         methods: &[String; 3],
     ) -> Self {
         let candidate1_header = format!("candidate1 = {}", config.candidate1_provider.as_label());
-        let candidate2_header = if rows.iter().any(|r| r.candidate2.is_some()) {
+        // 【重大インシデント対応 2026-07-12】表示（header）も、実行結果（rows内の成功件数）
+        // ではなく、既に正しく確定した providers 配列（設定=真実源）を見て判定する。
+        // これにより「有効だが全滅」と「無効」が同じ表示になる問題を解消する。
+        let candidate2_header = if providers[1] != "None" {
             format!("candidate2 = {}", config.candidate2_provider.as_label())
         } else {
             "candidate2 = None".to_string()
         };
-        let candidate3_header = if rows.iter().any(|r| r.candidate3.is_some()) {
+        let candidate3_header = if providers[2] != "None" {
             format!("candidate3 = {}", config.candidate3_provider.as_label())
         } else {
             "candidate3 = None".to_string()

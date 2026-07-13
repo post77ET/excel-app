@@ -573,9 +573,15 @@ def sitemap_xml():
         'xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
         f'{lang_urls}'
         f'  <url><loc>{base}/engine</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n'
+        f'  <url><loc>{base}/guide/excel-ja-zh-translate</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>\n'
         '</urlset>\n'
     )
     return (body, 200, {"Content-Type": "application/xml; charset=utf-8"})
+
+
+@app.get("/guide/excel-ja-zh-translate")
+def guide_excel_ja_zh():
+    return render_template("guide_excel_ja_zh.html")
 
 
 @app.get("/engine")

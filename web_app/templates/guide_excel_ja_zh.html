@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Excelを日本語から中国語へ翻訳する方法まとめ｜書式・数式を崩さずに一括翻訳 | EX-TR-MULTI</title>
+<meta name="description" content="ExcelファイルをレイアウトそのままExcel標準機能・Googleスプレッドシート・DeepL単体・専用ツールの4つの方法を比較。書式崩れ・数式消失・改行消失といった落とし穴と対策も解説します。">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://excel-app-t3dn.onrender.com/guide/excel-ja-zh-translate">
+<meta property="og:title" content="Excelを日本語から中国語へ翻訳する方法まとめ｜書式・数式を崩さずに一括翻訳">
+<meta property="og:description" content="Excel標準機能・Googleスプレッドシート・DeepL単体・専用ツールの4つの方法を比較。書式崩れ・数式消失・改行消失の落とし穴と対策も解説。">
+<meta property="og:image" content="https://excel-app-t3dn.onrender.com/static/ogp.png">
+<meta property="og:type" content="article">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Excelを日本語から中国語へ翻訳する方法まとめ",
+  "description": "Excel標準機能・Googleスプレッドシート・DeepL単体・専用ツールの4つの方法を比較し、書式崩れ・数式消失・改行消失の落とし穴と対策を解説する。",
+  "author": { "@type": "Organization", "name": "EX-TR-MULTI" },
+  "datePublished": "2026-07-13"
+}
+</script>
+<style>
+  :root{ --navy-900:#101f36; --navy-950:#0a1322; --gold:#c9a558; --ink:#10213f; --muted:#5b6b82; --bg:#f5f8ff; }
+  body{ font-family:"Segoe UI","Noto Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Microsoft YaHei",sans-serif; margin:0; background:var(--bg); color:var(--ink); line-height:1.85; }
+  .wrap{ max-width:760px; margin:0 auto; padding:0 24px 80px; }
+  header.top{ background:linear-gradient(160deg,var(--navy-900),var(--navy-950)); padding:26px 0; margin-bottom:8px; }
+  header.top .wrap{ padding-bottom:0; display:flex; justify-content:space-between; align-items:center; }
+  header.top a{ color:#e6d3a0; text-decoration:none; font-weight:700; font-size:14px; letter-spacing:.06em; }
+  h1{ font-family:Georgia,"Hiragino Mincho ProN","Yu Mincho",serif; font-size:30px; color:var(--navy-900); line-height:1.5; margin:36px 0 14px; }
+  h2{ font-family:Georgia,"Hiragino Mincho ProN","Yu Mincho",serif; font-size:21px; color:var(--navy-900); margin:44px 0 14px; border-left:4px solid var(--gold); padding-left:12px; }
+  h3{ font-size:17px; color:var(--navy-900); margin:26px 0 8px; }
+  p{ font-size:15.5px; color:#2f3b52; }
+  .lead{ font-size:16.5px; color:var(--muted); }
+  table{ width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px; }
+  th, td{ border:1px solid #c5d0e3; padding:10px 12px; text-align:left; vertical-align:top; }
+  th{ background:#eef2fa; color:var(--navy-900); }
+  .warn{ background:#fff5f0; border:1px solid #e9b79a; border-radius:8px; padding:16px 18px; margin:18px 0; font-size:14.5px; }
+  .cta{ background:linear-gradient(160deg,var(--navy-900),var(--navy-950)); border-radius:12px; padding:28px 26px; margin:44px 0; text-align:center; }
+  .cta p{ color:#cfd8ec; margin:0 0 16px; }
+  .cta a{ display:inline-block; background:var(--gold); color:#1a1508; font-weight:700; padding:12px 30px; border-radius:999px; text-decoration:none; }
+  footer{ text-align:center; color:var(--muted); font-size:12.5px; padding:30px 0; }
+  .toc{ background:#fff; border:1px solid #dbe6f7; border-radius:10px; padding:18px 22px; font-size:14.5px; }
+  .toc a{ color:var(--navy-900); text-decoration:none; }
+  .toc li{ margin:6px 0; }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><span style="color:#e6d3a0; font-weight:700; letter-spacing:.1em; font-size:12.5px;">EX-TR-MULTI</span><a href="/?lang=ja">ツールを開く →</a></div></header>
+<div class="wrap">
+
+<h1>Excelを日本語から中国語へ翻訳する方法まとめ｜書式・数式を崩さずに一括翻訳する</h1>
+<p class="lead">貿易・製造業・海外拠点とのやり取りで、Excelファイルを日本語から中国語（またはベトナム語）へ翻訳する機会は多くあります。しかし「翻訳したらレイアウトが崩れた」「数式が消えた」「セル内の改行がなくなった」といった失敗も起きがちです。この記事では、主な4つの翻訳方法を比較し、それぞれの落とし穴と対策を整理します。</p>
+
+<div class="toc">
+<strong>目次</strong>
+<ul>
+<li><a href="#methods">①方法の比較（Excel標準機能／Googleスプレッドシート／DeepL単体／専用ツール）</a></li>
+<li><a href="#pitfall1">②よくある失敗：書式・数式が崩れる</a></li>
+<li><a href="#pitfall2">③よくある失敗：セル内の改行が消える</a></li>
+<li><a href="#pitfall3">④よくある失敗：結合セルがズレる</a></li>
+<li><a href="#choose">⑤どの方法を選べばいいか</a></li>
+</ul>
+</div>
+
+<h2 id="methods">①方法の比較</h2>
+<table>
+<tr><th>方法</th><th>書式保持</th><th>数式保持</th><th>手間</th></tr>
+<tr><td>Excel標準の翻訳機能（校閲タブ）</td><td>△（セル単位のコピペが必要）</td><td>×（文字列としてしか扱えない）</td><td>多い（セルごとに手作業）</td></tr>
+<tr><td>Googleスプレッドシート＋翻訳アドオン</td><td>△（レイアウトが崩れることがある）</td><td>△</td><td>中（アップロード・ダウンロードの手間）</td></tr>
+<tr><td>DeepL単体（コピー＆ペースト）</td><td>×（Excelの構造情報を持たない）</td><td>×</td><td>多い（大量セルは非現実的）</td></tr>
+<tr><td>Excel構造保持型の専用ツール</td><td>◎</td><td>◎</td><td>少ない（ファイルをアップロードするだけ）</td></tr>
+</table>
+
+<h2 id="pitfall1">②よくある失敗：書式・数式が崩れる</h2>
+<p>セルの内容だけをコピー＆ペーストで翻訳ツールに通すと、フォント・罫線・セルの色・条件付き書式といった情報がすべて失われます。また、数式が入っているセルをそのまま翻訳にかけると、数式そのものが文字列として上書きされてしまい、計算ができなくなることがあります。</p>
+<p>対策としては、<strong>セルの「中の文字列」だけを差し替え、セルの構造・数式自体には触れない</strong>方式のツールを使うことが確実です。</p>
+
+<h2 id="pitfall2">③よくある失敗：セル内の改行が消える</h2>
+<div class="warn">
+<strong>注意：</strong>Google翻訳のAPIには、セル内の改行（Alt+Enterで入力した改行）を保持できないという既知の制約があります。複数行にわたる注記・備考欄を翻訳すると、改行が消えて1行にまとまってしまうことがあります。
+</div>
+<p>この問題を避けるには、改行を保持できる翻訳エンジン（DeepLやAmazon Translateなど）を選べるツールを使う、または翻訳後に目視で改行位置を確認できる仕組みがあるツールを選ぶとよいでしょう。</p>
+
+<h2 id="pitfall3">④よくある失敗：結合セルがズレる</h2>
+<p>表の見出し部分などでセルが結合されている場合、単純なコピペ翻訳では結合が解除されたり、ズレて別のセルに文字が入ってしまうことがあります。結合セルの構造を保ったまま翻訳できるかどうかは、ツール選定の際に必ず確認すべきポイントです。</p>
+
+<h2 id="choose">⑤どの方法を選べばいいか</h2>
+<p>数セル程度のちょっとした翻訳であればExcel標準機能やDeepLへのコピペで十分です。しかし、<strong>数十〜数百セル規模の業務用Excel（部品リスト・作業記録簿・仕様書など）を、書式・数式・結合セルを保ったまま一括翻訳したい場合</strong>は、Excel構造を直接扱える専用ツールを使うのが確実です。</p>
+<p>また、DeepL・Google・Amazonのどれか1つに絞らず、<strong>複数の翻訳エンジンの候補を見比べて選べる</strong>ツールであれば、誤訳や改行消失が起きた候補を避け、より正確な候補を選び直すことができます。</p>
+
+<div class="cta">
+<p>日本語⇄中国語・日本語⇄ベトナム語対応。書式・数式・結合セルを保持したまま、Excelを一括翻訳できます。</p>
+<a href="/?lang=ja">無料の体験コースで試す</a>
+</div>
+
+</div>
+<footer>EX-TR-MULTI｜Excel翻訳作業支援ツール</footer>
+</body>
+</html>

@@ -40,9 +40,17 @@ pub fn write_generate_workbook(
 
     // C-2: provider/method を真実源として __ETB_INTERNAL に保存する。
     // provider/method は CandidateConfig からのみ取得（C-3 引継ぎ方針）。
-    // 候補が無効（rows に候補列が無い）場合は header と整合させ "None"/"none"。
-    let has_c2 = rows.iter().any(|r| r.candidate2.is_some());
-    let has_c3 = rows.iter().any(|r| r.candidate3.is_some());
+    // 候補の有効/無効は「設定(enabled_candidates)」だけで判定する。
+    // 【重大インシデント対応 2026-07-12】以前は rows.iter().any(|r| r.candidate2/3.is_some())
+    // という「実行結果（1件でも翻訳に成功したか）」を有効/無効の判定に使っていたため、
+    // 「候補は正しく有効化・実行されたが、レート制限等で全件失敗した」場合に、
+    // あたかも「候補が無効化されていた」かのように誤って記録・表示されるバグがあった
+    // （QA重大インシデント報告：candidate3=Google が全件レート制限で失敗した際、
+    // __ETB_INTERNAL に candidate3_provider=None と誤って記録され、
+    // 「使わない設定なのに裏で呼ばれている」という誤解を招いた）。
+    // 「有効/無効」と「実行結果（成功件数）」は独立した別概念であり、混同してはならない。
+    let c2_enabled = enabled_candidates.contains(&2);
+    let c3_enabled = enabled_candidates.contains(&3);
     let provider_label = |cc: &CandidateConfig, enabled: bool| -> String {
         if enabled {
             cc.provider.map(|p| p.as_label().to_string()).unwrap_or_else(|| "None".to_string())
@@ -55,13 +63,13 @@ pub fn write_generate_workbook(
     };
     let providers = [
         provider_label(&candidate_configs[0], true),
-        provider_label(&candidate_configs[1], has_c2),
-        provider_label(&candidate_configs[2], has_c3),
+        provider_label(&candidate_configs[1], c2_enabled),
+        provider_label(&candidate_configs[2], c3_enabled),
     ];
     let methods = [
         method_label(&candidate_configs[0], true),
-        method_label(&candidate_configs[1], has_c2),
-        method_label(&candidate_configs[2], has_c3),
+        method_label(&candidate_configs[1], c2_enabled),
+        method_label(&candidate_configs[2], c3_enabled),
     ];
     let internal = InternalMetadata::from_rows(rows, config, &providers, &methods);
     write_internal_metadata_sheet_into_book(&mut book, &internal)?;
