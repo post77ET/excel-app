@@ -1,8 +1,8 @@
 <!doctype html>
 {% set seo = {
   'ja': {
-    'title': 'Excel翻訳ツール | 日本語⇄中国語・ベトナム語 | 書式保持対応',
-    'desc': 'Excelの書式・数式・結合セルを保持したまま日本語⇄中国語・ベトナム語の翻訳ができるExcel翻訳ツール',
+    'title': 'エクセル翻訳（Excel翻訳）ツール | 日本語⇄中国語・ベトナム語 | 書式保持対応',
+    'desc': 'エクセル翻訳（Excel翻訳）の書式・数式・結合セルを保持したまま日本語⇄中国語・ベトナム語の翻訳ができる無料ツールです。',
     'ogtitle': 'Excel翻訳作業支援ツール',
     'ogdesc': 'Excelの構造をそのまま保持して、日本語⇄中国語・ベトナム語に翻訳。',
     'locale': 'ja_JP',
@@ -791,8 +791,8 @@ window.addEventListener("DOMContentLoaded", function() {
   <section class="hero hero-lite">
     <div>
       <p class="catch" id="home-catch">文章の翻訳は、AIがぐっと身近に。Excelの翻訳も、同じくらい身近に。</p>
-      <h1 id="home-heroTitle">Excelの構造をそのまま保持して、日本語⇄中国語・ベトナム語に翻訳・確認・反映できます。</h1>
-      <p class="lead" id="home-heroLead">日本語のExcelブック（.xlsx）を、レイアウトや数式を崩さずに中国語（簡体字 zh-CN）へ翻訳。翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。エクセル 翻訳・Excel 日本語 中国語 翻訳をお探しの方にも対応した無料のExcel翻訳ツールです。日本語からベトナム語への翻訳（Excel dịch tiếng Việt）にも対応しています。</p>
+      <h1 id="home-heroTitle">エクセル翻訳（Excel翻訳）｜構造をそのまま保持して、日本語⇄中国語・ベトナム語に翻訳・確認・反映できます。</h1>
+      <p class="lead" id="home-heroLead">日本語のExcelブック（.xlsx）を、レイアウトや数式を崩さずに中国語（簡体字 zh-CN）へ翻訳。翻訳結果を確認・編集してから、編集内容を反映したExcelブックを生成します。エクセル翻訳・Excel翻訳・Excel 日本語 中国語 翻訳をお探しの方にも対応した無料のエクセル翻訳ツールです。日本語からベトナム語への翻訳（Excel dịch tiếng Việt）にも対応しています。</p>
       <p class="catch-sub" id="home-catchSub">DeepL、Google、Amazonの翻訳APIに対応した、Excel一括翻訳ツール</p>
       <p class="gate-lead" id="home-gateLead">{% if lang == "zh" %}要翻译的原文是什么语言？{% else %}翻訳したい原文は何語ですか？{% endif %}</p>
       <div class="source-gate">
@@ -1015,6 +1015,56 @@ window.addEventListener("DOMContentLoaded", function() {
     </ul>
   </section>
 
+
+  {% if lang == "ja" %}
+  <section class="seo-compare" aria-label="一般翻訳サービスとの違い">
+    <style>
+      .seo-compare{ margin:28px 0 8px; }
+      .seo-compare h2{ font-size:clamp(20px,2.6vw,26px); color:#063577; margin:0 0 14px; }
+      .compare-table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); border-radius:10px; overflow:hidden; font-size:14.5px; }
+      .compare-table th,.compare-table td{ border:1px solid #e6eaf1; padding:10px 12px; text-align:center; }
+      .compare-table th{ background:#f5f7fa; color:#063577; font-weight:700; }
+      .compare-table td:first-child,.compare-table th:first-child{ text-align:left; font-weight:600; color:var(--ink); }
+      .compare-table td.yes{ color:#1f9d62; font-weight:700; }
+      .compare-table td.no{ color:#c0392b; font-weight:700; }
+    </style>
+    <h2>一般翻訳サービスとの違い</h2>
+    <table class="compare-table">
+      <thead>
+        <tr><th>項目</th><th>一般的な翻訳サービス</th><th>エクセル翻訳（EX-TR-MULTI）</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>文章の翻訳</td><td class="yes">○</td><td class="yes">○</td></tr>
+        <tr><td>セル単位での処理</td><td class="no">×</td><td class="yes">○</td></tr>
+        <tr><td>書式（フォント・色・罫線）の保持</td><td class="no">×</td><td class="yes">○</td></tr>
+        <tr><td>数式の保護（訳さずそのまま残す）</td><td class="no">×</td><td class="yes">○</td></tr>
+        <tr><td>結合セル・レイアウトの保持</td><td class="no">×</td><td class="yes">○</td></tr>
+        <tr><td>Excelブックのまま出力</td><td class="no">×</td><td class="yes">○</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="seo-manufacturing" aria-label="製造業で利用されるExcel資料">
+    <style>
+      .seo-manufacturing{ margin:28px 0 8px; }
+      .seo-manufacturing h2{ font-size:clamp(20px,2.6vw,26px); color:#063577; margin:0 0 14px; }
+      .seo-manufacturing p.lead-s{ font-size:14.5px; color:#2f3b52; margin:0 0 14px; }
+      .seo-manufacturing ul{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
+      .seo-manufacturing li{ background:#fff; border:1px solid #c5d0e3; border-top:3px solid var(--gold); border-radius:10px; padding:12px 14px; font-size:15px; font-weight:600; color:#10213f; box-shadow:0 4px 14px rgba(8,40,90,.05); }
+      .seo-manufacturing li::before{ content:"\2713"; color:#9c7a2e; font-weight:700; margin-right:8px; }
+    </style>
+    <h2>製造業のExcel資料翻訳にも対応</h2>
+    <p class="lead-s">エクセル翻訳（Excel翻訳）は、製造業の現場で扱う技術資料の日本語⇄中国語・ベトナム語翻訳にも利用できます。<a href="/guide/manufacturing-excel-translation">仕様書・品質帳票の翻訳で起きやすい事故と対策はこちら →</a></p>
+    <ul>
+      <li>仕様書</li>
+      <li>品質帳票</li>
+      <li>検査表</li>
+      <li>作業標準書</li>
+      <li>海外工場向け資料</li>
+      <li>見積書・発注書</li>
+    </ul>
+  </section>
+  {% endif %}
 
   <section>
     <h2 id="home-problemTitle">こんなことで困っていませんか？</h2>

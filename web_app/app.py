@@ -574,6 +574,7 @@ def sitemap_xml():
         f'{lang_urls}'
         f'  <url><loc>{base}/engine</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n'
         f'  <url><loc>{base}/guide/excel-ja-zh-translate</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>\n'
+        f'  <url><loc>{base}/guide/manufacturing-excel-translation</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>\n'
         '</urlset>\n'
     )
     return (body, 200, {"Content-Type": "application/xml; charset=utf-8"})
@@ -582,6 +583,11 @@ def sitemap_xml():
 @app.get("/guide/excel-ja-zh-translate")
 def guide_excel_ja_zh():
     return render_template("guide_excel_ja_zh.html")
+
+
+@app.get("/guide/manufacturing-excel-translation")
+def guide_manufacturing_spec():
+    return render_template("guide_manufacturing_spec.html")
 
 
 @app.get("/engine")

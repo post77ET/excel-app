@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>製造業の仕様書・品質帳票をExcel翻訳する方法｜型番・単位を崩さず日中翻訳 | EX-TR-MULTI</title>
+<meta name="description" content="仕様書・品質帳票・検査表のエクセル翻訳（Excel翻訳）で起きやすい型番の誤訳、単位記号の消失、検査基準値のズレを防ぐ方法を解説。日本語⇄中国語・ベトナム語対応。">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://excel-app-t3dn.onrender.com/guide/manufacturing-excel-translation">
+<meta property="og:title" content="製造業の仕様書・品質帳票をExcel翻訳する方法｜型番・単位を崩さず日中翻訳">
+<meta property="og:description" content="仕様書・品質帳票・検査表のエクセル翻訳で起きやすい型番誤訳・単位記号消失・基準値ズレを防ぐ方法を解説。">
+<meta property="og:image" content="https://excel-app-t3dn.onrender.com/static/ogp.png">
+<meta property="og:type" content="article">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "製造業の仕様書・品質帳票をExcel翻訳する方法",
+  "description": "仕様書・品質帳票・検査表のエクセル翻訳で起きやすい型番誤訳・単位記号消失・基準値ズレを防ぐ方法を解説する。",
+  "author": { "@type": "Organization", "name": "EX-TR-MULTI" },
+  "datePublished": "2026-07-27"
+}
+</script>
+<style>
+  :root{ --navy-900:#101f36; --navy-950:#0a1322; --gold:#c9a558; --ink:#10213f; --muted:#5b6b82; --bg:#f5f8ff; }
+  body{ font-family:"Segoe UI","Noto Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Microsoft YaHei",sans-serif; margin:0; background:var(--bg); color:var(--ink); line-height:1.85; }
+  .wrap{ max-width:760px; margin:0 auto; padding:0 24px 80px; }
+  header.top{ background:linear-gradient(160deg,var(--navy-900),var(--navy-950)); padding:26px 0; margin-bottom:8px; }
+  header.top .wrap{ padding-bottom:0; display:flex; justify-content:space-between; align-items:center; }
+  header.top a{ color:#e6d3a0; text-decoration:none; font-weight:700; font-size:14px; letter-spacing:.06em; }
+  h1{ font-family:Georgia,"Hiragino Mincho ProN","Yu Mincho",serif; font-size:28px; color:var(--navy-900); line-height:1.5; margin:36px 0 14px; }
+  h2{ font-family:Georgia,"Hiragino Mincho ProN","Yu Mincho",serif; font-size:21px; color:var(--navy-900); margin:44px 0 14px; border-left:4px solid var(--gold); padding-left:12px; }
+  p{ font-size:15.5px; color:#2f3b52; }
+  .lead{ font-size:16.5px; color:var(--muted); }
+  table{ width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px; }
+  th, td{ border:1px solid #c5d0e3; padding:10px 12px; text-align:left; vertical-align:top; }
+  th{ background:#eef2fa; color:var(--navy-900); }
+  .warn{ background:#fff5f0; border:1px solid #e9b79a; border-radius:8px; padding:16px 18px; margin:18px 0; font-size:14.5px; }
+  .cta{ background:linear-gradient(160deg,var(--navy-900),var(--navy-950)); border-radius:12px; padding:28px 26px; margin:44px 0; text-align:center; }
+  .cta p{ color:#cfd8ec; margin:0 0 16px; }
+  .cta a{ display:inline-block; background:var(--gold); color:#1a1508; font-weight:700; padding:12px 30px; border-radius:999px; text-decoration:none; }
+  footer{ text-align:center; color:var(--muted); font-size:12.5px; padding:30px 0; }
+  .toc{ background:#fff; border:1px solid #dbe6f7; border-radius:10px; padding:18px 22px; font-size:14.5px; }
+  .toc a{ color:var(--navy-900); text-decoration:none; }
+  .toc li{ margin:6px 0; }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><span style="color:#e6d3a0; font-weight:700; letter-spacing:.1em; font-size:12.5px;">EX-TR-MULTI</span><a href="/?lang=ja">ツールを開く →</a></div></header>
+<div class="wrap">
+
+<h1>製造業の仕様書・品質帳票をエクセル翻訳する方法｜型番・単位を崩さず日中翻訳する</h1>
+<p class="lead">仕様書、品質帳票、検査表といった製造業のExcel資料は、一般的な文書と違い、型番・単位記号・検査基準値のように「訳してはいけない部分」が多く含まれます。この記事では、これらの資料をエクセル翻訳する際に起きやすい事故と、その対策を整理します。</p>
+
+<div class="toc">
+<strong>目次</strong>
+<ul>
+<li><a href="#issue1">①型番・品番が誤って翻訳される</a></li>
+<li><a href="#issue2">②単位記号（mm、℃、kgf等）が消失・変換される</a></li>
+<li><a href="#issue3">③検査基準値の桁・小数点がズレる</a></li>
+<li><a href="#solution">④対策：訳す範囲と訳さない範囲を分ける</a></li>
+</ul>
+</div>
+
+<h2 id="issue1">①型番・品番が誤って翻訳される</h2>
+<p>「SUS304-A2」のような型番や、「担当：山田太郎」のような人名を、一般的な翻訳ツールにそのまま通すと、部分的に意味のある単語として認識され、誤訳・変換されてしまうことがあります。仕様書ではこの型番の誤りがそのまま部品発注ミスにつながるため、特に注意が必要です。</p>
+
+<h2 id="issue2">②単位記号（mm、℃、kgf等）が消失・変換される</h2>
+<div class="warn">
+<strong>注意：</strong>単位記号は言語によって全角・半角の扱いが異なり、機械翻訳を通す過程で記号が消えたり別の文字に置き換わったりすることがあります。検査表の測定値欄で単位が消えると、数値だけが残り意味が通じなくなります。
+</div>
+
+<h2 id="issue3">③検査基準値の桁・小数点がズレる</h2>
+<p>「0.05±0.01」のような公差表記は、翻訳エンジンによっては数値部分まで処理対象になり、桁や記号がズレることがあります。品質帳票では基準値の誤りがそのまま検査ミスにつながるため、数値を含むセルは翻訳対象から明示的に除外できることが望ましいです。</p>
+
+<h2 id="solution">④対策：訳す範囲と訳さない範囲を分ける</h2>
+<p>これらの事故を防ぐ最も確実な方法は、<strong>セル単位で「訳す」「訳さない」を選べる</strong>ツールを使うことです。型番・単位記号・数値を含むセルを翻訳対象から外し、説明文や項目名だけを翻訳することで、資料としての正確性を保ったまま多言語化できます。</p>
+<p>また、翻訳後に候補を目視で確認・修正できる仕組みがあれば、誤訳が残ったまま資料が完成してしまうリスクも減らせます。</p>
+
+<div class="cta">
+<p>仕様書・品質帳票・検査表のエクセル翻訳に対応。型番・単位・数式を保護したまま、日本語⇄中国語・ベトナム語へ翻訳できます。</p>
+<a href="/?lang=ja">無料の体験コースで試す</a>
+</div>
+
+</div>
+<footer>EX-TR-MULTI｜Excel翻訳作業支援ツール</footer>
+</body>
+</html>
